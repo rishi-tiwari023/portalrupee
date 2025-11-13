@@ -1,0 +1,91 @@
+.rbi-guideline {
+    width: 100%;
+    padding: 3rem 2rem;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rbi-guideline__content {
+    max-width: 640px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.rbi-guideline__headline {
+    font-size: 2rem;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.rbi-guideline__headline .char {
+    color: inherit;
+}
+
+.rbi-guideline__headline--primary {
+    color: #1a1a1a;
+}
+
+.rbi-guideline__headline--primary .char {
+    color: #1a1a1a;
+}
+
+.rbi-guideline__headline--secondary {
+    color: #666666;
+}
+
+.rbi-guideline__headline--secondary .char {
+    color: #666666;
+}
+
+.rbi-guideline__body {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: #333333;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: justify;
+}
+
+.rbi-guideline__cta {
+    display: flex;
+    justify-content: center;
+}
+
+.rbi-guideline__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    background-color: #1a5cff;
+    color: #ffffff;
+    padding: 0.75rem 1.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(26, 92, 255, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.rbi-guideline__button span {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.rbi-guideline__button:hover {
+    background-color: #1947d6;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(26, 92, 255, 0.3);
+}
+
+.rbi-guideline__button:focus-visible {
+    outline: 2px solid #1a5cff;
+    outline-offset: 4px;
+}
