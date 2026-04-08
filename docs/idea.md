@@ -45,21 +45,29 @@ A comprehensive banking system demo with multi-role support, authentication, tra
 - Dashboard for different roles
 - Reports generation
 
-### 6. Security Features
-- OTP verification (SMS/Email) on registration
+### 6. Chat & Messaging
+- Real-time chat between users (via Socket.io)
+- Messaging enabled for users who have completed a payment to each other
+- Unread message notifications
+- Real-time balance alerts
+
+### 7. Security Features
+- OTP verification (Gmail SMTP initially, Resend for production)
 - PIN reset functionality
 - Transaction PIN (TPIN)
 - Encrypted sensitive data
 - Audit logs
+- Input validation using Zod
 
 ## Architecture
 
-### Database Design
-- User schema with roles and profile information
-- Account schema (Savings/Current)
-- Transaction schema
-- OTP schema
-- Audit log schema
+### Database Design (MongoDB)
+- **Users Collection**: Roles, profile info, and chat permissions
+- **Accounts Collection**: Savings/Current account details
+- **Transactions Collection**: Transaction history and metadata
+- **Messages Collection**: Peer-to-peer message history
+- **OTP Collection**: Temp storage for verification codes
+- **Audit Log Collection**: Security and activity tracking
 
 ### Scalability
 **Note**: Scalability features (sharding, replication, load balancing) will be implemented only after the initial version is working and tested.
