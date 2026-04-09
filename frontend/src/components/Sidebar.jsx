@@ -1,0 +1,95 @@
+import React, { useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import {
+  CreditCard,
+  LayoutDashboard,
+  ArrowLeftRight,
+  History,
+  Settings,
+  LogOut,
+  ShieldCheck
+} from 'lucide-react';
+
+const Sidebar = () => {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  const menuItems = [
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', end: true },
+    { name: 'Accounts', icon: CreditCard, path: '/dashboard/accounts' },
+    { name: 'Transfer', icon: ArrowLeftRight, path: '/dashboard/transfer' },
+    { name: 'Transactions', icon: History, path: '/dashboard/transactions' },
+    { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
+  ];
+
+  return (
+    <aside
+      className={`
+        ${isExpanded ? 'w-64' : 'w-20'} 
+        bg-white h-full flex flex-col border-r border-slate-100 shadow-[4px_0_24px_rgba(0,0,0,0.02)]
+        transition-all duration-300 ease-in-out relative z-20
+      `}
+    >
+      {/* PortalRupee Info */}
+      <div className="h-16 flex items-center px-6 border-b border-slate-50 mb-6 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="bg-indigo-600 p-1.5 rounded-lg flex items-center justify-center mr-3 shadow-md shadow-indigo-200">
+          <ShieldCheck className="w-5 h-5 text-white" />
+        </div>
+        {isExpanded && (
+          <span className="text-xl font-bold bg-gradient-to-r from-indigo-700 to-indigo-500 bg-clip-text text-transparent truncate tracking-tight transition-opacity duration-300">
+            PortalRupee
+          </span>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-4 space-y-2">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.name}
+              to={item.path}
+              end={item.end}
+              className={({ isActive }) => `
+                flex items-center px-3 py-3 rounded-xl transition-all duration-200 group
+                ${isActive
+                  ? 'bg-indigo-50/80 text-indigo-600 font-semibold shadow-sm overflow-hidden relative'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                }
+              `}
+            >
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-r-full" />
+                  )}
+                  <Icon
+                    className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 
+                      ${isActive ? 'text-indigo-600' : 'group-hover:scale-110 text-slate-400 group-hover:text-indigo-500'}
+                      ${isExpanded ? 'mr-3' : 'mx-auto'}
+                    `}
+                  />
+                  {isExpanded && <span className="truncate whitespace-nowrap">{item.name}</span>}
+
+                  {!isActive && isExpanded && (
+                    <span className="absolute inset-0 bg-slate-50 opacity-0 group-hover:opacity-10 rounded-xl transition-opacity duration-300 scale-95 group-hover:scale-100 -z-10" />
+                  )}
+                </>
+              )}
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      {/* Footer Area */}
+      <div className="p-4 mt-auto border-t border-slate-50">
+        <button className="flex items-center w-full px-3 py-3 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors duration-200 rounded-xl group">
+          <LogOut className={`w-5 h-5 flex-shrink-0 group-hover:-translate-x-1 duration-200 ${isExpanded ? 'mr-3' : 'mx-auto'}`} />
+          {isExpanded && <span className="font-medium truncate">Sign Out</span>}
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+export default Sidebar;
