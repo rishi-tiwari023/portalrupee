@@ -1,38 +1,50 @@
 import { useEffect, useRef } from 'react';
-import { animate, stagger, splitText } from 'animejs';
+import { animate, stagger } from 'animejs';
 import './RBIGuideline.css';
 
 const RBIGuideline = () => {
-    const containerRef = useRef(null);
     const textRef = useRef(null);
 
     useEffect(() => {
         if (textRef.current) {
-            const { chars } = splitText(textRef.current, { words: false, chars: true });
+            // Manual splitting for better control and reliability
+            const charElements = textRef.current.querySelectorAll('.char');
 
-            animate(chars, {
-                // Property keyframes
+            animate(charElements, {
+                opacity: [0, 1],
                 y: [
-                    { to: '-2.75rem', ease: 'outExpo', duration: 600 },
-                    { to: 0, ease: 'outBounce', duration: 800, delay: 100 }
+                    { to: -40, ease: 'outExpo', duration: 400 },
+                    { to: 0, ease: 'outBounce', duration: 1000 }
                 ],
-                // Property specific parameters
                 rotate: {
-                    from: '-1turn',
-                    delay: 0
+                    from: -45,
+                    to: 0,
+                    ease: 'outBack',
+                    duration: 600
                 },
-                delay: stagger(50),
-                ease: 'inOutCirc'
+                delay: stagger(30),
             });
         }
     }, []);
 
+    const splitTextToSpans = (text) => {
+        return text.split('').map((char, index) => (
+            <span key={index} className="char" style={{ display: 'inline-block', whiteSpace: 'pre' }}>
+                {char}
+            </span>
+        ));
+    };
+
     return (
-        <div className="rbi-guideline" ref={containerRef}>
+        <div className="rbi-guideline">
             <div className="rbi-guideline__content">
                 <h2 className="rbi-guideline__headline" ref={textRef}>
-                    <span className="rbi-guideline__headline--primary">"RBI Kehta Hai...</span>
-                    <span className="rbi-guideline__headline--secondary">Jaankar Baniyen, Satark Rahiye!"</span>
+                    <div className="rbi-guideline__headline-line rbi-guideline__headline--primary">
+                        {splitTextToSpans('" RBI Kehta Hai Jaankar Baniye')}
+                    </div>
+                    <div className="rbi-guideline__headline-line rbi-guideline__headline--secondary">
+                        {splitTextToSpans('Satark Rahiye! "')}
+                    </div>
                 </h2>
                 <div className="rbi-guideline__body">
                     <p>
