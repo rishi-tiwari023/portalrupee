@@ -17,6 +17,14 @@
 .navbar-logo {
     display: flex;
     align-items: center;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.navbar-logo-img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
 }
 
 .navbar-title {

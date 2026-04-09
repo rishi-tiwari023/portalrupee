@@ -6,9 +6,9 @@ import {
   ArrowLeftRight,
   History,
   Settings,
-  LogOut,
-  ShieldCheck
+  LogOut
 } from 'lucide-react';
+import logo from '../assets/logo.png';
 
 const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -31,8 +31,8 @@ const Sidebar = () => {
     >
       {/* PortalRupee Info */}
       <div className="h-16 flex items-center px-6 border-b border-slate-50 mb-6 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
-        <div className="bg-indigo-600 p-1.5 rounded-lg flex items-center justify-center mr-3 shadow-md shadow-indigo-200">
-          <ShieldCheck className="w-5 h-5 text-white" />
+        <div className="w-9 h-9 flex-shrink-0 mr-3 overflow-hidden rounded-lg shadow-sm">
+          <img src={logo} alt="PortalRupee Logo" className="w-full h-full object-contain" />
         </div>
         {isExpanded && (
           <span className="text-xl font-bold bg-gradient-to-r from-indigo-700 to-indigo-500 bg-clip-text text-transparent truncate tracking-tight transition-opacity duration-300">

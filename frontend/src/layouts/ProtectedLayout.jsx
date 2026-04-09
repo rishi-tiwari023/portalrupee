@@ -18,12 +18,12 @@ const ProtectedLayout = () => {
         <header className="w-full h-16 bg-white/70 glass sticky top-0 z-10 flex items-center justify-end px-8">
           <div className="flex items-center gap-4">
             <div className="flex flex-col text-right">
-              <span className="text-sm font-semibold text-slate-800">John Doe</span>
+              <span className="text-sm font-semibold text-slate-800">Rishi Tiwari</span>
               <span className="text-xs text-indigo-500 font-medium">Customer</span>
             </div>
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-cyan-400 p-[2px]">
               <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-indigo-600 font-bold">
-                JD
+                RT
               </div>
             </div>
           </div>
