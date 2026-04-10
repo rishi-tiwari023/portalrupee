@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import globalErrorHandler from './middleware/errorMiddleware.js';
 import AppError from './utils/AppError.js';
+import authRoutes from './routes/auth.routes.js';
 
 const app = express();
 
@@ -15,6 +16,9 @@ app.use(express.json({ limit: '10kb' }));
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
+
+// Routes
+app.use('/api/v1/auth', authRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
