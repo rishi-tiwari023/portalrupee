@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema(
   {
@@ -28,18 +29,33 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, 'Password is required'],
+      select: false,
     },
     role: {
       type: String,
       enum: ['CUSTOMER', 'CASHIER', 'MANAGER'],
       default: 'CUSTOMER',
     },
-    // tpin to be added on Day 9
   },
   {
     timestamps: true,
   }
 );
+
+// Hash password before saving
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
+
+// Instance method to compare passwords
+userSchema.methods.comparePassword = async function (
+  candidatePassword,
+  userPassword
+) {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 const User = mongoose.model('User', userSchema);
 export default User;
