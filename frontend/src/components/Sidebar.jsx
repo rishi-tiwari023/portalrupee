@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { logout } from '../store/slices/authSlice';
 import {
   CreditCard,
   LayoutDashboard,
@@ -12,6 +14,7 @@ import logo from '../assets/logo.png';
 
 const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const dispatch = useDispatch();
 
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', end: true },
@@ -83,7 +86,10 @@ const Sidebar = () => {
 
       {/* Footer Area */}
       <div className="p-4 mt-auto border-t border-slate-50">
-        <button className="flex items-center w-full px-3 py-3 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors duration-200 rounded-xl group">
+        <button 
+          onClick={() => dispatch(logout())}
+          className="flex items-center w-full px-3 py-3 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors duration-200 rounded-xl group"
+        >
           <LogOut className={`w-5 h-5 flex-shrink-0 group-hover:-translate-x-1 duration-200 ${isExpanded ? 'mr-3' : 'mx-auto'}`} />
           {isExpanded && <span className="font-medium truncate">Sign Out</span>}
         </button>
