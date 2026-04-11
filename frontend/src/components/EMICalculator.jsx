@@ -1,29 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './EMICalculator.css';
 
 const EMICalculator = () => {
     const [loanAmount, setLoanAmount] = useState(89000);
     const [tenure, setTenure] = useState(3);
     const [interestRate, setInterestRate] = useState(12.69);
-    const [monthlyEMI, setMonthlyEMI] = useState(0);
-    const [totalPayable, setTotalPayable] = useState(0);
-    const [interestAmount, setInterestAmount] = useState(0);
-
-    // Calculate EMI
-    useEffect(() => {
-        if (loanAmount > 0 && tenure > 0 && interestRate > 0) {
-            const monthlyRate = interestRate / 12 / 100;
-            const numMonths = tenure * 12;
-            const emi = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numMonths)) /
-                (Math.pow(1 + monthlyRate, numMonths) - 1);
-            const total = emi * numMonths;
-            const interest = total - loanAmount;
-
-            setMonthlyEMI(emi);
-            setTotalPayable(total);
-            setInterestAmount(interest);
-        }
-    }, [loanAmount, tenure, interestRate]);
+    // Calculate EMI (Derived State)
+    const monthlyRate = interestRate / 12 / 100;
+    const numMonths = tenure * 12;
+    const monthlyEMI = (loanAmount > 0 && tenure > 0 && interestRate > 0)
+        ? (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numMonths)) / (Math.pow(1 + monthlyRate, numMonths) - 1)
+        : 0;
+    const totalPayable = monthlyEMI * numMonths;
+    const interestAmount = totalPayable - loanAmount;
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-IN', {

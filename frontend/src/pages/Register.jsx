@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as zod from 'zod';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
+/* eslint-disable no-unused-vars */
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Mail, Phone, Lock, UserPlus, AlertCircle, Eye, EyeOff, ShieldCheck, CreditCard } from 'lucide-react';
 import { registerUser } from '../store/slices/authSlice';
@@ -37,7 +38,7 @@ const Register = () => {
         },
         validationSchema: toFormikValidationSchema(registerSchema),
         onSubmit: async (values) => {
-            const { name, confirmPassword, ...otherData } = values;
+            const { name, confirmPassword: _, ...otherData } = values;
             
             // Split name into firstName and lastName
             const nameParts = name.trim().split(/\s+/);
