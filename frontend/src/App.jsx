@@ -2,12 +2,15 @@ import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import PublicLayout from './layouts/PublicLayout';
 import ProtectedLayout from './layouts/ProtectedLayout';
+import { ToastContainer } from 'react-toastify';
+import RoleBasedRoute from './components/RoleBasedRoute';
 
 // Pages
 import Home from './pages/Home';
 import DashboardHome from './pages/DashboardHome';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Profile from './pages/Profile';
 
 import './App.css';
 
@@ -39,6 +42,10 @@ const router = createBrowserRouter([
         element: <DashboardHome />,
       },
       {
+        path: 'profile',
+        element: <Profile />,
+      },
+      {
         path: 'accounts',
         element: <div className="p-8 h-full flex items-center justify-center text-slate-400 font-medium text-xl bg-white/50 backdrop-blur-sm rounded-3xl border border-white">Accounts View (Pending)</div>
       },
@@ -53,6 +60,16 @@ const router = createBrowserRouter([
       {
         path: 'settings',
         element: <div className="p-8 h-full flex items-center justify-center text-slate-400 font-medium text-xl bg-white/50 backdrop-blur-sm rounded-3xl border border-white">Settings panel (Pending)</div>
+      },
+      // Admin/Manager Only Routes
+      {
+        element: <RoleBasedRoute allowedRoles={['MANAGER']} />,
+        children: [
+          {
+            path: 'users',
+            element: <div className="p-8 h-full flex items-center justify-center text-slate-400 font-medium text-xl bg-white/50 backdrop-blur-sm rounded-3xl border border-white font-bold">User Management (Manager Only)</div>
+          }
+        ]
       }
     ],
   },
@@ -66,6 +83,18 @@ function App() {
   return (
     <div className="App antialiased selection:bg-indigo-100 selection:text-indigo-900 font-sans">
       <RouterProvider router={router} />
+      <ToastContainer
+        position="top-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }

@@ -14,15 +14,15 @@ const DashboardHome = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="premium-card p-6 border-l-4 border-l-indigo-500 bg-white shadow-sm ring-1 ring-slate-200/50 rounded-2xl">
+        <div className="premium-card p-6 border-2 border-indigo-500 bg-white shadow-sm ring-4 ring-indigo-500/5 rounded-2xl transition-all hover:shadow-md">
           <h3 className="text-sm font-medium text-slate-500 mb-2 uppercase tracking-wide">Total Balance</h3>
           <p className="text-4xl font-bold bg-gradient-to-br from-indigo-700 to-indigo-400 bg-clip-text text-transparent">₹4,500.00</p>
         </div>
-        <div className="premium-card p-6 border-l-4 border-l-emerald-500 bg-white shadow-sm ring-1 ring-slate-200/50 rounded-2xl flex flex-col justify-between">
+        <div className="premium-card p-6 border-2 border-emerald-500 bg-white shadow-sm ring-4 ring-emerald-500/5 rounded-2xl flex flex-col justify-between transition-all hover:shadow-md">
           <h3 className="text-sm font-medium text-slate-500 mb-2 uppercase tracking-wide">Active Accounts</h3>
           <p className="text-3xl font-bold text-slate-800">1 Account</p>
         </div>
-        <div className="premium-card p-6 border-l-4 border-l-amber-500 bg-white shadow-sm ring-1 ring-slate-200/50 rounded-2xl flex flex-col justify-between">
+        <div className="premium-card p-6 border-2 border-amber-500 bg-white shadow-sm ring-4 ring-amber-500/5 rounded-2xl flex flex-col justify-between transition-all hover:shadow-md">
           <h3 className="text-sm font-medium text-slate-500 mb-2 uppercase tracking-wide">Recent Transactions</h3>
           <p className="text-3xl font-bold text-slate-800">24 This Month</p>
         </div>

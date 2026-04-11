@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as zod from 'zod';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
+/* eslint-disable no-unused-vars */
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, LogIn, AlertCircle, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { loginUser } from '../store/slices/authSlice';

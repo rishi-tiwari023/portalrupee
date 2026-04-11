@@ -8,21 +8,31 @@ import {
   ArrowLeftRight,
   History,
   Settings,
-  LogOut
+  LogOut,
+  User,
+  Users
 } from 'lucide-react';
 import logo from '../assets/logo.png';
+import { useSelector } from 'react-redux';
 
 const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(true);
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
 
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', end: true },
+    { name: 'Profile', icon: User, path: '/dashboard/profile' },
     { name: 'Accounts', icon: CreditCard, path: '/dashboard/accounts' },
     { name: 'Transfer', icon: ArrowLeftRight, path: '/dashboard/transfer' },
     { name: 'Transactions', icon: History, path: '/dashboard/transactions' },
     { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
   ];
+
+  // Add Manager-specific links
+  if (user?.role === 'MANAGER') {
+    menuItems.push({ name: 'User Management', icon: Users, path: '/dashboard/users' });
+  }
 
   return (
     <aside
@@ -54,18 +64,15 @@ const Sidebar = () => {
               to={item.path}
               end={item.end}
               className={({ isActive }) => `
-                flex items-center px-3 py-3 rounded-xl transition-all duration-200 group
+                flex items-center px-3 py-3 rounded-xl transition-all duration-200 group relative
                 ${isActive
-                  ? 'bg-indigo-50/80 text-indigo-600 font-semibold shadow-sm overflow-hidden relative'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                  ? 'bg-indigo-50/80 text-indigo-600 font-bold shadow-sm border border-indigo-200 ring-4 ring-indigo-500/10'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 border border-transparent'
                 }
               `}
             >
               {({ isActive }) => (
                 <>
-                  {isActive && (
-                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-r-full" />
-                  )}
                   <Icon
                     className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 
                       ${isActive ? 'text-indigo-600' : 'group-hover:scale-110 text-slate-400 group-hover:text-indigo-500'}
