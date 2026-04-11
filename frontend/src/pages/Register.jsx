@@ -6,8 +6,9 @@ import * as zod from 'zod';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
 /* eslint-disable no-unused-vars */
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Mail, Phone, Lock, UserPlus, AlertCircle, Eye, EyeOff, ShieldCheck, CreditCard } from 'lucide-react';
+import { User, Mail, Phone, Lock, UserPlus, AlertCircle, Eye, EyeOff, ShieldCheck, CreditCard, PartyPopper } from 'lucide-react';
 import { registerUser } from '../store/slices/authSlice';
+import { toast } from 'react-toastify';
 
 const registerSchema = zod.object({
     name: zod.string().min(2, 'Name must be at least 2 characters'),
@@ -53,7 +54,15 @@ const Register = () => {
 
             const resultAction = await dispatch(registerUser(registerData));
             if (registerUser.fulfilled.match(resultAction)) {
+                toast.success('Account created successfully!', {
+                    icon: <PartyPopper size={20} className="text-emerald-600" />,
+                    className: 'premium-toast'
+                });
                 navigate('/dashboard');
+            } else if (registerUser.rejected.match(resultAction)) {
+                toast.error(resultAction.payload || 'Registration failed. Please try again.', {
+                    className: 'premium-toast'
+                });
             }
         },
     });
@@ -65,7 +74,7 @@ const Register = () => {
     ];
 
     return (
-        <div className="min-h-screen py-20 flex items-center justify-center p-6 relative overflow-hidden bg-slate-50">
+        <div className="min-h-screen pt-28 pb-12 flex items-center justify-center p-6 relative overflow-hidden bg-slate-50">
             {/* Decorative Orbs */}
             <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-cyan-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />

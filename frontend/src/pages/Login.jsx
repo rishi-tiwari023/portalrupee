@@ -6,8 +6,9 @@ import * as zod from 'zod';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
 /* eslint-disable no-unused-vars */
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, LogIn, AlertCircle, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle, Eye, EyeOff, ArrowRight, Rocket } from 'lucide-react';
 import { loginUser } from '../store/slices/authSlice';
+import { toast } from 'react-toastify';
 
 const loginSchema = zod.object({
   email: zod.string().email('Invalid email address'),
@@ -29,13 +30,21 @@ const Login = () => {
     onSubmit: async (values) => {
       const resultAction = await dispatch(loginUser(values));
       if (loginUser.fulfilled.match(resultAction)) {
+        toast.success('Sign in successful!', {
+          icon: <Rocket size={20} className="text-indigo-600" />,
+          className: 'premium-toast'
+        });
         navigate('/dashboard');
+      } else if (loginUser.rejected.match(resultAction)) {
+        toast.error(resultAction.payload || 'Invalid credentials. Please try again.', {
+          className: 'premium-toast'
+        });
       }
     },
   });
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center p-6 relative overflow-hidden bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center pt-24 pb-12 p-6 relative overflow-hidden bg-slate-50">
       {/* Decorative Orbs */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />

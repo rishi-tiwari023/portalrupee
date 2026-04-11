@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { getMe } from './store/slices/authSlice';
 import PublicLayout from './layouts/PublicLayout';
 import ProtectedLayout from './layouts/ProtectedLayout';
 import { ToastContainer } from 'react-toastify';
@@ -80,6 +82,16 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
+  const dispatch = useDispatch();
+  const { token, user } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    // If we have a token but no user data, fetch it
+    if (token && !user) {
+      dispatch(getMe());
+    }
+  }, [dispatch, token, user]);
+
   return (
     <div className="App antialiased selection:bg-indigo-100 selection:text-indigo-900 font-sans">
       <RouterProvider router={router} />

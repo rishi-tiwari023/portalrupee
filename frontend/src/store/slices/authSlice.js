@@ -1,11 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/axios';
 
+const token = localStorage.getItem('portalrupee_token');
+
 const initialState = {
   user: null,
-  token: localStorage.getItem('portalrupee_token') || null,
-  isAuthenticated: !!localStorage.getItem('portalrupee_token'),
-  loading: false,
+  token: token || null,
+  isAuthenticated: !!token,
+  loading: !!token, // Set loading to true initially if token exists to wait for getMe()
   error: null,
 };
 
@@ -37,7 +39,7 @@ export const getMe = createAsyncThunk(
   'auth/getMe',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/auth/me');
+      const response = await api.get('/users/profile');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch user');
