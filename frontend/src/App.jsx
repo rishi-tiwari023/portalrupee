@@ -6,6 +6,7 @@ import PublicLayout from './layouts/PublicLayout';
 import ProtectedLayout from './layouts/ProtectedLayout';
 import { ToastContainer } from 'react-toastify';
 import RoleBasedRoute from './components/RoleBasedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Pages
 import Home from './pages/Home';
@@ -94,7 +95,9 @@ function App() {
 
   return (
     <div className="App antialiased selection:bg-indigo-100 selection:text-indigo-900 font-sans">
-      <RouterProvider router={router} />
+      <ErrorBoundary>
+        <RouterProvider router={router} />
+      </ErrorBoundary>
       <ToastContainer
         position="top-right"
         autoClose={4000}
