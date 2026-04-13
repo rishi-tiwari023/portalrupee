@@ -1,42 +1,247 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchDashboardSummary } from '../store/slices/dashboardSlice';
+import {
+  Plus,
+  Send,
+  FileText,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Clock,
+  RefreshCcw,
+  LayoutGrid
+} from 'lucide-react';
 
 const DashboardHome = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { summary, loading } = useSelector((state) => state.dashboard);
+
+  useEffect(() => {
+    if (user?._id) {
+      dispatch(fetchDashboardSummary(user._id));
+    }
+  }, [dispatch, user]);
+
+  const quickActions = [
+    { name: 'Add Funds', icon: Plus, color: 'bg-indigo-500', textColor: 'text-indigo-600' },
+    { name: 'Send Money', icon: Send, color: 'bg-emerald-500', textColor: 'text-emerald-600' },
+    { name: 'Statements', icon: FileText, color: 'bg-amber-500', textColor: 'text-amber-600' },
+    { name: 'Analytics', icon: LayoutGrid, color: 'bg-cyan-500', textColor: 'text-cyan-600' },
+  ];
+
+  // Mock transactions for Day 6 (as per placeholders requirement)
+  const mockTransactions = [
+    { id: 1, type: 'DEPOSIT', amount: 3500, date: '2026-04-12', name: 'Cash Deposit', status: 'COMPLETED' },
+    { id: 2, type: 'TRANSFER', amount: -600, date: '2026-04-11', name: 'Cafe 2004', status: 'COMPLETED' },
+    { id: 3, type: 'WITHDRAWAL', amount: -2000, date: '2026-04-10', name: 'ATM Withdrawal', status: 'PENDING' },
+  ];
+
+  if (loading && !summary.accountCount) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full animate-in fade-in duration-700">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-800">
-            Welcome back, <span className="text-indigo-600">{user?.firstName || 'User'}</span>
-        </h1>
-        <p className="text-slate-500 font-medium">Here's what's happening with your accounts today.</p>
+    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      {/* Header Section */}
+      <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+            Dashboard
+          </h1>
+          <p className="text-slate-500 font-medium mt-1">
+            Welcome back, <span className="text-indigo-600 font-bold">{user?.firstName || 'User'}</span>! Here's your financial overview.
+          </p>
+        </div>
+        <button
+          onClick={() => dispatch(fetchDashboardSummary(user?._id))}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all shadow-sm active:scale-95"
+        >
+          <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          <span className="text-sm font-semibold">Sync Data</span>
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="premium-card p-6 border-2 border-indigo-500 bg-white shadow-sm ring-4 ring-indigo-500/5 rounded-2xl transition-all hover:shadow-md">
-          <h3 className="text-sm font-medium text-slate-500 mb-2 uppercase tracking-wide">Total Balance</h3>
-          <p className="text-4xl font-bold bg-gradient-to-br from-indigo-700 to-indigo-400 bg-clip-text text-transparent">₹4,500.00</p>
+      {/* Main Stats Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+          {/* Balance Card - High Fidelity Bank Card Look */}
+          <div className="premium-card relative overflow-hidden p-6 sm:p-8 bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4338ca] text-white rounded-[2.5rem] shadow-2xl shadow-indigo-200 group transition-all duration-500 hover:scale-[1.02]">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-indigo-400/20 transition-colors" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-400/10 rounded-full -ml-24 -mb-24 blur-3xl" />
+            
+            <div className="flex justify-between items-start mb-12">
+              <div>
+                <h3 className="text-indigo-200/80 text-xs font-black uppercase tracking-[0.2em] mb-1">Available Balance</h3>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-medium text-indigo-300">₹</span>
+                  <span className="text-5xl font-black tracking-tighter">
+                    {summary?.totalBalance?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}
+                  </span>
+                </div>
+              </div>
+              <div className="w-14 h-10 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 flex items-center justify-center overflow-hidden">
+                 <div className="w-8 h-6 bg-amber-400/80 rounded-sm relative shadow-inner">
+                    <div className="absolute inset-0 grid grid-cols-3 grid-rows-2 gap-[1px] opacity-30">
+                       {[...Array(6)].map((_, i) => <div key={i} className="border-[0.5px] border-black/20" />)}
+                    </div>
+                 </div>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex gap-4 text-indigo-100/40 font-mono text-lg tracking-[0.3em]">
+                <span>****</span> <span>****</span> <span>****</span> <span className="text-white font-bold tracking-normal">4290</span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="px-4 py-2 bg-indigo-500/20 backdrop-blur-md border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-indigo-100">
+                    {summary?.accountCount || 0} {summary?.accountCount === 1 ? 'Primary Account' : 'Active Accounts'}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                   <div className="w-8 h-8 rounded-full bg-rose-500/80 border border-white/20" />
+                   <div className="w-8 h-8 rounded-full bg-amber-500/80 border border-white/20 -ml-4" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions Card */}
+          <div className="premium-card p-6 sm:p-8 bg-white border border-slate-100 shadow-sm rounded-[2.5rem] flex flex-col justify-between">
+            <h3 className="text-slate-800 text-lg font-black tracking-tight mb-6 sm:mb-8">Quick Actions</h3>
+            <div className="grid grid-cols-2 gap-4 sm:gap-6">
+              {quickActions.map((action) => (
+                <button
+                  key={action.name}
+                  className="flex flex-col items-center gap-3 p-5 rounded-[2rem] hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 group active:scale-95"
+                >
+                  <div className={`w-14 h-14 rounded-2xl ${action.color} text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-all`}>
+                    <action.icon className="w-7 h-7" />
+                  </div>
+                  <span className="text-xs font-black text-slate-500 group-hover:text-indigo-600 transition-colors">{action.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="premium-card p-6 border-2 border-emerald-500 bg-white shadow-sm ring-4 ring-emerald-500/5 rounded-2xl flex flex-col justify-between transition-all hover:shadow-md">
-          <h3 className="text-sm font-medium text-slate-500 mb-2 uppercase tracking-wide">Active Accounts</h3>
-          <p className="text-3xl font-bold text-slate-800">1 Account</p>
-        </div>
-        <div className="premium-card p-6 border-2 border-amber-500 bg-white shadow-sm ring-4 ring-amber-500/5 rounded-2xl flex flex-col justify-between transition-all hover:shadow-md">
-          <h3 className="text-sm font-medium text-slate-500 mb-2 uppercase tracking-wide">Recent Transactions</h3>
-          <p className="text-3xl font-bold text-slate-800">24 This Month</p>
+
+        {/* Savings Goals Card - More Detailed & Glowing */}
+        <div className="premium-card p-6 sm:p-8 bg-slate-900 text-white rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col border border-slate-800">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 rounded-full -mr-20 -mt-20 blur-3xl" />
+          
+          <div className="flex justify-between items-center mb-8 sm:mb-10">
+            <div>
+              <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Savings Goal</h3>
+              <p className="text-3xl font-black tracking-tighter">Emergency Fund</p>
+            </div>
+            <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 shadow-inner">
+              <LayoutGrid className="w-7 h-7 text-indigo-400" />
+            </div>
+          </div>
+
+          <div className="space-y-8 flex-1 flex flex-col justify-center">
+            <div>
+              <div className="flex justify-between items-end mb-3">
+                <span className="text-4xl font-black text-indigo-400 tracking-tighter">₹12,450<span className="text-xl text-slate-600">.00</span></span>
+                <span className="text-slate-500 text-xs font-bold">of ₹20,000</span>
+              </div>
+              
+              <div className="h-4 w-full bg-slate-800/50 rounded-full overflow-hidden p-1 relative border border-slate-700">
+                <div 
+                  className="h-full bg-gradient-to-r from-indigo-600 via-indigo-400 to-cyan-400 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all duration-1000 ease-out" 
+                  style={{ width: '62%' }} 
+                />
+              </div>
+              <div className="flex justify-between mt-3">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Progress</span>
+                <span className="text-sm font-black text-indigo-400">62%</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 py-4 border-y border-white/5">
+               <div>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Daily Avg</p>
+                  <p className="text-sm font-black text-white">₹450.00</p>
+               </div>
+               <div>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">ETA</p>
+                  <p className="text-sm font-black text-white">18 Days</p>
+               </div>
+            </div>
+          </div>
+          
+          <button className="mt-8 w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-black text-sm transition-all active:scale-95 shadow-lg shadow-indigo-600/20">
+             Customize Goal
+          </button>
         </div>
       </div>
 
-      <div className="premium-card p-8 min-h-[400px] flex flex-col items-center justify-center bg-white/50 backdrop-blur-md border border-white rounded-3xl shadow-lg relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent" />
-        <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6">
-            <svg className="w-10 h-10 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+      {/* Transactions Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recent Transactions */}
+        <div className="lg:col-span-2 premium-card p-4 sm:p-8 bg-white border border-slate-100 shadow-sm rounded-[2.5rem]">
+          <div className="flex items-center justify-between mb-8 px-2">
+            <h3 className="text-slate-800 text-xl font-black tracking-tight">Recent Transactions</h3>
+            <button className="text-indigo-600 hover:text-indigo-700 text-sm font-bold hover:underline">View All</button>
+          </div>
+
+          <div className="space-y-4">
+            {mockTransactions.map((tx) => (
+              <div key={tx.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 hover:bg-slate-50 transition-colors rounded-3xl group cursor-pointer gap-4">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className={`w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center
+                    ${tx.type === 'DEPOSIT' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}
+                  `}>
+                    {tx.type === 'DEPOSIT' ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
+                  </div>
+                  <div className="min-w-0 overflow-hidden">
+                    <p className="text-slate-900 font-bold truncate">{tx.name}</p>
+                    <p className="text-slate-400 text-xs font-bold flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {tx.date}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex sm:flex-col justify-between items-end sm:text-right">
+                  <p className={`font-black text-lg ${tx.amount > 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
+                    {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                  </p>
+                  <span className={`text-[10px] font-black tracking-widest px-2 py-0.5 rounded-full uppercase
+                    ${tx.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}
+                  `}>
+                    {tx.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+
+            {mockTransactions.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+                <Clock className="w-12 h-12 mb-4 opacity-20" />
+                <p className="font-bold">No recent transactions</p>
+              </div>
+            )}
+          </div>
         </div>
-        <p className="text-slate-400 font-medium text-lg">Transaction Analytics Coming Soon</p>
-        <p className="text-slate-300 text-sm max-w-xs text-center mt-2">We are working on bringing you advanced spending patterns and insights.</p>
+
+        {/* Promo / Info Card */}
+        <div className="premium-card p-6 sm:p-8 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-[2.5rem] shadow-lg shadow-amber-100 flex flex-col justify-center items-center text-center">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-6">
+            <Plus className="w-10 h-10 text-white" />
+          </div>
+          <h3 className="text-2xl font-black mb-3 leading-tight">Apply for a Premium Card</h3>
+          <p className="text-amber-50 text-sm font-medium mb-8 leading-relaxed">
+            Enjoy zero-fee international transfers and 2% cashback on every transaction.
+          </p>
+          <button className="w-full bg-white text-orange-600 font-black py-4 rounded-3xl shadow-lg hover:-translate-y-1 transition-transform active:scale-95">
+            Check Eligibility
+          </button>
+        </div>
       </div>
     </div>
   );
