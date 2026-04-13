@@ -1,12 +1,63 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '../../api/axios';
+
+const token = localStorage.getItem('portalrupee_token');
 
 const initialState = {
   user: null,
-  token: localStorage.getItem('portalrupee_token') || null,
-  isAuthenticated: !!localStorage.getItem('portalrupee_token'),
-  loading: false,
+  token: token || null,
+  isAuthenticated: !!token,
+  loading: !!token, // Set loading to true initially if token exists to wait for getMe()
   error: null,
 };
+
+export const registerUser = createAsyncThunk(
+  'auth/register',
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/register', userData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+    }
+  }
+);
+
+export const loginUser = createAsyncThunk(
+  'auth/login',
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/login', credentials);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Login failed');
+    }
+  }
+);
+
+export const getMe = createAsyncThunk(
+  'auth/getMe',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/users/profile');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch user');
+    }
+  }
+);
+
+export const updateProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await api.patch('/users/profile', userData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Update failed');
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: 'auth',
@@ -36,6 +87,71 @@ const authSlice = createSlice({
     updateUser: (state, action) => {
       state.user = { ...state.user, ...action.payload };
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Register
+      .addCase(registerUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.data.user;
+        state.token = action.payload.data.accessToken;
+        localStorage.setItem('portalrupee_token', action.payload.data.accessToken);
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Login
+      .addCase(loginUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.data.user;
+        state.token = action.payload.data.accessToken;
+        localStorage.setItem('portalrupee_token', action.payload.data.accessToken);
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Get Me
+      .addCase(getMe.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getMe.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.data?.user || action.payload.data;
+      })
+      .addCase(getMe.rejected, (state) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.token = null;
+        localStorage.removeItem('portalrupee_token');
+      })
+      // Update Profile
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.data?.user || action.payload.data;
+        state.error = null;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 

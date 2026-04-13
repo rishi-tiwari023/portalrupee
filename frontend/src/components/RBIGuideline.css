@@ -8,7 +8,7 @@
 }
 
 .rbi-guideline__content {
-    max-width: 640px;
+    max-width: 720px;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -16,11 +16,20 @@
 }
 
 .rbi-guideline__headline {
-    font-size: 2rem;
-    letter-spacing: 0.06em;
-    font-weight: 700;
-    line-height: 1.5;
+    font-size: 2.5rem;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+    line-height: 1.1;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rbi-guideline__headline-line {
+    display: block;
+    overflow: hidden; /* Helps with entry animations */
+    padding: 0.2rem 0;
 }
 
 .rbi-guideline__headline .char {
@@ -31,16 +40,8 @@
     color: #1a1a1a;
 }
 
-.rbi-guideline__headline--primary .char {
-    color: #1a1a1a;
-}
-
 .rbi-guideline__headline--secondary {
-    color: #666666;
-}
-
-.rbi-guideline__headline--secondary .char {
-    color: #666666;
+    color: #1a5cff; /* Use primary brand color for emphasis */
 }
 
 .rbi-guideline__body {

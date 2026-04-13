@@ -1,29 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './EMICalculator.css';
 
 const EMICalculator = () => {
     const [loanAmount, setLoanAmount] = useState(89000);
     const [tenure, setTenure] = useState(3);
     const [interestRate, setInterestRate] = useState(12.69);
-    const [monthlyEMI, setMonthlyEMI] = useState(0);
-    const [totalPayable, setTotalPayable] = useState(0);
-    const [interestAmount, setInterestAmount] = useState(0);
-
-    // Calculate EMI
-    useEffect(() => {
-        if (loanAmount > 0 && tenure > 0 && interestRate > 0) {
-            const monthlyRate = interestRate / 12 / 100;
-            const numMonths = tenure * 12;
-            const emi = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numMonths)) /
-                (Math.pow(1 + monthlyRate, numMonths) - 1);
-            const total = emi * numMonths;
-            const interest = total - loanAmount;
-
-            setMonthlyEMI(emi);
-            setTotalPayable(total);
-            setInterestAmount(interest);
-        }
-    }, [loanAmount, tenure, interestRate]);
+    // Calculate EMI (Derived State)
+    const monthlyRate = interestRate / 12 / 100;
+    const numMonths = tenure * 12;
+    const monthlyEMI = (loanAmount > 0 && tenure > 0 && interestRate > 0)
+        ? (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numMonths)) / (Math.pow(1 + monthlyRate, numMonths) - 1)
+        : 0;
+    const totalPayable = monthlyEMI * numMonths;
+    const interestAmount = totalPayable - loanAmount;
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-IN', {
@@ -34,15 +23,18 @@ const EMICalculator = () => {
     };
 
     const handleLoanAmountChange = (e) => {
-        setLoanAmount(parseInt(e.target.value));
+        const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+        setLoanAmount(val);
     };
 
     const handleTenureChange = (e) => {
-        setTenure(parseInt(e.target.value));
+        const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+        setTenure(val);
     };
 
     const handleInterestRateChange = (e) => {
-        setInterestRate(parseFloat(e.target.value));
+        const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+        setInterestRate(val);
     };
 
     const handleClear = () => {
@@ -51,19 +43,16 @@ const EMICalculator = () => {
         setInterestRate(12.69);
     };
 
-    // TODO: Implement get as mail functionality using nodemailer
-    // handleGetAsMail function will be implemented later with backend API integration
-
-    const loanAmountMin = 25000;
-    const loanAmountMax = 5000000;
+    const loanAmountMin = 10000;
+    const loanAmountMax = 10000000;
     const tenureMin = 1;
-    const tenureMax = 10;
-    const interestMin = 6.5;
-    const interestMax = 25;
+    const tenureMax = 30;
+    const interestMin = 0.25;
+    const interestMax = 50;
 
-    const loanAmountPercent = ((loanAmount - loanAmountMin) / (loanAmountMax - loanAmountMin)) * 100;
-    const tenurePercent = ((tenure - tenureMin) / (tenureMax - tenureMin)) * 100;
-    const interestPercent = ((interestRate - interestMin) / (interestMax - interestMin)) * 100;
+    const loanAmountPercent = Math.min(100, Math.max(0, ((loanAmount - loanAmountMin) / (loanAmountMax - loanAmountMin)) * 100));
+    const tenurePercent = Math.min(100, Math.max(0, ((tenure - tenureMin) / (tenureMax - tenureMin)) * 100));
+    const interestPercent = Math.min(100, Math.max(0, ((interestRate - interestMin) / (interestMax - interestMin)) * 100));
 
     return (
         <div className="emi-calculator-container">
@@ -76,15 +65,21 @@ const EMICalculator = () => {
                 <div className="emi-calculator-left">
                     <div className="slider-group">
                         <div className="slider-header">
-                            <label className="slider-label">Loan Amount</label>
+                            <label className="slider-label">Loan Amount (₹)</label>
                             <input
-                                type="text"
+                                type="number"
                                 className="slider-input"
-                                value={formatCurrency(loanAmount)}
-                                readOnly
+                                value={loanAmount || ''}
+                                onChange={handleLoanAmountChange}
+                                min={loanAmountMin}
+                                max={loanAmountMax}
                             />
                         </div>
                         <div className="slider-container">
+                            <div className="slider-labels">
+                                <span>{formatCurrency(loanAmountMin)}</span>
+                                <span>{formatCurrency(loanAmountMax)}</span>
+                            </div>
                             <div className="slider-wrapper" style={{
                                 '--slider-progress': `${loanAmountPercent}%`
                             }}>
@@ -103,13 +98,20 @@ const EMICalculator = () => {
 
                     <div className="slider-group">
                         <div className="slider-header">
-                            <label className="slider-label">Loan Tenure</label>
-                            <div className="slider-value-box">{tenure} years</div>
+                            <label className="slider-label">Loan Tenure (Years)</label>
+                            <input
+                                type="number"
+                                className="slider-input"
+                                value={tenure || ''}
+                                onChange={handleTenureChange}
+                                min={tenureMin}
+                                max={tenureMax}
+                            />
                         </div>
                         <div className="slider-container">
                             <div className="slider-labels">
-                                <span>1 year</span>
-                                <span>10 years</span>
+                                <span>{tenureMin} Year</span>
+                                <span>{tenureMax} Years</span>
                             </div>
                             <div className="slider-wrapper" style={{
                                 '--slider-progress': `${tenurePercent}%`
@@ -129,13 +131,21 @@ const EMICalculator = () => {
 
                     <div className="slider-group">
                         <div className="slider-header">
-                            <label className="slider-label">Interest Rate</label>
-                            <div className="slider-value-box">{interestRate.toFixed(2)}%</div>
+                            <label className="slider-label">Interest Rate (% PA)</label>
+                            <input
+                                type="number"
+                                className="slider-input"
+                                value={interestRate || ''}
+                                onChange={handleInterestRateChange}
+                                step="0.01"
+                                min={interestMin}
+                                max={interestMax}
+                            />
                         </div>
                         <div className="slider-container">
                             <div className="slider-labels">
-                                <span>6.50% PA</span>
-                                <span>25% PA</span>
+                                <span>{interestMin}% PA</span>
+                                <span>{interestMax}% PA</span>
                             </div>
                             <div className="slider-wrapper" style={{
                                 '--slider-progress': `${interestPercent}%`

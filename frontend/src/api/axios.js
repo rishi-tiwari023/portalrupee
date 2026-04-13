@@ -28,9 +28,16 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Handle unauthorized access (e.g., logout user)
-      localStorage.removeItem('portalrupee_token');
-      window.location.href = '/login';
+      const isLoginRequest = error.config.url.includes('/auth/login');
+      const isRegisterRequest = error.config.url.includes('/auth/register');
+      
+      // Only redirect and clear token if it's NOT a login/register request
+      if (!isLoginRequest && !isRegisterRequest) {
+        localStorage.removeItem('portalrupee_token');
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
     }
     return Promise.reject(error);
   }

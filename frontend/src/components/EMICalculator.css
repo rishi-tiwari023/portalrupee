@@ -6,17 +6,38 @@
     overflow: hidden;
 }
 
-/* Background pattern */
-.emi-calculator-container::before {
+/* Background decorative elements */
+.emi-calculator-container::before,
+.emi-calculator-container::after {
     content: '';
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 400px;
-    height: 400px;
-    background: linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(25, 118, 210, 0.1) 100%);
-    border-radius: 20px;
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    filter: blur(80px);
     z-index: 0;
+    opacity: 0.6;
+}
+
+.emi-calculator-container::before {
+    top: -10%;
+    right: -5%;
+    width: 500px;
+    height: 500px;
+    background: linear-gradient(135deg, #bbdefb 0%, #1976d2 100%);
+    animation: blobify 20s infinite alternate;
+}
+
+.emi-calculator-container::after {
+    bottom: -10%;
+    left: -5%;
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, rgba(0, 188, 212, 0.4) 0%, rgba(25, 118, 210, 0.4) 100%);
+    animation: blobify 15s infinite alternate-reverse;
+}
+
+@keyframes blobify {
+    0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; transform: translate(0, 0) scale(1); }
+    100% { border-radius: 50% 50% 20% 80% / 50% 20% 80% 50%; transform: translate(20px, -40px) scale(1.1); }
 }
 
 .emi-calculator-header {
@@ -83,24 +104,32 @@
     background-color: #ffffff;
     border: 1px solid #e0e0e0;
     border-radius: 6px;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.75rem;
     font-size: 1rem;
     font-weight: 600;
     color: #424242;
-    width: 150px;
+    width: 160px;
     text-align: right;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.slider-value-box {
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #424242;
-    min-width: 80px;
-    text-align: center;
+.slider-input:focus {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+}
+
+/* Hide number input arrows */
+.slider-input::-webkit-outer-spin-button,
+.slider-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+.slider-input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .slider-container {
