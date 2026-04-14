@@ -9,8 +9,10 @@ import {
   ArrowDownLeft,
   Clock,
   RefreshCcw,
-  LayoutGrid
+  LayoutGrid,
+  CreditCard
 } from 'lucide-react';
+import AccountSummaryCard from '../components/AccountSummaryCard';
 
 const DashboardHome = () => {
   const dispatch = useDispatch();
@@ -179,6 +181,33 @@ const DashboardHome = () => {
             Customize Goal
           </button>
         </div>
+      </div>
+
+      {/* Individual Accounts Section */}
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-6 px-2">
+          <h3 className="text-slate-800 text-xl font-black tracking-tight">My Accounts</h3>
+          <button className="text-indigo-600 hover:text-indigo-700 text-sm font-bold hover:underline">Manage Accounts</button>
+        </div>
+        
+        {summary?.accounts?.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {summary.accounts.map((account, index) => (
+              <AccountSummaryCard key={account._id || index} account={account} />
+            ))}
+          </div>
+        ) : (
+           <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50">
+             <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+               <CreditCard className="w-8 h-8" />
+             </div>
+             <h4 className="text-slate-800 font-black text-lg mb-2">No Accounts Found</h4>
+             <p className="text-slate-500 font-medium mb-6">You don't have any active accounts yet. Open one to get started.</p>
+             <button className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 active:scale-95 transition-all">
+               Open Account
+             </button>
+           </div>
+        )}
       </div>
 
       {/* Transactions Section */}
