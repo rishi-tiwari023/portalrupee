@@ -4,7 +4,9 @@ import {
   getMyAccounts,
   getAccountDetails,
   getAccountBalance,
-  updateAccountStatus
+  updateAccountStatus,
+  getAllAccounts,
+  getAccountByNumber
 } from '../controllers/account.controller.js';
 import { isAuth, checkRole } from '../middleware/authMiddleware.js';
 import validate from '../middleware/validate.js';
@@ -16,6 +18,8 @@ router.use(isAuth);
 
 router.post('/', validate(createAccountSchema), createAccount);
 router.get('/', getMyAccounts);
+router.get('/admin/all', checkRole('MANAGER'), getAllAccounts);
+router.get('/number/:accountNumber', getAccountByNumber);
 router.get('/:id', getAccountDetails);
 router.get('/:id/balance', getAccountBalance);
 

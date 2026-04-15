@@ -45,7 +45,9 @@ export const createAccount = async (req, res, next) => {
 
 export const getMyAccounts = async (req, res, next) => {
   try {
-    const accounts = await Account.find({ user: req.user.id }).sort({ createdAt: -1 });
+    const accounts = await Account.find({ user: req.user.id })
+      .populate('user', 'firstName lastName email mobile')
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -62,7 +64,7 @@ export const getAccountDetails = async (req, res, next) => {
     const account = await Account.findOne({
       _id: req.params.id,
       user: req.user.id,
-    });
+    }).populate('user', 'firstName lastName email mobile');
 
     if (!account) {
       return next(new AppError('Account not found or unauthorized', 404));
@@ -71,6 +73,61 @@ export const getAccountDetails = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: account,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAccountByNumber = async (req, res, next) => {
+  try {
+    const { accountNumber } = req.params;
+
+    // Check if user is looking for their own account or is a manager
+    const account = await Account.findOne({ accountNumber })
+      .populate('user', 'firstName lastName email mobile');
+
+    if (!account) {
+      return next(new AppError('Account not found', 404));
+    }
+
+    // Role-based access check
+    if (req.user.role !== 'MANAGER' && req.user.id !== account.user._id.toString()) {
+      return next(new AppError('You are not authorized to view this account info', 403));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: account,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllAccounts = async (req, res, next) => {
+  try {
+    // Only Managers can access this
+    if (req.user.role !== 'MANAGER') {
+      return next(new AppError('Unauthorized access', 403));
+    }
+
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+
+    const accounts = await Account.find()
+      .populate('user', 'firstName lastName email mobile')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Account.countDocuments();
+
+    res.status(200).json({
+      success: true,
+      results: accounts.length,
+      total,
+      data: accounts,
     });
   } catch (error) {
     next(error);
@@ -102,11 +159,15 @@ export const getAccountBalance = async (req, res, next) => {
 export const updateAccountStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
-
     const account = await Account.findById(req.params.id);
 
     if (!account) {
       return next(new AppError('Account not found', 404));
+    }
+
+    // New logic: Prevent closing account if balance is not zero
+    if (status === 'CLOSED' && account.balance > 0) {
+      return next(new AppError('Account cannot be closed while balance is greater than zero', 400));
     }
 
     account.status = status;
