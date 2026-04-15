@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDashboardSummary } from '../store/slices/dashboardSlice';
+import { useNavigate } from 'react-router-dom';
 import {
   Plus,
   Send,
@@ -13,11 +14,14 @@ import {
   CreditCard
 } from 'lucide-react';
 import AccountSummaryCard from '../components/AccountSummaryCard';
+import CreateAccountModal from '../components/CreateAccountModal';
 
 const DashboardHome = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { summary, loading } = useSelector((state) => state.dashboard);
+  const [isOpeningAccount, setIsOpeningAccount] = useState(false);
 
   useEffect(() => {
     if (user?._id) {
@@ -96,7 +100,18 @@ const DashboardHome = () => {
 
             <div className="space-y-6">
               <div className="flex gap-4 text-indigo-100/40 font-mono text-lg tracking-[0.3em]">
-                <span>****</span> <span>****</span> <span>****</span> <span className="text-white font-bold tracking-normal">4290</span>
+                {summary?.accounts?.length > 0 ? (
+                  <>
+                    <span>****</span> <span>****</span> 
+                    <span className="text-white font-bold tracking-normal">
+                      {summary.accounts[0].accountNumber.slice(-4)}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span>****</span> <span>****</span> <span>****</span>
+                  </>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
@@ -187,7 +202,12 @@ const DashboardHome = () => {
       <div className="mb-10">
         <div className="flex items-center justify-between mb-6 px-2">
           <h3 className="text-slate-800 text-xl font-black tracking-tight">My Accounts</h3>
-          <button className="text-indigo-600 hover:text-indigo-700 text-sm font-bold hover:underline">Manage Accounts</button>
+          <button 
+            onClick={() => navigate('/dashboard/accounts')}
+            className="text-indigo-600 hover:text-indigo-700 text-sm font-bold hover:underline"
+          >
+            Manage Accounts
+          </button>
         </div>
         
         {summary?.accounts?.length > 0 ? (
@@ -203,7 +223,10 @@ const DashboardHome = () => {
              </div>
              <h4 className="text-slate-800 font-black text-lg mb-2">No Accounts Found</h4>
              <p className="text-slate-500 font-medium mb-6">You don't have any active accounts yet. Open one to get started.</p>
-             <button className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 active:scale-95 transition-all">
+             <button 
+               onClick={() => setIsOpeningAccount(true)}
+               className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 active:scale-95 transition-all"
+             >
                Open Account
              </button>
            </div>
@@ -271,6 +294,10 @@ const DashboardHome = () => {
           </button>
         </div>
       </div>
+      <CreateAccountModal 
+        isOpen={isOpeningAccount} 
+        onClose={() => setIsOpeningAccount(false)} 
+      />
     </div>
   );
 };
