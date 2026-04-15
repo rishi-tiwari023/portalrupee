@@ -1,17 +1,31 @@
-import React from 'react';
-import { CreditCard, Eye, ArrowRight, ShieldCheck, ShieldAlert } from 'lucide-react';
+import React, { useState } from 'react';
+import { CreditCard, Eye, EyeOff, ArrowRight, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const AccountSummaryCard = ({ account }) => {
-  const { accountNumber, accountType, balance, status } = account;
+  const navigate = useNavigate();
+  const [showBalance, setShowBalance] = useState(false);
+  const { _id, accountNumber, accountType, balance, status } = account;
 
   const isBlocked = status === 'BLOCKED' || status === 'CLOSED';
   const lastFourDigits = accountNumber ? accountNumber.slice(-4) : 'XXXX';
-  const prefixDots = '•••• •••• •••• ';
+  const prefixDots = '•••• •••• ';
+
+  const toggleBalance = (e) => {
+    e.stopPropagation();
+    setShowBalance(!showBalance);
+  };
+
+  const goToDetails = () => {
+    navigate(`/dashboard/accounts?id=${_id}`);
+  };
 
   return (
-    <div className={`relative p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-xl group overflow-hidden
+    <div
+      onClick={goToDetails}
+      className={`relative p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-xl group overflow-hidden cursor-pointer
       ${isBlocked ? 'bg-slate-50 border-slate-200' : 'bg-gradient-to-br from-white to-slate-50 border-indigo-100'}`}>
-      
+
       {/* Background Decorators */}
       {!isBlocked && (
         <div className="absolute top-0 right-0 p-8 rounded-full bg-indigo-50/50 -mr-10 -mt-10 blur-xl group-hover:bg-indigo-100/50 transition-colors" />
@@ -41,9 +55,12 @@ const AccountSummaryCard = ({ account }) => {
             </div>
           </div>
         </div>
-        
-        <button className="text-slate-400 hover:text-indigo-600 transition-colors p-2 hover:bg-indigo-50 rounded-full active:scale-95">
-          <Eye className="w-5 h-5" />
+
+        <button
+          onClick={toggleBalance}
+          className="text-slate-400 hover:text-indigo-600 transition-colors p-2 hover:bg-indigo-50 rounded-full active:scale-95"
+        >
+          {showBalance ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
         </button>
       </div>
 
@@ -53,7 +70,10 @@ const AccountSummaryCard = ({ account }) => {
         <div className="flex items-baseline gap-1">
           <span className={`text-lg font-bold ${isBlocked ? 'text-slate-400' : 'text-slate-500'}`}>₹</span>
           <span className={`text-4xl font-black tracking-tighter ${isBlocked ? 'text-slate-600' : 'text-slate-900'}`}>
-            {balance ? balance.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}
+            {showBalance
+              ? (balance ? balance.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00')
+              : '••••••'
+            }
           </span>
         </div>
       </div>
@@ -67,9 +87,12 @@ const AccountSummaryCard = ({ account }) => {
             <span className="text-slate-800 font-black">{lastFourDigits}</span>
           </div>
         </div>
-        
+
         {!isBlocked && (
-          <button className="flex items-center gap-1 text-sm font-black text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-4 py-2 rounded-xl transition-colors hover:bg-indigo-100 active:scale-95">
+          <button
+            onClick={(e) => { e.stopPropagation(); goToDetails(); }}
+            className="flex items-center gap-1 text-sm font-black text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-4 py-2 rounded-xl transition-colors hover:bg-indigo-100 active:scale-95"
+          >
             Details <ArrowRight className="w-4 h-4 ml-1" />
           </button>
         )}

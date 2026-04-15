@@ -14,6 +14,7 @@ import DashboardHome from './pages/DashboardHome';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import Accounts from './pages/Accounts';
 
 import './App.css';
 
@@ -50,7 +51,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'accounts',
-        element: <div className="p-8 h-full flex items-center justify-center text-slate-400 font-medium text-xl bg-white/50 backdrop-blur-sm rounded-3xl border border-white">Accounts View (Pending)</div>
+        element: <Accounts />
       },
       {
         path: 'transfer',
