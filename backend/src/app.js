@@ -28,7 +28,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/accounts', accountRoutes);
-
+app.use('/api/v1/dashboard', dashboardRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
@@ -38,8 +38,6 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
-
-app.use('/api/dashboard', dashboardRoutes);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
