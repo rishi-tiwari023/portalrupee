@@ -45,6 +45,34 @@ export const isAuth = async (req, res, next) => {
 };
 
 /**
+ * Middleware to verify TPIN for transactions
+ */
+export const verifyTPIN = async (req, res, next) => {
+  try {
+    const { tpin } = req.body;
+
+    if (!tpin) {
+      return next(new AppError('Please provide TPIN for this transaction', 400));
+    }
+
+    const user = await User.findById(req.user.id).select('+tpin');
+
+    if (!user.tpin) {
+      return next(new AppError('TPIN not set. Please set your TPIN first.', 400));
+    }
+
+    const isCorrect = await user.compareTPIN(tpin, user.tpin);
+    if (!isCorrect) {
+      return next(new AppError('Incorrect TPIN', 401));
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Middleware to restrict access based on roles
  * @param {...String} roles Allowed roles
  */
