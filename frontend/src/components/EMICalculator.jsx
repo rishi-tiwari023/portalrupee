@@ -186,7 +186,6 @@ const EMICalculator = () => {
                     </div>
 
                     <div className="emi-actions">
-                        {/* TODO: Implement get as mail functionality using nodemailer */}
                         <button className="btn-primary" disabled>
                             Get this as mail
                         </button>
