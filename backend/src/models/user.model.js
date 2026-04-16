@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Password is required'],
       select: false,
     },
+    tpin: {
+      type: String,
+      select: false,
+    },
     role: {
       type: String,
       enum: ['CUSTOMER', 'CASHIER', 'MANAGER'],
@@ -42,10 +46,16 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Hash password before saving
+// Hash password and TPIN before saving
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 12);
+  }
+
+  if (this.isModified('tpin')) {
+    this.tpin = await bcrypt.hash(this.tpin, 12);
+  }
+
   next();
 });
 
@@ -55,6 +65,14 @@ userSchema.methods.comparePassword = async function (
   userPassword
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+// Instance method to compare TPIN
+userSchema.methods.compareTPIN = async function (
+  candidateTPIN,
+  userTPIN
+) {
+  return await bcrypt.compare(candidateTPIN, userTPIN);
 };
 
 const User = mongoose.model('User', userSchema);
