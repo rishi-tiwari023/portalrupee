@@ -7,7 +7,7 @@ const initialState = {
   user: null,
   token: token || null,
   isAuthenticated: !!token,
-  loading: !!token, // Set loading to true initially if token exists to wait for getMe()
+  loading: !!token,
   error: null,
 };
 
@@ -55,6 +55,30 @@ export const updateProfile = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Update failed');
+    }
+  }
+);
+
+export const setTPIN = createAsyncThunk(
+  'auth/setTPIN',
+  async (tpin, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/tpin/set', { tpin });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to set TPIN');
+    }
+  }
+);
+
+export const changeTPIN = createAsyncThunk(
+  'auth/changeTPIN',
+  async ({ oldTPIN, newTPIN }, { rejectWithValue }) => {
+    try {
+      const response = await api.put('/tpin/change', { oldTPIN, newTPIN });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to change TPIN');
     }
   }
 );
@@ -149,6 +173,30 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // setTPIN
+      .addCase(setTPIN.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(setTPIN.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(setTPIN.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // changeTPIN
+      .addCase(changeTPIN.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(changeTPIN.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(changeTPIN.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

@@ -1,13 +1,14 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { User, Mail, Shield, Phone, Calendar, MapPin, Edit3, X, Save, Loader2 } from 'lucide-react';
+import { User, Mail, Shield, Phone, Calendar, MapPin, Edit3, X, Save, Loader2, ArrowRight } from 'lucide-react';
 /* eslint-disable no-unused-vars */
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFormik } from 'formik';
 import * as z from 'zod';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
-import { updateProfile } from '../store/slices/authSlice';
+import { updateProfile, setTPIN, updateUser, changeTPIN } from '../store/slices/authSlice';
 import { toast } from 'react-toastify';
+import TPINSetupWizard from '../components/TPINSetupWizard';
 
 const profileSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -20,6 +21,19 @@ const Profile = () => {
   const dispatch = useDispatch();
   const { user, loading } = useSelector((state) => state.auth);
   const [isEditing, setIsEditing] = React.useState(false);
+  const [showTPINWizard, setShowTPINWizard] = React.useState(false);
+
+  const handleTPINSuccess = async (pin) => {
+    try {
+      await dispatch(setTPIN(pin)).unwrap();
+      toast.success('TPIN setup successfully!');
+      dispatch(updateUser({ tpinSet: true }));
+      setShowTPINWizard(false);
+    } catch (error) {
+      toast.error(error || 'Failed to update TPIN');
+      throw error;
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -61,40 +75,40 @@ const Profile = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Header Profile Section */}
-      <motion.div 
+      <motion.div
         initial="hidden"
         animate="visible"
         variants={containerVariants}
         className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 p-8 z-20">
-           {!isEditing ? (
-             <button 
-               onClick={() => setIsEditing(true)}
-               className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-medium hover:bg-indigo-100 transition-colors shadow-sm"
-             >
-                <Edit3 size={18} />
-                <span>Edit Profile</span>
-             </button>
-           ) : (
-             <div className="flex gap-2">
-               <button 
-                 onClick={() => setIsEditing(false)}
-                 className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition-colors"
-               >
-                  <X size={18} />
-                  <span>Cancel</span>
-               </button>
-               <button 
-                 onClick={formik.handleSubmit}
-                 disabled={loading}
-                 className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 disabled:opacity-50"
-               >
-                  {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                  <span>Save Changes</span>
-               </button>
-             </div>
-           )}
+          {!isEditing ? (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-medium hover:bg-indigo-100 transition-colors shadow-sm"
+            >
+              <Edit3 size={18} />
+              <span>Edit Profile</span>
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition-colors"
+              >
+                <X size={18} />
+                <span>Cancel</span>
+              </button>
+              <button
+                onClick={formik.handleSubmit}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 disabled:opacity-50"
+              >
+                {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                <span>Save Changes</span>
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
@@ -127,7 +141,7 @@ const Profile = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Contact Information */}
-        <motion.div 
+        <motion.div
           initial="hidden"
           animate="visible"
           variants={containerVariants}
@@ -140,14 +154,14 @@ const Profile = () => {
 
           <AnimatePresence mode="wait">
             {!isEditing ? (
-              <motion.div 
+              <motion.div
                 key="view-info"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
                 className="space-y-6"
               >
-                <motion.div variants={itemVariants} className="flex items-start gap-4">
+                <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
                     <Mail size={18} />
                   </div>
@@ -155,9 +169,9 @@ const Profile = () => {
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Email Address</p>
                     <p className="text-slate-700 font-medium">{user?.email}</p>
                   </div>
-                </motion.div>
+                </div>
 
-                <motion.div variants={itemVariants} className="flex items-start gap-4">
+                <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
                     <Phone size={18} />
                   </div>
@@ -165,9 +179,9 @@ const Profile = () => {
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Mobile Number</p>
                     <p className="text-slate-700 font-medium">{user?.mobile || '+91 99999 88888'}</p>
                   </div>
-                </motion.div>
+                </div>
 
-                <motion.div variants={itemVariants} className="flex items-start gap-4">
+                <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
                     <Shield size={18} />
                   </div>
@@ -175,10 +189,10 @@ const Profile = () => {
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Account Role</p>
                     <p className="text-slate-700 font-medium capitalize">{user?.role?.toLowerCase()}</p>
                   </div>
-                </motion.div>
+                </div>
               </motion.div>
             ) : (
-              <motion.form 
+              <motion.form
                 key="edit-form"
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -249,40 +263,109 @@ const Profile = () => {
           </AnimatePresence>
         </motion.div>
 
-        {/* Security / Account Status */}
-        <motion.div 
+        {/* Security & PIN */}
+        <motion.div
           initial="hidden"
           animate="visible"
           variants={containerVariants}
           className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100"
         >
-          <h2 className="text-xl font-bold text-slate-800 mb-6">Account Status</h2>
-          
-          <div className="p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-slate-600 font-medium">KYC Verification</span>
-              <span className="px-2 py-1 bg-amber-100 text-amber-600 text-[10px] font-bold rounded shadow-sm uppercase">Pending</span>
-            </div>
-            <p className="text-sm text-slate-400 leading-relaxed mb-4">
-              Your account is currently in "Limited" mode. Complete your KYC verification to unlock full transaction limits and messaging features.
-            </p>
-            <button className="w-full py-3 bg-white text-indigo-600 border border-indigo-100 rounded-xl font-semibold shadow-sm hover:bg-indigo-50 transition-all">
-              Start KYC Verification
-            </button>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <Shield size={20} className="text-indigo-600" />
+              <span>Security & PIN</span>
+            </h2>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-slate-100 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-600 font-medium">Last Login</span>
-              <span className="text-slate-400 text-sm italic font-medium">Yet to decide</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-600 font-medium">Device</span>
-              <span className="text-slate-400 text-sm italic font-medium">Yet to decide</span>
-            </div>
-          </div>
+          <AnimatePresence mode="wait">
+            {!showTPINWizard ? (
+              <motion.div
+                key="security-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-slate-700 font-semibold">Transaction PIN</span>
+                    <span className={`px-2 py-1 text-[10px] font-bold rounded uppercase ${user?.tpinSet ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                      {user?.tpinSet ? 'Active' : 'Not Set'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-400 mb-4">
+                    Your TPIN is required for all transfers and withdrawals. Keep it secure.
+                  </p>
+                  <button
+                    onClick={() => setShowTPINWizard(true)}
+                    className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all"
+                  >
+                    {user?.tpinSet ? 'Change TPIN' : 'Setup TPIN'}
+                  </button>
+                </div>
+
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center justify-between group cursor-pointer" onClick={() => toast.info("Coming Soon!")}>
+                    <span className="text-slate-600 font-medium group-hover:text-indigo-600 transition-colors">Forgot TPIN?</span>
+                    <ArrowRight size={16} className="text-slate-300 group-hover:text-indigo-600 transition-all" />
+                  </div>
+                  <div className="flex items-center justify-between group cursor-pointer" onClick={() => toast.info("Coming Soon!")}>
+                    <span className="text-slate-600 font-medium group-hover:text-indigo-600 transition-colors">Two-Factor Authentication</span>
+                    <span className="text-[10px] font-bold text-slate-300 uppercase">Disabled</span>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="wizard-view"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+              >
+                <TPINSetupWizard
+                  onCancel={() => setShowTPINWizard(false)}
+                  onSuccess={handleTPINSuccess}
+                  title={user?.tpinSet ? "Change TPIN" : "Setup TPIN"}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
+
+      {/* Account Status */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 max-w-none md:col-span-2"
+      >
+        <h2 className="text-xl font-bold text-slate-800 mb-6 font-display">Account Status</h2>
+
+        <div className="p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-slate-600 font-medium">KYC Verification</span>
+            <span className="px-2 py-1 bg-amber-100 text-amber-600 text-[10px] font-bold rounded shadow-sm uppercase font-display">Pending</span>
+          </div>
+          <p className="text-sm text-slate-400 leading-relaxed max-w-2xl mb-4 font-medium">
+            Your account is currently in "Limited" mode. Complete your KYC verification to unlock full transaction limits and messaging features.
+          </p>
+          <button className="px-6 py-3 bg-white text-indigo-600 border border-indigo-100 rounded-xl font-bold shadow-sm hover:bg-indigo-50 transition-all">
+            Start KYC Verification
+          </button>
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
+            <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Last Login</span>
+            <span className="text-slate-600 font-extrabold text-sm">Today, 10:45 AM</span>
+          </div>
+          <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
+            <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Device</span>
+            <span className="text-slate-600 font-extrabold text-sm">Chrome (Windows 11)</span>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };
