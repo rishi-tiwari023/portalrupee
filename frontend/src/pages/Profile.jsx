@@ -23,11 +23,18 @@ const Profile = () => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [showTPINWizard, setShowTPINWizard] = React.useState(false);
 
-  const handleTPINSuccess = async (pin) => {
+  const handleTPINSuccess = async (payload) => {
     try {
-      await dispatch(setTPIN(pin)).unwrap();
-      toast.success('TPIN setup successfully!');
-      dispatch(updateUser({ tpinSet: true }));
+      if (typeof payload === 'object') {
+        // Change mode
+        await dispatch(changeTPIN(payload)).unwrap();
+        toast.success('TPIN updated successfully!');
+      } else {
+        // Setup mode
+        await dispatch(setTPIN(payload)).unwrap();
+        toast.success('TPIN setup successfully!');
+        dispatch(updateUser({ tpinSet: true }));
+      }
       setShowTPINWizard(false);
     } catch (error) {
       toast.error(error || 'Failed to update TPIN');
@@ -325,6 +332,7 @@ const Profile = () => {
                 <TPINSetupWizard
                   onCancel={() => setShowTPINWizard(false)}
                   onSuccess={handleTPINSuccess}
+                  isChangeMode={user?.tpinSet}
                   title={user?.tpinSet ? "Change TPIN" : "Setup TPIN"}
                 />
               </motion.div>
