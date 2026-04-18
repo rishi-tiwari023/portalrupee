@@ -4,11 +4,7 @@ import AppError from '../utils/AppError.js';
 
 export const getSummary = async (req, res, next) => {
   try {
-    const { userId } = req.query;
-
-    if (!userId) {
-      return next(new AppError('userId query parameter is required for dashboard summary (Mock Auth)', 400));
-    }
+    const userId = req.user.id;
 
     const user = await User.findById(userId);
     if (!user) {

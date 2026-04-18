@@ -1,27 +1,29 @@
 import mongoose from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 
 const transactionSchema = new mongoose.Schema(
   {
     sender: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
     },
     receiver: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
     },
     senderAccount: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Account',
-      required: true,
+      required: function () {
+        return this.type === 'WITHDRAW' || this.type === 'TRANSFER';
+      },
     },
     receiverAccount: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Account',
-      required: true,
+      required: function () {
+        return this.type === 'DEPOSIT' || this.type === 'TRANSFER';
+      },
     },
     amount: {
       type: Number,
@@ -31,14 +33,12 @@ const transactionSchema = new mongoose.Schema(
     type: {
       type: String,
       enum: ['DEPOSIT', 'WITHDRAW', 'TRANSFER'],
-      default: 'TRANSFER',
-      required: true,
+      required: [true, 'Transaction type is required'],
     },
     status: {
       type: String,
       enum: ['PENDING', 'SUCCESS', 'FAILED'],
-      default: 'SUCCESS', // Default to SUCCESS for immediate atomic transfers
-      required: true,
+      default: 'SUCCESS',
     },
     description: {
       type: String,
@@ -47,7 +47,11 @@ const transactionSchema = new mongoose.Schema(
     transactionId: {
       type: String,
       unique: true,
-      default: () => `TXN-${uuidv4().split('-')[0].toUpperCase()}`,
+      default: () => `TXN-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
+    },
+    metadata: {
+      type: Map,
+      of: String,
     },
   },
   {
@@ -55,9 +59,11 @@ const transactionSchema = new mongoose.Schema(
   }
 );
 
-// Indexing for faster history lookups
+// Indexes for performance
 transactionSchema.index({ sender: 1, createdAt: -1 });
 transactionSchema.index({ receiver: 1, createdAt: -1 });
+transactionSchema.index({ senderAccount: 1 });
+transactionSchema.index({ receiverAccount: 1 });
 transactionSchema.index({ transactionId: 1 });
 
 const Transaction = mongoose.model('Transaction', transactionSchema);

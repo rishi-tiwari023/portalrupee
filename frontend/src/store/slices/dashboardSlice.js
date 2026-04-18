@@ -3,9 +3,9 @@ import api from '../../api/axios';
 
 export const fetchDashboardSummary = createAsyncThunk(
   'dashboard/fetchSummary',
-  async (userId, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/dashboard/summary?userId=${userId}`);
+      const response = await api.get('/dashboard/summary');
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch dashboard summary');

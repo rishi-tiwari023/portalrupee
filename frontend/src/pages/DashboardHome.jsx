@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDashboardSummary } from '../store/slices/dashboardSlice';
+import { useNavigate } from 'react-router-dom';
 import {
   Plus,
   Send,
@@ -9,17 +10,22 @@ import {
   ArrowDownLeft,
   Clock,
   RefreshCcw,
-  LayoutGrid
+  LayoutGrid,
+  CreditCard
 } from 'lucide-react';
+import AccountSummaryCard from '../components/AccountSummaryCard';
+import CreateAccountModal from '../components/CreateAccountModal';
 
 const DashboardHome = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { summary, loading } = useSelector((state) => state.dashboard);
+  const [isOpeningAccount, setIsOpeningAccount] = useState(false);
 
   useEffect(() => {
     if (user?._id) {
-      dispatch(fetchDashboardSummary(user._id));
+      dispatch(fetchDashboardSummary());
     }
   }, [dispatch, user]);
 
@@ -30,7 +36,6 @@ const DashboardHome = () => {
     { name: 'Analytics', icon: LayoutGrid, color: 'bg-cyan-500', textColor: 'text-cyan-600' },
   ];
 
-  // Mock transactions for Day 6 (as per placeholders requirement)
   const mockTransactions = [
     { id: 1, type: 'DEPOSIT', amount: 3500, date: '2026-04-12', name: 'Cash Deposit', status: 'COMPLETED' },
     { id: 2, type: 'TRANSFER', amount: -600, date: '2026-04-11', name: 'Cafe 2004', status: 'COMPLETED' },
@@ -58,7 +63,7 @@ const DashboardHome = () => {
           </p>
         </div>
         <button
-          onClick={() => dispatch(fetchDashboardSummary(user?._id))}
+          onClick={() => dispatch(fetchDashboardSummary())}
           className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all shadow-sm active:scale-95"
         >
           <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -73,7 +78,7 @@ const DashboardHome = () => {
           <div className="premium-card relative overflow-hidden p-6 sm:p-8 bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4338ca] text-white rounded-[2.5rem] shadow-2xl shadow-indigo-200 group transition-all duration-500 hover:scale-[1.02]">
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-indigo-400/20 transition-colors" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-400/10 rounded-full -ml-24 -mb-24 blur-3xl" />
-            
+
             <div className="flex justify-between items-start mb-12">
               <div>
                 <h3 className="text-indigo-200/80 text-xs font-black uppercase tracking-[0.2em] mb-1">Available Balance</h3>
@@ -85,19 +90,30 @@ const DashboardHome = () => {
                 </div>
               </div>
               <div className="w-14 h-10 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 flex items-center justify-center overflow-hidden">
-                 <div className="w-8 h-6 bg-amber-400/80 rounded-sm relative shadow-inner">
-                    <div className="absolute inset-0 grid grid-cols-3 grid-rows-2 gap-[1px] opacity-30">
-                       {[...Array(6)].map((_, i) => <div key={i} className="border-[0.5px] border-black/20" />)}
-                    </div>
-                 </div>
+                <div className="w-8 h-6 bg-amber-400/80 rounded-sm relative shadow-inner">
+                  <div className="absolute inset-0 grid grid-cols-3 grid-rows-2 gap-[1px] opacity-30">
+                    {[...Array(6)].map((_, i) => <div key={i} className="border-[0.5px] border-black/20" />)}
+                  </div>
+                </div>
               </div>
             </div>
-            
+
             <div className="space-y-6">
               <div className="flex gap-4 text-indigo-100/40 font-mono text-lg tracking-[0.3em]">
-                <span>****</span> <span>****</span> <span>****</span> <span className="text-white font-bold tracking-normal">4290</span>
+                {summary?.accounts?.length > 0 ? (
+                  <>
+                    <span>****</span> <span>****</span> 
+                    <span className="text-white font-bold tracking-normal">
+                      {summary.accounts[0].accountNumber.slice(-4)}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span>****</span> <span>****</span> <span>****</span>
+                  </>
+                )}
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="px-4 py-2 bg-indigo-500/20 backdrop-blur-md border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-indigo-100">
@@ -105,8 +121,8 @@ const DashboardHome = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                   <div className="w-8 h-8 rounded-full bg-rose-500/80 border border-white/20" />
-                   <div className="w-8 h-8 rounded-full bg-amber-500/80 border border-white/20 -ml-4" />
+                  <div className="w-8 h-8 rounded-full bg-rose-500/80 border border-white/20" />
+                  <div className="w-8 h-8 rounded-full bg-amber-500/80 border border-white/20 -ml-4" />
                 </div>
               </div>
             </div>
@@ -134,7 +150,7 @@ const DashboardHome = () => {
         {/* Savings Goals Card - More Detailed & Glowing */}
         <div className="premium-card p-6 sm:p-8 bg-slate-900 text-white rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col border border-slate-800">
           <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 rounded-full -mr-20 -mt-20 blur-3xl" />
-          
+
           <div className="flex justify-between items-center mb-8 sm:mb-10">
             <div>
               <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Savings Goal</h3>
@@ -151,11 +167,11 @@ const DashboardHome = () => {
                 <span className="text-4xl font-black text-indigo-400 tracking-tighter">₹12,450<span className="text-xl text-slate-600">.00</span></span>
                 <span className="text-slate-500 text-xs font-bold">of ₹20,000</span>
               </div>
-              
+
               <div className="h-4 w-full bg-slate-800/50 rounded-full overflow-hidden p-1 relative border border-slate-700">
-                <div 
-                  className="h-full bg-gradient-to-r from-indigo-600 via-indigo-400 to-cyan-400 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all duration-1000 ease-out" 
-                  style={{ width: '62%' }} 
+                <div
+                  className="h-full bg-gradient-to-r from-indigo-600 via-indigo-400 to-cyan-400 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all duration-1000 ease-out"
+                  style={{ width: '62%' }}
                 />
               </div>
               <div className="flex justify-between mt-3">
@@ -163,23 +179,58 @@ const DashboardHome = () => {
                 <span className="text-sm font-black text-indigo-400">62%</span>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4 py-4 border-y border-white/5">
-               <div>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Daily Avg</p>
-                  <p className="text-sm font-black text-white">₹450.00</p>
-               </div>
-               <div>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">ETA</p>
-                  <p className="text-sm font-black text-white">18 Days</p>
-               </div>
+              <div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Daily Avg</p>
+                <p className="text-sm font-black text-white">₹450.00</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">ETA</p>
+                <p className="text-sm font-black text-white">18 Days</p>
+              </div>
             </div>
           </div>
-          
+
           <button className="mt-8 w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-black text-sm transition-all active:scale-95 shadow-lg shadow-indigo-600/20">
-             Customize Goal
+            Customize Goal
           </button>
         </div>
+      </div>
+
+      {/* Individual Accounts Section */}
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-6 px-2">
+          <h3 className="text-slate-800 text-xl font-black tracking-tight">My Accounts</h3>
+          <button 
+            onClick={() => navigate('/dashboard/accounts')}
+            className="text-indigo-600 hover:text-indigo-700 text-sm font-bold hover:underline"
+          >
+            Manage Accounts
+          </button>
+        </div>
+        
+        {summary?.accounts?.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {summary.accounts.map((account, index) => (
+              <AccountSummaryCard key={account._id || index} account={account} />
+            ))}
+          </div>
+        ) : (
+           <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50">
+             <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+               <CreditCard className="w-8 h-8" />
+             </div>
+             <h4 className="text-slate-800 font-black text-lg mb-2">No Accounts Found</h4>
+             <p className="text-slate-500 font-medium mb-6">You don't have any active accounts yet. Open one to get started.</p>
+             <button 
+               onClick={() => setIsOpeningAccount(true)}
+               className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 active:scale-95 transition-all"
+             >
+               Open Account
+             </button>
+           </div>
+        )}
       </div>
 
       {/* Transactions Section */}
@@ -243,6 +294,10 @@ const DashboardHome = () => {
           </button>
         </div>
       </div>
+      <CreateAccountModal 
+        isOpen={isOpeningAccount} 
+        onClose={() => setIsOpeningAccount(false)} 
+      />
     </div>
   );
 };

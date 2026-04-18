@@ -35,10 +35,22 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
+    tpinSet: {
+      type: Boolean,
+      default: false,
+    },
     role: {
       type: String,
       enum: ['CUSTOMER', 'CASHIER', 'MANAGER'],
       default: 'CUSTOMER',
+    },
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    twoFactorSecret: {
+      type: String,
+      select: false,
     },
   },
   {
@@ -54,6 +66,7 @@ userSchema.pre('save', async function (next) {
 
   if (this.isModified('tpin')) {
     this.tpin = await bcrypt.hash(this.tpin, 12);
+    this.tpinSet = true;
   }
 
   next();

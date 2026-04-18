@@ -30,6 +30,15 @@ export const isAuth = async (req, res, next) => {
       return next(new AppError('The user belonging to this token no longer exists.', 401));
     }
 
+    // Backfill tpinSet if tpin exists but tpinSet is false
+    if (!user.tpinSet) {
+      const userWithTpin = await User.findById(user._id).select('+tpin');
+      if (userWithTpin.tpin) {
+        user.tpinSet = true;
+        await User.updateOne({ _id: user._id }, { tpinSet: true });
+      }
+    }
+
     // 4) Grant access to protected route
     req.user = user;
     next();

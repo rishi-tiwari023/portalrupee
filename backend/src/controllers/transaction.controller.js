@@ -4,7 +4,125 @@ import Transaction from '../models/transaction.model.js';
 import AppError from '../utils/AppError.js';
 
 /**
- * Transfer money from current user to another user
+ * @desc    Deposit money to an account
+ * @route   POST /api/v1/transactions/deposit
+ * @access  Private
+ */
+export const deposit = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { accountNumber, amount, description } = req.body;
+
+    const account = await Account.findOne({ accountNumber }).session(session);
+    if (!account) {
+      throw new AppError('Account not found', 404);
+    }
+
+    if (account.status !== 'ACTIVE') {
+      throw new AppError('Account is not active', 400);
+    }
+
+    const transactionArray = await Transaction.create(
+      [
+        {
+          receiverAccount: account._id,
+          amount,
+          type: 'DEPOSIT',
+          status: 'SUCCESS',
+          description: description || 'Deposit to account',
+        },
+      ],
+      { session }
+    );
+
+    account.balance += amount;
+    await account.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Deposit successful',
+      data: {
+        transaction: transactionArray[0],
+        newBalance: account.balance,
+      },
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    next(error);
+  }
+};
+
+/**
+ * @desc    Withdraw money from an account
+ * @route   POST /api/v1/transactions/withdraw
+ * @access  Private
+ */
+export const withdraw = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { accountNumber, amount, description } = req.body;
+
+    const account = await Account.findOne({ accountNumber }).session(session);
+    if (!account) {
+      throw new AppError('Account not found', 404);
+    }
+
+    if (req.user.role !== 'MANAGER' && account.user.toString() !== req.user.id) {
+      throw new AppError('You are not authorized to withdraw from this account', 403);
+    }
+
+    if (account.status !== 'ACTIVE') {
+      throw new AppError('Account is not active', 400);
+    }
+
+    if (account.balance < amount) {
+      throw new AppError('Insufficient balance', 400);
+    }
+
+    const transactionArray = await Transaction.create(
+      [
+        {
+          senderAccount: account._id,
+          amount,
+          type: 'WITHDRAW',
+          status: 'SUCCESS',
+          description: description || 'Withdrawal from account',
+        },
+      ],
+      { session }
+    );
+
+    account.balance -= amount;
+    await account.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Withdrawal successful',
+      data: {
+        transaction: transactionArray[0],
+        newBalance: account.balance,
+      },
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    next(error);
+  }
+};
+
+/**
+ * @desc    Transfer money from current user to another user
+ * @route   POST /api/v1/transactions/transfer
+ * @access  Private (TPIN Verified)
  */
 export const transferMoney = async (req, res, next) => {
   const session = await mongoose.startSession();
@@ -28,7 +146,7 @@ export const transferMoney = async (req, res, next) => {
       throw new AppError('Receiver active account not found or account is not active', 404);
     }
 
-    const transaction = await Transaction.create(
+    const transactionArray = await Transaction.create(
       [
         {
           sender: senderId,
@@ -57,7 +175,7 @@ export const transferMoney = async (req, res, next) => {
       status: 'success',
       message: 'Transfer successful',
       data: {
-        transaction: transaction[0],
+        transaction: transactionArray[0],
         newBalance: senderAccount.balance,
       },
     });
