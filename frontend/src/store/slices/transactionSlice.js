@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import API from '../../api/axios';
 
-// --- Day 10 Actions ---
 export const deposit = createAsyncThunk(
   'transaction/deposit',
   async (transactionData, { rejectWithValue }) => {
@@ -30,9 +29,6 @@ export const withdraw = createAsyncThunk(
   }
 );
 
-// --- Day 11 Actions ---
-
-// Search users by name, email, or mobile
 export const searchUsers = createAsyncThunk(
   'transaction/searchUsers',
   async (query, { rejectWithValue }) => {
@@ -149,10 +145,10 @@ const transactionSlice = createSlice({
   },
 });
 
-export const { 
-  resetTransactionState, 
-  clearSearchResults, 
-  clearTransactionStatus 
+export const {
+  resetTransactionState,
+  clearSearchResults,
+  clearTransactionStatus
 } = transactionSlice.actions;
 
 export default transactionSlice.reducer;
