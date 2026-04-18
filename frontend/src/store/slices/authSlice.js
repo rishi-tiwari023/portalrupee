@@ -35,6 +35,54 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+export const verify2FA = createAsyncThunk(
+  'auth/verify2FA',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/verify-2fa', data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || '2FA Verification failed');
+    }
+  }
+);
+
+export const get2FASetup = createAsyncThunk(
+  'auth/get2FASetup',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/2fa/setup');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to get 2FA setup');
+    }
+  }
+);
+
+export const enable2FA = createAsyncThunk(
+  'auth/enable2FA',
+  async (token, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/2fa/enable', { token });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to enable 2FA');
+    }
+  }
+);
+
+export const disable2FA = createAsyncThunk(
+  'auth/disable2FA',
+  async (token, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/2fa/disable', { token });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to disable 2FA');
+    }
+  }
+);
+
 export const getMe = createAsyncThunk(
   'auth/getMe',
   async (_, { rejectWithValue }) => {
@@ -137,6 +185,10 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
+        if (action.payload.data.requires2FA) {
+          // Handled by component to show 2FA input
+          return;
+        }
         state.isAuthenticated = true;
         state.user = action.payload.data.user;
         state.token = action.payload.data.accessToken;
@@ -145,6 +197,29 @@ const authSlice = createSlice({
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Verify 2FA
+      .addCase(verify2FA.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(verify2FA.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.data.user;
+        state.token = action.payload.data.accessToken;
+        localStorage.setItem('portalrupee_token', action.payload.data.accessToken);
+      })
+      .addCase(verify2FA.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Enable/Disable 2FA Fullfilled
+      .addCase(enable2FA.fulfilled, (state, action) => {
+        state.user.twoFactorEnabled = true;
+      })
+      .addCase(disable2FA.fulfilled, (state, action) => {
+        state.user.twoFactorEnabled = false;
       })
       // Get Me
       .addCase(getMe.pending, (state) => {
