@@ -30,9 +30,9 @@ export const fetchAccountDetails = createAsyncThunk(
 // Get account balance
 export const fetchAccountBalance = createAsyncThunk(
   'account/fetchAccountBalance',
-  async (accountId, { rejectWithValue }) => {
+  async ({ accountId, totpToken }, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/accounts/${accountId}/balance`);
+      const response = await api.post(`/accounts/${accountId}/balance`, { totpToken });
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch balance');
