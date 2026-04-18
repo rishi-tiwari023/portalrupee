@@ -55,7 +55,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'transfer',
-        element: <div className="p-8 h-full flex items-center justify-center text-slate-400 font-medium text-xl bg-white/50 backdrop-blur-sm rounded-3xl border border-white">Transfer Funds (Pending)</div>
+        element: <Transfer />
       },
       {
         path: 'transactions',
