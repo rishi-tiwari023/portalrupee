@@ -3,6 +3,14 @@ import crypto from 'crypto';
 
 const transactionSchema = new mongoose.Schema(
   {
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     senderAccount: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Account',
@@ -20,7 +28,7 @@ const transactionSchema = new mongoose.Schema(
     amount: {
       type: Number,
       required: [true, 'Transaction amount is required'],
-      min: [0, 'Amount cannot be negative'],
+      min: [1, 'Amount must be at least 1'],
     },
     type: {
       type: String,
@@ -30,13 +38,13 @@ const transactionSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ['PENDING', 'SUCCESS', 'FAILED'],
-      default: 'PENDING',
+      default: 'SUCCESS',
     },
     description: {
       type: String,
       trim: true,
     },
-    referenceId: {
+    transactionId: {
       type: String,
       unique: true,
       default: () => `TXN-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
@@ -51,10 +59,12 @@ const transactionSchema = new mongoose.Schema(
   }
 );
 
-// Index for faster lookups
+// Indexes for performance
+transactionSchema.index({ sender: 1, createdAt: -1 });
+transactionSchema.index({ receiver: 1, createdAt: -1 });
 transactionSchema.index({ senderAccount: 1 });
 transactionSchema.index({ receiverAccount: 1 });
-transactionSchema.index({ referenceId: 1 });
+transactionSchema.index({ transactionId: 1 });
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 export default Transaction;
