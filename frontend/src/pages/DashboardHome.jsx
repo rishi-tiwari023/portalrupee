@@ -135,6 +135,9 @@ const DashboardHome = () => {
               {quickActions.map((action) => (
                 <button
                   key={action.name}
+                  onClick={() => {
+                    if (action.name === 'Send Money') navigate('/dashboard/transfer');
+                  }}
                   className="flex flex-col items-center gap-3 p-5 rounded-[2rem] hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 group active:scale-95"
                 >
                   <div className={`w-14 h-14 rounded-2xl ${action.color} text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-all`}>
