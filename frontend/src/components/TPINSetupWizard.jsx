@@ -77,6 +77,7 @@ const TPINSetupWizard = ({ onSuccess, onCancel, isChangeMode = false, title = "S
               value={oldPin} 
               onChange={(val) => { setOldPin(val); setError(""); }} 
               error={error}
+              onEnter={handleNext}
             />
             
             <div className="flex flex-col gap-3">
@@ -110,6 +111,7 @@ const TPINSetupWizard = ({ onSuccess, onCancel, isChangeMode = false, title = "S
               value={pin} 
               onChange={(val) => { setPin(val); setError(""); }} 
               error={error}
+              onEnter={handleNext}
             />
             
             <div className="flex flex-col gap-3">
@@ -152,6 +154,7 @@ const TPINSetupWizard = ({ onSuccess, onCancel, isChangeMode = false, title = "S
               value={confirmPin} 
               onChange={(val) => { setConfirmPin(val); setError(""); }} 
               error={error}
+              onEnter={handleSubmit}
             />
 
             <div className="flex flex-col gap-3">
