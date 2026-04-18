@@ -12,6 +12,7 @@ import adminRoutes from './routes/admin.routes.js';
 import tpinRoutes from './routes/tpin.routes.js';
 import accountRoutes from './routes/account.routes.js';
 import twoFactorRoutes from './routes/2fa.routes.js';
+import transactionRoutes from './routes/transaction.routes.js';
 
 
 const app = express();
@@ -33,6 +34,7 @@ app.use('/api/v1/tpin', tpinRoutes);
 app.use('/api/v1/2fa', twoFactorRoutes);
 
 app.use('/api/v1/accounts', accountRoutes);
+app.use('/api/v1/transactions', transactionRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 
 // Health Check
