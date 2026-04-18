@@ -44,6 +44,14 @@ const userSchema = new mongoose.Schema(
       enum: ['CUSTOMER', 'CASHIER', 'MANAGER'],
       default: 'CUSTOMER',
     },
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    twoFactorSecret: {
+      type: String,
+      select: false,
+    },
   },
   {
     timestamps: true,

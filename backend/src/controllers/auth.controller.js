@@ -1,6 +1,8 @@
 import User from '../models/user.model.js';
 import AppError from '../utils/AppError.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt.utils.js';
+import speakeasy from 'speakeasy';
+import { decrypt } from '../utils/encryption.util.js';
 
 /**
  * Register a new user
@@ -69,6 +71,65 @@ export const login = async (req, res, next) => {
 
     // Remove password from output
     user.password = undefined;
+
+    // Check if 2FA is enabled
+    if (user.twoFactorEnabled) {
+      return res.status(200).json({
+        success: true,
+        message: 'Two-factor authentication required',
+        data: {
+          requires2FA: true,
+          email: user.email,
+        },
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Logged in successfully',
+      data: {
+        user,
+        accessToken,
+        refreshToken,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Verify 2FA during login
+ */
+export const verify2FA = async (req, res, next) => {
+  try {
+    const { email, token } = req.body;
+
+    if (!email || !token) {
+      return next(new AppError('Email and OTP token are required', 400));
+    }
+
+    const user = await User.findOne({ email }).select('+twoFactorSecret');
+
+    if (!user || !user.twoFactorEnabled) {
+      return next(new AppError('User not found or 2FA not enabled', 400));
+    }
+
+    const secret = decrypt(user.twoFactorSecret);
+    const verified = speakeasy.totp.verify({
+      secret,
+      encoding: 'base32',
+      token,
+      window: 1,
+    });
+
+    if (!verified) {
+      return next(new AppError('Invalid OTP token', 401));
+    }
+
+    // Generate tokens
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
 
     res.status(200).json({
       success: true,
