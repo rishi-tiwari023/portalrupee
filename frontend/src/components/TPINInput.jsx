@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
-const TPINInput = ({ value, onChange, length = 6, error }) => {
+const TPINInput = ({ value, onChange, length = 6, error, onEnter }) => {
   const [otp, setOtp] = useState(new Array(length).fill(""));
   const inputRefs = useRef([]);
 
@@ -35,6 +35,8 @@ const TPINInput = ({ value, onChange, length = 6, error }) => {
       if (!otp[index] && index > 0) {
         inputRefs.current[index - 1].focus();
       }
+    } else if (e.key === "Enter" && onEnter) {
+      onEnter();
     }
   };
 

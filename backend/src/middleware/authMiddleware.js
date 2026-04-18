@@ -30,6 +30,15 @@ export const isAuth = async (req, res, next) => {
       return next(new AppError('The user belonging to this token no longer exists.', 401));
     }
 
+    // Backfill tpinSet if tpin exists but tpinSet is false
+    if (!user.tpinSet) {
+      const userWithTpin = await User.findById(user._id).select('+tpin');
+      if (userWithTpin.tpin) {
+        user.tpinSet = true;
+        await User.updateOne({ _id: user._id }, { tpinSet: true });
+      }
+    }
+
     // 4) Grant access to protected route
     req.user = user;
     next();
@@ -40,6 +49,34 @@ export const isAuth = async (req, res, next) => {
     if (error.name === 'TokenExpiredError') {
       return next(new AppError('Your token has expired! Please log in again.', 401));
     }
+    next(error);
+  }
+};
+
+/**
+ * Middleware to verify TPIN for transactions
+ */
+export const verifyTPIN = async (req, res, next) => {
+  try {
+    const { tpin } = req.body;
+
+    if (!tpin) {
+      return next(new AppError('Please provide TPIN for this transaction', 400));
+    }
+
+    const user = await User.findById(req.user.id).select('+tpin');
+
+    if (!user.tpin) {
+      return next(new AppError('TPIN not set. Please set your TPIN first.', 400));
+    }
+
+    const isCorrect = await user.compareTPIN(tpin, user.tpin);
+    if (!isCorrect) {
+      return next(new AppError('Incorrect TPIN', 401));
+    }
+
+    next();
+  } catch (error) {
     next(error);
   }
 };

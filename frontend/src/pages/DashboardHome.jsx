@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import AccountSummaryCard from '../components/AccountSummaryCard';
 import CreateAccountModal from '../components/CreateAccountModal';
+import DepositModal from '../components/DepositModal';
+import WithdrawModal from '../components/WithdrawModal';
 
 const DashboardHome = () => {
   const dispatch = useDispatch();
@@ -22,6 +24,8 @@ const DashboardHome = () => {
   const { user } = useSelector((state) => state.auth);
   const { summary, loading } = useSelector((state) => state.dashboard);
   const [isOpeningAccount, setIsOpeningAccount] = useState(false);
+  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
 
   useEffect(() => {
     if (user?._id) {
@@ -30,10 +34,34 @@ const DashboardHome = () => {
   }, [dispatch, user]);
 
   const quickActions = [
-    { name: 'Add Funds', icon: Plus, color: 'bg-indigo-500', textColor: 'text-indigo-600' },
-    { name: 'Send Money', icon: Send, color: 'bg-emerald-500', textColor: 'text-emerald-600' },
-    { name: 'Statements', icon: FileText, color: 'bg-amber-500', textColor: 'text-amber-600' },
-    { name: 'Analytics', icon: LayoutGrid, color: 'bg-cyan-500', textColor: 'text-cyan-600' },
+    { 
+      name: 'Add Funds', 
+      icon: Plus, 
+      color: 'bg-indigo-500', 
+      textColor: 'text-indigo-600',
+      onClick: () => setIsDepositOpen(true)
+    },
+    { 
+      name: 'Withdraw', 
+      icon: ArrowUpRight, 
+      color: 'bg-rose-500', 
+      textColor: 'text-rose-600',
+      onClick: () => setIsWithdrawOpen(true)
+    },
+    { 
+      name: 'Send Money', 
+      icon: Send, 
+      color: 'bg-emerald-500', 
+      textColor: 'text-emerald-600',
+      onClick: () => navigate('/dashboard/transfer') // Future Day 11
+    },
+    { 
+      name: 'Statements', 
+      icon: FileText, 
+      color: 'bg-amber-500', 
+      textColor: 'text-amber-600',
+      onClick: () => {}
+    },
   ];
 
   const mockTransactions = [
@@ -135,9 +163,7 @@ const DashboardHome = () => {
               {quickActions.map((action) => (
                 <button
                   key={action.name}
-                  onClick={() => {
-                    if (action.name === 'Send Money') navigate('/dashboard/transfer');
-                  }}
+                  onClick={action.onClick}
                   className="flex flex-col items-center gap-3 p-5 rounded-[2rem] hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 group active:scale-95"
                 >
                   <div className={`w-14 h-14 rounded-2xl ${action.color} text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-all`}>
@@ -300,6 +326,16 @@ const DashboardHome = () => {
       <CreateAccountModal 
         isOpen={isOpeningAccount} 
         onClose={() => setIsOpeningAccount(false)} 
+      />
+      <DepositModal 
+        isOpen={isDepositOpen} 
+        onClose={() => setIsDepositOpen(false)}
+        accounts={summary?.accounts}
+      />
+      <WithdrawModal 
+        isOpen={isWithdrawOpen} 
+        onClose={() => setIsWithdrawOpen(false)}
+        accounts={summary?.accounts}
       />
     </div>
   );

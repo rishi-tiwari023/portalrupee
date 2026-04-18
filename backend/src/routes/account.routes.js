@@ -21,7 +21,7 @@ router.get('/', getMyAccounts);
 router.get('/admin/all', checkRole('MANAGER'), getAllAccounts);
 router.get('/number/:accountNumber', getAccountByNumber);
 router.get('/:id', getAccountDetails);
-router.get('/:id/balance', getAccountBalance);
+router.post('/:id/balance', getAccountBalance);
 
 router.patch('/:id/status', checkRole('MANAGER'), validate(updateStatusSchema), updateAccountStatus);
 

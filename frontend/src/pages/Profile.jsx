@@ -9,6 +9,7 @@ import { toFormikValidationSchema } from 'zod-formik-adapter';
 import { updateProfile, setTPIN, updateUser, changeTPIN } from '../store/slices/authSlice';
 import { toast } from 'react-toastify';
 import TPINSetupWizard from '../components/TPINSetupWizard';
+import TwoFactorSetup from '../components/TwoFactorSetup';
 
 const profileSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -22,12 +23,20 @@ const Profile = () => {
   const { user, loading } = useSelector((state) => state.auth);
   const [isEditing, setIsEditing] = React.useState(false);
   const [showTPINWizard, setShowTPINWizard] = React.useState(false);
+  const [show2FAWizard, setShow2FAWizard] = React.useState(false);
 
-  const handleTPINSuccess = async (pin) => {
+  const handleTPINSuccess = async (payload) => {
     try {
-      await dispatch(setTPIN(pin)).unwrap();
-      toast.success('TPIN setup successfully!');
-      dispatch(updateUser({ tpinSet: true }));
+      if (typeof payload === 'object') {
+        // Change mode
+        await dispatch(changeTPIN(payload)).unwrap();
+        toast.success('TPIN updated successfully!');
+      } else {
+        // Setup mode
+        await dispatch(setTPIN(payload)).unwrap();
+        toast.success('TPIN setup successfully!');
+        dispatch(updateUser({ tpinSet: true }));
+      }
       setShowTPINWizard(false);
     } catch (error) {
       toast.error(error || 'Failed to update TPIN');
@@ -278,7 +287,7 @@ const Profile = () => {
           </div>
 
           <AnimatePresence mode="wait">
-            {!showTPINWizard ? (
+            {!showTPINWizard && !show2FAWizard ? (
               <motion.div
                 key="security-view"
                 initial={{ opacity: 0 }}
@@ -305,17 +314,24 @@ const Profile = () => {
                 </div>
 
                 <div className="space-y-4 pt-2">
-                  <div className="flex items-center justify-between group cursor-pointer" onClick={() => toast.info("Coming Soon!")}>
-                    <span className="text-slate-600 font-medium group-hover:text-indigo-600 transition-colors">Forgot TPIN?</span>
-                    <ArrowRight size={16} className="text-slate-300 group-hover:text-indigo-600 transition-all" />
-                  </div>
-                  <div className="flex items-center justify-between group cursor-pointer" onClick={() => toast.info("Coming Soon!")}>
-                    <span className="text-slate-600 font-medium group-hover:text-indigo-600 transition-colors">Two-Factor Authentication</span>
-                    <span className="text-[10px] font-bold text-slate-300 uppercase">Disabled</span>
+                  <div 
+                    className="flex items-center justify-between group cursor-pointer" 
+                    onClick={() => setShow2FAWizard(true)}
+                  >
+                    <div className="space-y-0.5">
+                      <span className="text-slate-600 font-medium group-hover:text-indigo-600 transition-colors block">Two-Factor Authentication</span>
+                      <p className="text-[10px] text-slate-400 font-medium">Google Authenticator TOTP</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${user?.twoFactorEnabled ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                        {user?.twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                      <ArrowRight size={16} className="text-slate-300 group-hover:text-indigo-600 transition-all" />
+                    </div>
                   </div>
                 </div>
               </motion.div>
-            ) : (
+            ) : showTPINWizard ? (
               <motion.div
                 key="wizard-view"
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -325,7 +341,20 @@ const Profile = () => {
                 <TPINSetupWizard
                   onCancel={() => setShowTPINWizard(false)}
                   onSuccess={handleTPINSuccess}
+                  isChangeMode={user?.tpinSet}
                   title={user?.tpinSet ? "Change TPIN" : "Setup TPIN"}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="2fa-view"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+              >
+                <TwoFactorSetup 
+                  isEnabled={user?.twoFactorEnabled}
+                  onCancel={() => setShow2FAWizard(false)}
                 />
               </motion.div>
             )}

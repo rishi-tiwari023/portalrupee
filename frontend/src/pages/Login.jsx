@@ -6,8 +6,8 @@ import * as zod from 'zod';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
 /* eslint-disable no-unused-vars */
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, LogIn, AlertCircle, Eye, EyeOff, ArrowRight, Rocket } from 'lucide-react';
-import { loginUser } from '../store/slices/authSlice';
+import { loginUser, verify2FA } from '../store/slices/authSlice';
+import { Shield, Mail, Lock, LogIn, AlertCircle, Eye, EyeOff, ArrowRight, Rocket, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const loginSchema = zod.object({
@@ -20,6 +20,9 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error } = useSelector((state) => state.auth);
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [otpToken, setOtpToken] = useState('');
+  const [userEmail, setUserEmail] = useState('');
 
   const formik = useFormik({
     initialValues: {
@@ -30,6 +33,11 @@ const Login = () => {
     onSubmit: async (values) => {
       const resultAction = await dispatch(loginUser(values));
       if (loginUser.fulfilled.match(resultAction)) {
+        if (resultAction.payload.data.requires2FA) {
+          setRequires2FA(true);
+          setUserEmail(values.email);
+          return;
+        }
         toast.success('Sign in successful!', {
           icon: <Rocket size={20} className="text-indigo-600" />,
           className: 'premium-toast'
@@ -42,6 +50,25 @@ const Login = () => {
       }
     },
   });
+
+  const handle2FAVerify = async (e) => {
+    e.preventDefault();
+    if (otpToken.length !== 6) {
+      toast.error('Please enter a 6-digit code');
+      return;
+    }
+
+    const resultAction = await dispatch(verify2FA({ email: userEmail, token: otpToken }));
+    if (verify2FA.fulfilled.match(resultAction)) {
+      toast.success('Identity verified!', {
+        icon: <Rocket size={20} className="text-indigo-600" />,
+        className: 'premium-toast'
+      });
+      navigate('/dashboard');
+    } else {
+      toast.error(resultAction.payload || 'Invalid 2FA code');
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center pt-24 pb-12 p-6 relative overflow-hidden bg-slate-50">
@@ -63,88 +90,141 @@ const Login = () => {
             <p className="text-slate-500 font-medium">Please enter your details to sign in</p>
           </div>
 
-          <form onSubmit={formik.handleSubmit} className="space-y-6">
-            <AnimatePresence mode='wait'>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="flex items-center gap-3 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-medium border border-red-100"
-                >
-                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                  <span>{error}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          {!requires2FA ? (
+            <form onSubmit={formik.handleSubmit} className="space-y-6">
+              <AnimatePresence mode='wait'>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center gap-3 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-medium border border-red-100"
+                  >
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <span>{error}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 ml-1">Email Address</label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="name@domain.com"
-                  className={`w-full pl-12 pr-4 py-4 bg-slate-100/50 border-2 rounded-2xl focus:outline-none transition-all ${formik.touched.email && formik.errors.email
-                    ? 'border-red-300 focus:border-red-500 bg-red-50/10'
-                    : 'border-transparent focus:border-indigo-500'
-                    }`}
-                  {...formik.getFieldProps('email')}
-                />
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 ml-1">Email Address</label>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="name@domain.com"
+                    className={`w-full pl-12 pr-4 py-4 bg-slate-100/50 border-2 rounded-2xl focus:outline-none transition-all ${formik.touched.email && formik.errors.email
+                      ? 'border-red-300 focus:border-red-500 bg-red-50/10'
+                      : 'border-transparent focus:border-indigo-500'
+                      }`}
+                    {...formik.getFieldProps('email')}
+                  />
+                </div>
+                {formik.touched.email && formik.errors.email && (
+                  <p className="text-xs text-red-500 font-bold ml-1">{formik.errors.email}</p>
+                )}
               </div>
-              {formik.touched.email && formik.errors.email && (
-                <p className="text-xs text-red-500 font-bold ml-1">{formik.errors.email}</p>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between px-1">
-                <label className="text-sm font-bold text-slate-700">Password</label>
-                <button type="button" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
-                  Forgot Password?
-                </button>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <label className="text-sm font-bold text-slate-700">Password</label>
+                  <button type="button" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
+                    Forgot Password?
+                  </button>
+                </div>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    placeholder="••••••••"
+                    className={`w-full pl-12 pr-12 py-4 bg-slate-100/50 border-2 rounded-2xl focus:outline-none transition-all ${formik.touched.password && formik.errors.password
+                      ? 'border-red-300 focus:border-red-500 bg-red-50/10'
+                      : 'border-transparent focus:border-indigo-500'
+                      }`}
+                    {...formik.getFieldProps('password')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {formik.touched.password && formik.errors.password && (
+                  <p className="text-xs text-red-500 font-bold ml-1">{formik.errors.password}</p>
+                )}
               </div>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  placeholder="••••••••"
-                  className={`w-full pl-12 pr-12 py-4 bg-slate-100/50 border-2 rounded-2xl focus:outline-none transition-all ${formik.touched.password && formik.errors.password
-                    ? 'border-red-300 focus:border-red-500 bg-red-50/10'
-                    : 'border-transparent focus:border-indigo-500'
-                    }`}
-                  {...formik.getFieldProps('password')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-              {formik.touched.password && formik.errors.password && (
-                <p className="text-xs text-red-500 font-bold ml-1">{formik.errors.password}</p>
-              )}
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group disabled:opacity-70 disabled:pointer-events-none"
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group disabled:opacity-70 disabled:pointer-events-none"
+              >
+                {loading ? (
+                  <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <span>Sign In</span>
+                    <LogIn className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+            </form>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-8"
             >
-              {loading ? (
-                <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <LogIn className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-          </form>
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center text-indigo-600">
+                  <Shield size={40} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-800">2FA Verification</h3>
+                  <p className="text-sm text-slate-500 font-medium px-4">
+                    Enter the 6-digit code from your Google Authenticator app
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handle2FAVerify} className="space-y-6">
+                <div className="space-y-2">
+                  <div className="relative group">
+                    <input
+                      autoFocus
+                      type="text"
+                      maxLength={6}
+                      placeholder="000 000"
+                      value={otpToken}
+                      onChange={(e) => setOtpToken(e.target.value.replace(/\D/g, ''))}
+                      className="w-full px-4 py-6 bg-slate-100/50 border-2 border-transparent focus:border-indigo-500 rounded-3xl text-center text-4xl font-black tracking-[0.3em] focus:outline-none transition-all placeholder:text-slate-200"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  <button
+                    type="submit"
+                    disabled={loading || otpToken.length !== 6}
+                    className="w-full py-5 bg-indigo-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:bg-indigo-300"
+                  >
+                    {loading ? <Loader2 className="animate-spin" /> : <>Verify & Access <ArrowRight size={20} /></>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRequires2FA(false)}
+                    className="text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          )}
 
           <div className="mt-10 text-center">
             <p className="text-sm text-slate-500 font-medium">
