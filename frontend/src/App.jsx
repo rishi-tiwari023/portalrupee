@@ -15,6 +15,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Accounts from './pages/Accounts';
+import Transfer from './pages/Transfer';
 
 import './App.css';
 

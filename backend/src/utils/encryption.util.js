@@ -26,14 +26,32 @@ export const encrypt = (text) => {
  * @returns {string} - The decrypted text
  */
 export const decrypt = (text) => {
-  const [ivHex, encryptedHex] = text.split(':');
-  if (!ivHex || !encryptedHex) {
-    throw new Error('Invalid encrypted text format');
+  try {
+    if (!text || typeof text !== 'string') {
+      throw new Error('No encrypted text provided');
+    }
+
+    const parts = text.split(':');
+    if (parts.length !== 2) {
+      throw new Error('Invalid encrypted text format');
+    }
+
+    const [ivHex, encryptedHex] = parts;
+    const iv = Buffer.from(ivHex, 'hex');
+    const encryptedText = Buffer.from(encryptedHex, 'hex');
+
+    if (iv.length !== ivLength) {
+      throw new Error('Invalid IV length');
+    }
+
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    // When input is a Buffer, inputEncoding should be null/undefined
+    let decrypted = decipher.update(encryptedText, null, 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
+  } catch (error) {
+    console.error('Decryption failed:', error.message);
+    throw new Error(`Decryption failed: ${error.message}`);
   }
-  const iv = Buffer.from(ivHex, 'hex');
-  const encryptedText = Buffer.from(encryptedHex, 'hex');
-  const decipher = crypto.createDecipheriv(algorithm, key, iv);
-  let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-  return decrypted;
 };

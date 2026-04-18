@@ -64,7 +64,6 @@ transactionSchema.index({ sender: 1, createdAt: -1 });
 transactionSchema.index({ receiver: 1, createdAt: -1 });
 transactionSchema.index({ senderAccount: 1 });
 transactionSchema.index({ receiverAccount: 1 });
-transactionSchema.index({ transactionId: 1 });
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 export default Transaction;

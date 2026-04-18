@@ -13,7 +13,18 @@ export const get2FASetup = async (req, res, next) => {
     
     let secret;
     if (user.twoFactorSecret) {
-      secret = decrypt(user.twoFactorSecret);
+      try {
+        secret = decrypt(user.twoFactorSecret);
+      } catch (error) {
+        // If decryption fails, generate a new one
+        const newSecret = speakeasy.generateSecret({
+          name: `PortalRupee (${user.email})`,
+          issuer: 'PortalRupee',
+        });
+        secret = newSecret.base32;
+        user.twoFactorSecret = encrypt(secret);
+        await user.save();
+      }
     } else {
       // Generate a new secret if not exists
       const newSecret = speakeasy.generateSecret({
@@ -64,7 +75,13 @@ export const enable2FA = async (req, res, next) => {
       return next(new AppError('2FA setup not initiated', 400));
     }
 
-    const secret = decrypt(user.twoFactorSecret);
+    let secret;
+    try {
+      secret = decrypt(user.twoFactorSecret);
+    } catch (error) {
+      return next(new AppError('Failed to decrypt 2FA secret. Please re-setup 2FA.', 500));
+    }
+
     const verified = speakeasy.totp.verify({
       secret: secret,
       encoding: 'base32',
@@ -106,7 +123,13 @@ export const disable2FA = async (req, res, next) => {
       return next(new AppError('2FA is not enabled', 400));
     }
 
-    const secret = decrypt(user.twoFactorSecret);
+    let secret;
+    try {
+      secret = decrypt(user.twoFactorSecret);
+    } catch (error) {
+      return next(new AppError('Failed to decrypt 2FA secret.', 500));
+    }
+
     const verified = speakeasy.totp.verify({
       secret: secret,
       encoding: 'base32',
@@ -134,33 +157,3 @@ export const disable2FA = async (req, res, next) => {
   }
 };
 
-/**
- * Verify TOTP during login (helper function or separate route)
- */
-export const verify2FA = async (req, res, next) => {
-  try {
-    const { token, email } = req.body;
-    if (!token || !email) {
-      return next(new AppError('Email and OTP token are required', 400));
-    }
-
-    const user = await User.findOne({ email }).select('+twoFactorSecret');
-    if (!user || !user.twoFactorEnabled) {
-      return next(new AppError('User not found or 2FA not enabled', 400));
-    }
-
-    const secret = decrypt(user.twoFactorSecret);
-    const verified = speakeasy.totp.verify({
-      secret: secret,
-      encoding: 'base32',
-      token: token,
-      window: 1,
-    });
-
-    if (!verified) {
-      return next(new AppError('Invalid OTP token', 401));
-    }
-  } catch (error) {
-    next(error);
-  }
-};

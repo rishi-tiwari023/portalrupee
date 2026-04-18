@@ -12,8 +12,8 @@ export const register = async (req, res, next) => {
     const { firstName, lastName, email, mobile, password, role } = req.body;
 
     // Check if user already exists
-    const existingUser = await User.findOne({ 
-      $or: [{ email }, { mobile }] 
+    const existingUser = await User.findOne({
+      $or: [{ email }, { mobile }]
     });
 
     if (existingUser) {
