@@ -1,11 +1,20 @@
 import React, { useState } from 'react';
 import { CreditCard, Eye, EyeOff, ArrowRight, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAccountBalance } from '../store/slices/accountSlice';
+import TOTPVerifyModal from './TOTPVerifyModal';
 
 const AccountSummaryCard = ({ account }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [showBalance, setShowBalance] = useState(false);
+  const [isTOTPOpen, setIsTOTPOpen] = useState(false);
+  const [verifiedBalance, setVerifiedBalance] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null); // 'balance' or 'details'
+  
   const { _id, accountNumber, accountType, balance, status } = account;
+  const user = useSelector(state => state.auth.user);
 
   const isBlocked = status === 'BLOCKED' || status === 'CLOSED';
   const lastFourDigits = accountNumber ? accountNumber.slice(-4) : 'XXXX';
@@ -13,11 +22,44 @@ const AccountSummaryCard = ({ account }) => {
 
   const toggleBalance = (e) => {
     e.stopPropagation();
-    setShowBalance(!showBalance);
+    if (showBalance) {
+      setShowBalance(false);
+      return;
+    }
+
+    if (user?.twoFactorEnabled && !verifiedBalance) {
+      setPendingAction('balance');
+      setIsTOTPOpen(true);
+    } else {
+      setShowBalance(true);
+    }
   };
 
-  const goToDetails = () => {
-    navigate(`/dashboard/accounts?id=${_id}`);
+  const goToDetails = (e) => {
+    if (e) e.stopPropagation();
+    if (user?.twoFactorEnabled && !verifiedBalance) {
+      setPendingAction('details');
+      setIsTOTPOpen(true);
+    } else {
+      navigate(`/dashboard/accounts?id=${_id}`);
+    }
+  };
+
+  const handleVerify = async (totpToken) => {
+    const resultAction = await dispatch(fetchAccountBalance({ accountId: _id, totpToken }));
+    if (fetchAccountBalance.fulfilled.match(resultAction)) {
+      setVerifiedBalance(resultAction.payload.balance);
+      setIsTOTPOpen(false);
+      
+      if (pendingAction === 'balance') {
+        setShowBalance(true);
+      } else if (pendingAction === 'details') {
+        navigate(`/dashboard/accounts?id=${_id}`);
+      }
+      setPendingAction(null);
+    } else {
+      throw new Error(resultAction.payload || 'Invalid TOTP token');
+    }
   };
 
   return (
@@ -71,7 +113,7 @@ const AccountSummaryCard = ({ account }) => {
           <span className={`text-lg font-bold ${isBlocked ? 'text-slate-400' : 'text-slate-500'}`}>₹</span>
           <span className={`text-4xl font-black tracking-tighter ${isBlocked ? 'text-slate-600' : 'text-slate-900'}`}>
             {showBalance
-              ? (balance ? balance.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00')
+              ? ((verifiedBalance !== null ? verifiedBalance : balance)?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00')
               : '••••••'
             }
           </span>
@@ -97,6 +139,13 @@ const AccountSummaryCard = ({ account }) => {
           </button>
         )}
       </div>
+
+      <TOTPVerifyModal 
+        isOpen={isTOTPOpen}
+        onClose={() => { setIsTOTPOpen(false); setPendingAction(null); }}
+        onVerify={handleVerify}
+        title={pendingAction === 'balance' ? 'View Balance' : 'View Details'}
+      />
     </div>
   );
 };

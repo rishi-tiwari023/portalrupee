@@ -1,5 +1,8 @@
 import Account from '../models/account.model.js';
+import User from '../models/user.model.js';
 import AppError from '../utils/AppError.js';
+import speakeasy from 'speakeasy';
+import { decrypt } from '../utils/encryption.util.js';
 
 const generateAccountNumber = () => {
   return Math.floor(100000000000 + Math.random() * 900000000000).toString();
@@ -136,6 +139,28 @@ export const getAllAccounts = async (req, res, next) => {
 
 export const getAccountBalance = async (req, res, next) => {
   try {
+    const user = await User.findById(req.user.id).select('+twoFactorSecret');
+    
+    if (user.twoFactorEnabled) {
+      const { totpToken } = req.body;
+      
+      if (!totpToken) {
+        return next(new AppError('2FA is enabled. TOTP token is required.', 403));
+      }
+
+      const secret = decrypt(user.twoFactorSecret);
+      const verified = speakeasy.totp.verify({
+        secret,
+        encoding: 'base32',
+        token: totpToken,
+        window: 1,
+      });
+
+      if (!verified) {
+        return next(new AppError('Invalid TOTP token', 403));
+      }
+    }
+
     const account = await Account.findOne({
       _id: req.params.id,
       user: req.user.id,
