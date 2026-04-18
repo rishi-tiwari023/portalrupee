@@ -9,6 +9,7 @@ export const depositSchema = z.object({
       required_error: 'Amount is required',
     }).positive('Amount must be greater than zero'),
     description: z.string().optional(),
+    totpToken: z.string().optional(),
   }),
 });
 
@@ -21,5 +22,6 @@ export const withdrawSchema = z.object({
       required_error: 'Amount is required',
     }).positive('Amount must be greater than zero'),
     description: z.string().optional(),
+    totpToken: z.string().optional(),
   }),
 });

@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 import Account from '../models/account.model.js';
 import Transaction from '../models/transaction.model.js';
+import User from '../models/user.model.js';
 import AppError from '../utils/AppError.js';
+import speakeasy from 'speakeasy';
+import { decrypt } from '../utils/encryption.util.js';
 
 /**
  * @desc    Deposit money to an account
@@ -12,7 +15,30 @@ export const deposit = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { accountNumber, amount, description } = req.body;
+    const { accountNumber, amount, description, totpToken } = req.body;
+
+    const user = await User.findById(req.user.id).select('+twoFactorSecret');
+    if (user.twoFactorEnabled) {
+      if (!totpToken) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new AppError('2FA is enabled. TOTP token is required.', 403));
+      }
+
+      const secret = decrypt(user.twoFactorSecret);
+      const verified = speakeasy.totp.verify({
+        secret,
+        encoding: 'base32',
+        token: totpToken,
+        window: 1,
+      });
+
+      if (!verified) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new AppError('Invalid TOTP token', 403));
+      }
+    }
 
     // Find the account
     const account = await Account.findOne({ accountNumber }).session(session);
@@ -81,7 +107,30 @@ export const withdraw = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { accountNumber, amount, description } = req.body;
+    const { accountNumber, amount, description, totpToken } = req.body;
+
+    const user = await User.findById(req.user.id).select('+twoFactorSecret');
+    if (user.twoFactorEnabled) {
+      if (!totpToken) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new AppError('2FA is enabled. TOTP token is required.', 401));
+      }
+
+      const secret = decrypt(user.twoFactorSecret);
+      const verified = speakeasy.totp.verify({
+        secret,
+        encoding: 'base32',
+        token: totpToken,
+        window: 1,
+      });
+
+      if (!verified) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new AppError('Invalid TOTP token', 401));
+      }
+    }
 
     // Find the account
     const account = await Account.findOne({ accountNumber }).session(session);
