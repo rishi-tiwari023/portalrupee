@@ -34,33 +34,33 @@ const DashboardHome = () => {
   }, [dispatch, user]);
 
   const quickActions = [
-    { 
-      name: 'Add Funds', 
-      icon: Plus, 
-      color: 'bg-indigo-500', 
+    {
+      name: 'Add Funds',
+      icon: Plus,
+      color: 'bg-indigo-500',
       textColor: 'text-indigo-600',
       onClick: () => setIsDepositOpen(true)
     },
-    { 
-      name: 'Withdraw', 
-      icon: ArrowUpRight, 
-      color: 'bg-rose-500', 
+    {
+      name: 'Withdraw',
+      icon: ArrowUpRight,
+      color: 'bg-rose-500',
       textColor: 'text-rose-600',
       onClick: () => setIsWithdrawOpen(true)
     },
-    { 
-      name: 'Send Money', 
-      icon: Send, 
-      color: 'bg-emerald-500', 
+    {
+      name: 'Send Money',
+      icon: Send,
+      color: 'bg-emerald-500',
       textColor: 'text-emerald-600',
       onClick: () => navigate('/dashboard/transfer') // Future Day 11
     },
-    { 
-      name: 'Statements', 
-      icon: FileText, 
-      color: 'bg-amber-500', 
+    {
+      name: 'Statements',
+      icon: FileText,
+      color: 'bg-amber-500',
       textColor: 'text-amber-600',
-      onClick: () => {}
+      onClick: () => { }
     },
   ];
 
@@ -130,7 +130,7 @@ const DashboardHome = () => {
               <div className="flex gap-4 text-indigo-100/40 font-mono text-lg tracking-[0.3em]">
                 {summary?.accounts?.length > 0 ? (
                   <>
-                    <span>****</span> <span>****</span> 
+                    <span>****</span> <span>****</span>
                     <span className="text-white font-bold tracking-normal">
                       {summary.accounts[0].accountNumber.slice(-4)}
                     </span>
@@ -231,14 +231,14 @@ const DashboardHome = () => {
       <div className="mb-10">
         <div className="flex items-center justify-between mb-6 px-2">
           <h3 className="text-slate-800 text-xl font-black tracking-tight">My Accounts</h3>
-          <button 
+          <button
             onClick={() => navigate('/dashboard/accounts')}
             className="text-indigo-600 hover:text-indigo-700 text-sm font-bold hover:underline"
           >
             Manage Accounts
           </button>
         </div>
-        
+
         {summary?.accounts?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {summary.accounts.map((account, index) => (
@@ -246,19 +246,19 @@ const DashboardHome = () => {
             ))}
           </div>
         ) : (
-           <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50">
-             <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
-               <CreditCard className="w-8 h-8" />
-             </div>
-             <h4 className="text-slate-800 font-black text-lg mb-2">No Accounts Found</h4>
-             <p className="text-slate-500 font-medium mb-6">You don't have any active accounts yet. Open one to get started.</p>
-             <button 
-               onClick={() => setIsOpeningAccount(true)}
-               className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 active:scale-95 transition-all"
-             >
-               Open Account
-             </button>
-           </div>
+          <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50">
+            <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CreditCard className="w-8 h-8" />
+            </div>
+            <h4 className="text-slate-800 font-black text-lg mb-2">No Accounts Found</h4>
+            <p className="text-slate-500 font-medium mb-6">You don't have any active accounts yet. Open one to get started.</p>
+            <button
+              onClick={() => setIsOpeningAccount(true)}
+              className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 active:scale-95 transition-all"
+            >
+              Open Account
+            </button>
+          </div>
         )}
       </div>
 
@@ -323,17 +323,17 @@ const DashboardHome = () => {
           </button>
         </div>
       </div>
-      <CreateAccountModal 
-        isOpen={isOpeningAccount} 
-        onClose={() => setIsOpeningAccount(false)} 
+      <CreateAccountModal
+        isOpen={isOpeningAccount}
+        onClose={() => setIsOpeningAccount(false)}
       />
-      <DepositModal 
-        isOpen={isDepositOpen} 
+      <DepositModal
+        isOpen={isDepositOpen}
         onClose={() => setIsDepositOpen(false)}
         accounts={summary?.accounts}
       />
-      <WithdrawModal 
-        isOpen={isWithdrawOpen} 
+      <WithdrawModal
+        isOpen={isWithdrawOpen}
         onClose={() => setIsWithdrawOpen(false)}
         accounts={summary?.accounts}
       />

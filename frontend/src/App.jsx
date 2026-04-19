@@ -16,6 +16,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Accounts from './pages/Accounts';
 import Transfer from './pages/Transfer';
+import Transactions from './pages/Transactions';
 
 import './App.css';
 
@@ -60,7 +61,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'transactions',
-        element: <div className="p-8 h-full flex items-center justify-center text-slate-400 font-medium text-xl bg-white/50 backdrop-blur-sm rounded-3xl border border-white">Transactions Detail (Pending)</div>
+        element: <Transactions />
       },
       {
         path: 'settings',

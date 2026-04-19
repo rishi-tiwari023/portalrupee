@@ -12,7 +12,7 @@ const AccountSummaryCard = ({ account }) => {
   const [isTOTPOpen, setIsTOTPOpen] = useState(false);
   const [verifiedBalance, setVerifiedBalance] = useState(null);
   const [pendingAction, setPendingAction] = useState(null); // 'balance' or 'details'
-  
+
   const { _id, accountNumber, accountType, balance, status } = account;
   const user = useSelector(state => state.auth.user);
 
@@ -50,7 +50,7 @@ const AccountSummaryCard = ({ account }) => {
     if (fetchAccountBalance.fulfilled.match(resultAction)) {
       setVerifiedBalance(resultAction.payload.balance);
       setIsTOTPOpen(false);
-      
+
       if (pendingAction === 'balance') {
         setShowBalance(true);
       } else if (pendingAction === 'details') {
@@ -140,7 +140,7 @@ const AccountSummaryCard = ({ account }) => {
         )}
       </div>
 
-      <TOTPVerifyModal 
+      <TOTPVerifyModal
         isOpen={isTOTPOpen}
         onClose={() => { setIsTOTPOpen(false); setPendingAction(null); }}
         onVerify={handleVerify}

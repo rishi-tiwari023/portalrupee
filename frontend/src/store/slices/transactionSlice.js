@@ -54,8 +54,28 @@ export const executeTransfer = createAsyncThunk(
   }
 );
 
+// Fetch transaction history
+export const fetchTransactions = createAsyncThunk(
+  'transaction/fetchTransactions',
+  async (params, { rejectWithValue }) => {
+    try {
+      const response = await API.get('/transactions', { params });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch transactions');
+    }
+  }
+);
+
 const initialState = {
   searchResults: [],
+  history: [],
+  pagination: {
+    total: 0,
+    pages: 0,
+    page: 1,
+    limit: 10,
+  },
   loading: false,
   error: null,
   success: false,
@@ -141,6 +161,20 @@ const transactionSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.success = false;
+      })
+      // Fetch Transactions
+      .addCase(fetchTransactions.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTransactions.fulfilled, (state, action) => {
+        state.loading = false;
+        state.history = action.payload.data.transactions;
+        state.pagination = action.payload.pagination;
+      })
+      .addCase(fetchTransactions.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
