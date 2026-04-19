@@ -34,7 +34,7 @@ export const searchUsers = createAsyncThunk(
   async (query, { rejectWithValue }) => {
     try {
       const response = await API.get(`/users/search?query=${query}`);
-      return response.data.data;
+      return response.data.data.users;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to search users');
     }

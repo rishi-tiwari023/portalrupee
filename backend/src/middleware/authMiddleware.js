@@ -72,7 +72,7 @@ export const verifyTPIN = async (req, res, next) => {
 
     const isCorrect = await user.compareTPIN(tpin, user.tpin);
     if (!isCorrect) {
-      return next(new AppError('Incorrect TPIN', 401));
+      return next(new AppError('Incorrect TPIN', 403));
     }
 
     next();

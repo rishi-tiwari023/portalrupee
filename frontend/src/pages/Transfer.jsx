@@ -34,6 +34,8 @@ const Transfer = () => {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [tpin, setTpin] = useState('');
   const [tpinError, setTpinError] = useState('');
+  const [totpToken, setTotpToken] = useState('');
+  const [totpError, setTotpError] = useState('');
 
   const { searchResults, loading, error, success, lastTransaction } = useSelector((state) => state.transaction);
   const { accounts } = useSelector((state) => state.account);
@@ -98,7 +100,8 @@ const Transfer = () => {
       receiverId: selectedReceiver._id,
       amount: parseFloat(amount),
       description: description || `Transfer to ${selectedReceiver.firstName}`,
-      tpin
+      tpin,
+      totpToken: currentUser?.twoFactorEnabled ? totpToken : undefined
     };
 
     const resultAction = await dispatch(executeTransfer(transferData));
@@ -107,7 +110,8 @@ const Transfer = () => {
       toast.success('Transfer successful!');
     } else {
       setTpin(''); // Clear TPIN on error
-      setTpinError(resultAction.payload || 'Transfer failed. Check TPIN and try again.');
+      if (currentUser?.twoFactorEnabled) setTotpToken('');
+      setTpinError(resultAction.payload || 'Transfer failed. Check TPIN/TOTP and try again.');
     }
   };
 
@@ -153,13 +157,13 @@ const Transfer = () => {
             className="premium-card bg-white p-6 sm:p-10 rounded-[2.5rem] shadow-sm border border-slate-100"
           >
             <h2 className="text-3xl font-black text-slate-800 mb-2">Send Money</h2>
-            <p className="text-slate-500 font-medium mb-8">Search for a recipient by their name, email, or mobile number.</p>
+            <p className="text-slate-500 font-medium mb-8">Search for a recipient by their name, email, mobile, or account number.</p>
 
             <div className="relative mb-8">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Name, email, or @mobile..."
+                placeholder="Name, email, mobile, or account number..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-medium"
@@ -344,20 +348,35 @@ const Transfer = () => {
               You are sending <span className="text-indigo-600 font-bold">₹{amount}</span> to <span className="text-indigo-600 font-bold">{selectedReceiver.firstName}</span>. Please enter your 6-digit Transaction PIN.
             </p>
 
-            <div className="mb-12">
+            <div className="mb-8">
+              <h4 className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Transaction PIN</h4>
               <TPINInput 
                 length={6} 
                 onChange={setTpin} 
                 value={tpin}
                 error={tpinError}
+                onEnter={handleTransfer}
               />
             </div>
 
+            {currentUser?.twoFactorEnabled && (
+              <div className="mb-12">
+                <h4 className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">2FA Code</h4>
+                <TPINInput 
+                  length={6} 
+                  onChange={setTotpToken} 
+                  value={totpToken}
+                  error={totpError}
+                  onEnter={handleTransfer}
+                />
+              </div>
+            )}
+
             <button
               onClick={handleTransfer}
-              disabled={loading || tpin.length !== 6}
+              disabled={loading || tpin.length !== 6 || (currentUser?.twoFactorEnabled && totpToken.length !== 6)}
               className={`w-full py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl
-                ${loading || tpin.length !== 6
+                ${loading || tpin.length !== 6 || (currentUser?.twoFactorEnabled && totpToken.length !== 6)
                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   : 'bg-slate-900 text-white hover:bg-black shadow-slate-200'}
               `}

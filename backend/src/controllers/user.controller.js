@@ -1,4 +1,5 @@
 import User from '../models/user.model.js';
+import Account from '../models/account.model.js';
 import AppError from '../utils/AppError.js';
 
 /**
@@ -57,12 +58,35 @@ export const searchUsers = async (req, res, next) => {
   try {
     const { query } = req.query;
 
+    if (!query) {
+      return res.status(200).json({
+        status: 'success',
+        results: 0,
+        data: { users: [] },
+      });
+    }
+
+    // 1. Search for accounts matching the query (for account number search)
+    const matchingAccounts = await Account.find({
+      accountNumber: { $regex: query, $options: 'i' },
+    }).select('user');
+
+    const userIdsFromAccounts = matchingAccounts.map((acc) => acc.user);
+
+    // 2. Search users by name, email, mobile, or IDs found from account search
     const users = await User.find({
-      $or: [
-        { email: { $regex: query, $options: 'i' } },
-        { mobile: { $regex: query } },
+      $and: [
+        {
+          $or: [
+            { firstName: { $regex: query, $options: 'i' } },
+            { lastName: { $regex: query, $options: 'i' } },
+            { email: { $regex: query, $options: 'i' } },
+            { mobile: { $regex: query, $options: 'i' } },
+            { _id: { $in: userIdsFromAccounts } },
+          ],
+        },
+        { _id: { $ne: req.user.id } }, // Exclude self
       ],
-      _id: { $ne: req.user.id }, // Exclude self from search
     }).select('firstName lastName email mobile');
 
     res.status(200).json({

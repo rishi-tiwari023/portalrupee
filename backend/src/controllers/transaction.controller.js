@@ -99,7 +99,7 @@ export const withdraw = async (req, res, next) => {
       if (!totpToken) {
         await session.abortTransaction();
         session.endSession();
-        return next(new AppError('2FA is enabled. TOTP token is required.', 401));
+        return next(new AppError('2FA is enabled. TOTP token is required.', 403));
       }
 
       const secret = decrypt(user.twoFactorSecret);
@@ -113,7 +113,7 @@ export const withdraw = async (req, res, next) => {
       if (!verified) {
         await session.abortTransaction();
         session.endSession();
-        return next(new AppError('Invalid TOTP token', 401));
+        return next(new AppError('Invalid TOTP token', 403));
       }
     }
 
@@ -178,8 +178,31 @@ export const transferMoney = async (req, res, next) => {
   session.startTransaction();
 
   try {
-    const { receiverId, amount, description } = req.body;
+    const { receiverId, amount, description, totpToken } = req.body;
     const senderId = req.user.id;
+
+    const user = await User.findById(senderId).select('+twoFactorSecret');
+    if (user.twoFactorEnabled) {
+      if (!totpToken) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new AppError('2FA is enabled. TOTP token is required.', 403));
+      }
+
+      const secret = decrypt(user.twoFactorSecret);
+      const verified = speakeasy.totp.verify({
+        secret,
+        encoding: 'base32',
+        token: totpToken,
+        window: 1,
+      });
+
+      if (!verified) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(new AppError('Invalid TOTP token', 403));
+      }
+    }
 
     const senderAccount = await Account.findOne({ user: senderId, status: 'ACTIVE' }).session(session);
     if (!senderAccount) {
