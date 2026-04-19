@@ -35,3 +35,18 @@ export const transferSchema = z.object({
     totpToken: z.string().optional(),
   }),
 });
+
+export const getTransactionHistorySchema = z.object({
+  query: z.object({
+    page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
+    limit: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 10)),
+    type: z.enum(['DEPOSIT', 'WITHDRAW', 'TRANSFER']).optional(),
+    status: z.enum(['PENDING', 'SUCCESS', 'FAILED']).optional(),
+    startDate: z.string().datetime({ message: 'Invalid start date format' }).optional(),
+    endDate: z.string().datetime({ message: 'Invalid end date format' }).optional(),
+    minAmount: z.string().optional().transform((val) => (val ? parseFloat(val) : undefined)),
+    maxAmount: z.string().optional().transform((val) => (val ? parseFloat(val) : undefined)),
+    search: z.string().optional(),
+    userId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid user ID format').optional(),
+  }),
+});

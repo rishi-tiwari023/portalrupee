@@ -3,6 +3,7 @@ import {
   deposit,
   withdraw,
   transferMoney,
+  getTransactionHistory,
 } from '../controllers/transaction.controller.js';
 import { isAuth, verifyTPIN } from '../middleware/authMiddleware.js';
 import validate from '../middleware/validate.js';
@@ -10,6 +11,7 @@ import {
   depositSchema,
   withdrawSchema,
   transferSchema,
+  getTransactionHistorySchema,
 } from '../validators/transaction.validator.js';
 
 const router = express.Router();
@@ -31,11 +33,13 @@ router.post('/deposit', validate(depositSchema), deposit);
  */
 router.post('/withdraw', validate(withdrawSchema), withdraw);
 
-/**
- * @route   POST /api/v1/transactions/transfer
- * @desc    Transfer money between accounts
- * @access  Private (TPIN Verified)
- */
 router.post('/transfer', verifyTPIN, validate(transferSchema), transferMoney);
+
+/**
+ * @route   GET /api/v1/transactions
+ * @desc    Get transaction history with filters and pagination
+ * @access  Private
+ */
+router.get('/', validate(getTransactionHistorySchema), getTransactionHistory);
 
 export default router;

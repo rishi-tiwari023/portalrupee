@@ -257,3 +257,107 @@ export const transferMoney = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * @desc    Get transaction history with filters and pagination
+ * @route   GET /api/v1/transactions
+ * @access  Private
+ */
+export const getTransactionHistory = async (req, res, next) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      type,
+      status,
+      startDate,
+      endDate,
+      minAmount,
+      maxAmount,
+      search,
+      userId,
+    } = req.query;
+
+    const skip = (page - 1) * limit;
+    const query = {};
+
+    // Role-based scoping
+    if (req.user.role === 'CUSTOMER') {
+      query.$or = [
+        { sender: req.user.id },
+        { receiver: req.user.id },
+      ];
+
+      const userAccounts = await Account.find({ user: req.user.id }).select('_id');
+      const accountIds = userAccounts.map(acc => acc._id);
+
+      query.$or = [
+        { sender: req.user.id },
+        { receiver: req.user.id },
+        { senderAccount: { $in: accountIds } },
+        { receiverAccount: { $in: accountIds } }
+      ];
+    } else if (userId) {
+      const targetUserAccounts = await Account.find({ user: userId }).select('_id');
+      const accountIds = targetUserAccounts.map(acc => acc._id);
+
+      query.$or = [
+        { sender: userId },
+        { receiver: userId },
+        { senderAccount: { $in: accountIds } },
+        { receiverAccount: { $in: accountIds } }
+      ];
+    }
+
+    if (type) query.type = type;
+    if (status) query.status = status;
+
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) query.createdAt.$gte = new Date(startDate);
+      if (endDate) query.createdAt.$lte = new Date(endDate);
+    }
+
+    if (minAmount !== undefined || maxAmount !== undefined) {
+      query.amount = {};
+      if (minAmount !== undefined) query.amount.$gte = minAmount;
+      if (maxAmount !== undefined) query.amount.$lte = maxAmount;
+    }
+
+    if (search) {
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [
+          { transactionId: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } },
+        ],
+      });
+    }
+
+    const totalTransactions = await Transaction.countDocuments(query);
+    const transactions = await Transaction.find(query)
+      .populate('sender', 'firstName lastName email')
+      .populate('receiver', 'firstName lastName email')
+      .populate('senderAccount', 'accountNumber type')
+      .populate('receiverAccount', 'accountNumber type')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      status: 'success',
+      results: transactions.length,
+      pagination: {
+        total: totalTransactions,
+        pages: Math.ceil(totalTransactions / limit),
+        page: Number(page),
+        limit: Number(limit),
+      },
+      data: {
+        transactions,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
