@@ -9,7 +9,7 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 
-const TransactionTable = ({ transactions, isLoading, currentUserId }) => {
+const TransactionTable = ({ transactions, isLoading, currentUserId, onViewDetails }) => {
   if (isLoading) {
     return (
       <div className="w-full space-y-4">
@@ -58,7 +58,8 @@ const TransactionTable = ({ transactions, isLoading, currentUserId }) => {
             return (
               <tr 
                 key={tx._id || idx} 
-                className="bg-white border border-slate-100 group hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5 transition-all duration-300 rounded-[2rem] overflow-hidden"
+                onClick={() => onViewDetails?.(tx)}
+                className="bg-white border border-slate-100 group hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5 transition-all duration-300 rounded-[2rem] overflow-hidden cursor-pointer"
               >
                 {/* Details Column */}
                 <td className="px-6 py-5 rounded-l-[1.5rem]">
@@ -115,7 +116,10 @@ const TransactionTable = ({ transactions, isLoading, currentUserId }) => {
                 </td>
 
                 {/* Action Column */}
-                <td className="px-6 py-5 text-center rounded-r-[1.5rem]">
+                <td className="px-6 py-5 text-center rounded-r-[1.5rem]" onClick={(e) => {
+                  e.stopPropagation();
+                  onViewDetails?.(tx);
+                }}>
                   <button className="w-8 h-8 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors">
                     <MoreHorizontal className="w-4 h-4" />
                   </button>
