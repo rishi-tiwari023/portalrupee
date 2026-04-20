@@ -5,6 +5,7 @@ import {
   searchUsers,
 } from '../controllers/user.controller.js';
 import { isAuth } from '../middleware/authMiddleware.js';
+import { auditLogger } from '../middleware/audit.middleware.js';
 import validate from '../middleware/validate.js';
 import {
   updateProfileSchema,
@@ -17,7 +18,7 @@ const router = express.Router();
 router.use(isAuth);
 
 router.get('/profile', getProfile);
-router.patch('/profile', validate(updateProfileSchema), updateProfile);
+router.patch('/profile', auditLogger('UPDATE_PROFILE', 'USER'), validate(updateProfileSchema), updateProfile);
 router.get('/search', validate(searchUserSchema), searchUsers);
 
 export default router;

@@ -6,6 +6,7 @@ import {
   getTransactionHistory,
 } from '../controllers/transaction.controller.js';
 import { isAuth, verifyTPIN } from '../middleware/authMiddleware.js';
+import { auditLogger } from '../middleware/audit.middleware.js';
 import validate from '../middleware/validate.js';
 import {
   depositSchema,
@@ -24,16 +25,16 @@ router.use(isAuth);
  * @desc    Deposit money to an account
  * @access  Private
  */
-router.post('/deposit', validate(depositSchema), deposit);
+router.post('/deposit', auditLogger('DEPOSIT', 'TRANSACTION'), validate(depositSchema), deposit);
 
 /**
  * @route   POST /api/v1/transactions/withdraw
  * @desc    Withdraw money from an account
  * @access  Private
  */
-router.post('/withdraw', validate(withdrawSchema), withdraw);
+router.post('/withdraw', auditLogger('WITHDRAW', 'TRANSACTION'), validate(withdrawSchema), withdraw);
 
-router.post('/transfer', verifyTPIN, validate(transferSchema), transferMoney);
+router.post('/transfer', verifyTPIN, auditLogger('TRANSFER', 'TRANSACTION'), validate(transferSchema), transferMoney);
 
 /**
  * @route   GET /api/v1/transactions
