@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
-const Sidebar = () => {
+const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const dispatch = useDispatch();
   const location = useLocation();
@@ -36,13 +36,22 @@ const Sidebar = () => {
   }
 
   return (
-    <aside
-      className={`
-        ${isExpanded ? 'w-72' : 'w-24'} 
-        bg-white h-full flex flex-col border-r border-slate-100 shadow-[20px_0_40px_rgba(0,0,0,0.01)]
-        transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) relative z-30
-      `}
-    >
+    <>
+      {/* Mobile Backdrop */}
+      <div 
+        className={`fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[45] lg:hidden transition-opacity duration-500 ${isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setIsMobileOpen(false)}
+      />
+
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-50 lg:relative lg:translate-x-0
+          ${isExpanded ? 'w-72' : 'w-24'} 
+          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
+          bg-white h-full flex flex-col border-r border-slate-100 shadow-[20px_0_40px_rgba(0,0,0,0.01)]
+          transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
+        `}
+      >
       {/* PortalRupee Info */}
       <div className="h-32 pt-4 flex items-center px-6 mb-8 relative">
         <div className="flex items-center gap-3 overflow-hidden">
@@ -78,6 +87,7 @@ const Sidebar = () => {
               key={item.name}
               to={item.path}
               end={item.end}
+              onClick={() => setIsMobileOpen(false)}
               className={`
                 flex items-center px-4 py-3.5 rounded-2xl transition-all duration-50 group relative
                 ${isActive
@@ -118,6 +128,7 @@ const Sidebar = () => {
         </button>
       </div>
     </aside>
+    </>
   );
 };
 

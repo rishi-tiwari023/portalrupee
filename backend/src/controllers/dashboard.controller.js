@@ -1,5 +1,6 @@
 import Account from '../models/account.model.js';
 import User from '../models/user.model.js';
+import Transaction from '../models/transaction.model.js';
 import AppError from '../utils/AppError.js';
 
 export const getSummary = async (req, res, next) => {
@@ -12,6 +13,20 @@ export const getSummary = async (req, res, next) => {
     }
 
     const accounts = await Account.find({ user: userId });
+    const accountIds = accounts.map(acc => acc._id);
+
+    const recentActivity = await Transaction.find({
+      $or: [
+        { sender: userId },
+        { receiver: userId },
+        { senderAccount: { $in: accountIds } },
+        { receiverAccount: { $in: accountIds } }
+      ]
+    })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('sender', 'firstName lastName')
+      .populate('receiver', 'firstName lastName');
 
     let totalBalance = 0;
     accounts.forEach(acc => {
@@ -24,7 +39,7 @@ export const getSummary = async (req, res, next) => {
         totalBalance,
         accountCount: accounts.length,
         accounts,
-        recentActivity: []
+        recentActivity
       }
     });
   } catch (error) {
