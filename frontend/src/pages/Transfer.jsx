@@ -97,6 +97,7 @@ const Transfer = () => {
     }
 
     const transferData = {
+      senderAccountId: selectedAccount._id,
       receiverId: selectedReceiver._id,
       amount: parseFloat(amount),
       description: description || `Transfer to ${selectedReceiver.firstName}`,
