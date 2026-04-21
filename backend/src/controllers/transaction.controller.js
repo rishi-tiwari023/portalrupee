@@ -267,30 +267,27 @@ export const getTransactionHistory = async (req, res, next) => {
       userId,
     } = req.query;
 
-    const skip = (page - 1) * limit;
-    const query = {};
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(Math.max(1, parseInt(limit, 10) || 10), 100);
+    const skip = (pageNum - 1) * limitNum;
 
     // Role-based scoping
+    let baseQuery = {};
     if (req.user.role === 'CUSTOMER') {
-      query.$or = [
-        { sender: req.user.id },
-        { receiver: req.user.id },
-      ];
-
       const userAccounts = await Account.find({ user: req.user.id }).select('_id');
       const accountIds = userAccounts.map(acc => acc._id);
 
-      query.$or = [
+      baseQuery.$or = [
         { sender: req.user.id },
         { receiver: req.user.id },
         { senderAccount: { $in: accountIds } },
         { receiverAccount: { $in: accountIds } }
       ];
-    } else if (userId) {
+    } else if (userId && mongoose.Types.ObjectId.isValid(userId)) {
       const targetUserAccounts = await Account.find({ user: userId }).select('_id');
       const accountIds = targetUserAccounts.map(acc => acc._id);
 
-      query.$or = [
+      baseQuery.$or = [
         { sender: userId },
         { receiver: userId },
         { senderAccount: { $in: accountIds } },
@@ -298,19 +295,31 @@ export const getTransactionHistory = async (req, res, next) => {
       ];
     }
 
+    const query = { ...baseQuery };
     if (type) query.type = type;
     if (status) query.status = status;
 
     if (startDate || endDate) {
-      query.createdAt = {};
-      if (startDate) query.createdAt.$gte = new Date(startDate);
-      if (endDate) query.createdAt.$lte = new Date(endDate);
+      const dateQuery = {};
+      if (startDate) {
+        const start = new Date(startDate);
+        if (!isNaN(start.getTime())) dateQuery.$gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        if (!isNaN(end.getTime())) {
+          end.setHours(23, 59, 59, 999);
+          dateQuery.$lte = end;
+        }
+      }
+      if (Object.keys(dateQuery).length > 0) query.createdAt = dateQuery;
     }
 
     if (minAmount !== undefined || maxAmount !== undefined) {
-      query.amount = {};
-      if (minAmount !== undefined) query.amount.$gte = minAmount;
-      if (maxAmount !== undefined) query.amount.$lte = maxAmount;
+      const amountQuery = {};
+      if (minAmount !== undefined && minAmount !== '') amountQuery.$gte = Number(minAmount);
+      if (maxAmount !== undefined && maxAmount !== '') amountQuery.$lte = Number(maxAmount);
+      if (Object.keys(amountQuery).length > 0) query.amount = amountQuery;
     }
 
     if (search) {
@@ -331,22 +340,23 @@ export const getTransactionHistory = async (req, res, next) => {
       .populate('receiverAccount', 'accountNumber type')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limitNum);
 
     res.status(200).json({
       status: 'success',
       results: transactions.length,
       pagination: {
         total: totalTransactions,
-        pages: Math.ceil(totalTransactions / limit),
-        page: Number(page),
-        limit: Number(limit),
+        pages: Math.ceil(totalTransactions / limitNum) || 0,
+        page: pageNum,
+        limit: limitNum,
       },
       data: {
         transactions,
       },
     });
   } catch (error) {
+    console.error('Transaction History Error:', error);
     next(error);
   }
 };

@@ -82,7 +82,7 @@ const Transactions = () => {
     if (!history || history.length === 0) return;
     
     const headers = ['Date', 'ID', 'Description', 'Type', 'Amount', 'Status'];
-    const rows = history.map(tx => [
+    const rows = (history || []).map(tx => [
       new Date(tx.createdAt).toLocaleDateString(),
       tx.transactionId,
       tx.description,
@@ -134,7 +134,7 @@ const Transactions = () => {
           </button>
           <button
             onClick={exportToCSV}
-            disabled={!history.length}
+            disabled={!history || history.length === 0}
             className="flex items-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-3xl font-black text-sm hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
             <Download className="w-4 h-4" />

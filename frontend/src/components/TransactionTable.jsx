@@ -20,7 +20,7 @@ const TransactionTable = ({ transactions, isLoading, currentUserId, onViewDetail
     );
   }
 
-  if (!transactions || transactions.length === 0) {
+  if (!Array.isArray(transactions) || transactions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-slate-400 bg-slate-50/50 rounded-[2.5rem] border-2 border-dashed border-slate-100">
         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
