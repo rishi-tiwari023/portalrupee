@@ -6,7 +6,11 @@
   "directories": {
     "doc": "docs"
   },
-  "scripts": {},
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:concurrency": "node backend/tests/concurrency.js",
+    "db:check": "node backend/check_db.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rishi-tiwari023/portalrupee.git"

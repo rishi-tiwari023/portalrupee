@@ -1,9 +1,12 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 import User from './src/models/user.model.js';
 import Account from './src/models/account.model.js';
 
-dotenv.config();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, '.env') });
 
 async function checkData() {
   await mongoose.connect(process.env.MONGODB_URI);
