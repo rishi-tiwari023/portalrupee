@@ -13,6 +13,7 @@ import {
 import TransactionTable from '../components/TransactionTable';
 import TransactionFilters from '../components/TransactionFilters';
 import Pagination from '../components/Pagination';
+import TransactionDetailsModal from '../components/TransactionDetailsModal';
 
 const Transactions = () => {
   const dispatch = useDispatch();
@@ -29,6 +30,9 @@ const Transactions = () => {
     maxAmount: undefined,
     search: '',
   });
+
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const loadTransactions = useCallback(() => {
     // Sanitize filters before sending to API
@@ -50,6 +54,16 @@ const Transactions = () => {
     setFilters((prev) => ({ ...prev, page: newPage }));
   };
 
+  const handleViewDetails = (tx) => {
+    setSelectedTransaction(tx);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTransaction(null);
+  };
+
   const handleReset = () => {
     setFilters({
       page: 1,
@@ -68,7 +82,7 @@ const Transactions = () => {
     if (!history || history.length === 0) return;
     
     const headers = ['Date', 'ID', 'Description', 'Type', 'Amount', 'Status'];
-    const rows = history.map(tx => [
+    const rows = (history || []).map(tx => [
       new Date(tx.createdAt).toLocaleDateString(),
       tx.transactionId,
       tx.description,
@@ -120,7 +134,7 @@ const Transactions = () => {
           </button>
           <button
             onClick={exportToCSV}
-            disabled={!history.length}
+            disabled={!history || history.length === 0}
             className="flex items-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-3xl font-black text-sm hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
             <Download className="w-4 h-4" />
@@ -135,7 +149,7 @@ const Transactions = () => {
             <Info className="w-4 h-4" />
          </div>
          <p className="text-xs font-bold text-slate-600 leading-relaxed">
-            Transactions are processed in real-time. Transfers between PortalRupee accounts are instant. For external transfers, it may take 1-3 business days to reflect in the recipient's history.
+            Transactions are processed in real-time. Transfers between PortalRupee accounts are instant.
          </p>
       </div>
 
@@ -160,10 +174,18 @@ const Transactions = () => {
              transactions={history} 
              isLoading={loading} 
              currentUserId={user?._id}
+             onViewDetails={handleViewDetails}
            />
            <Pagination pagination={pagination} onPageChange={handlePageChange} />
         </div>
       </div>
+
+      <TransactionDetailsModal 
+        isOpen={isModalOpen} 
+        onClose={handleCloseModal} 
+        transaction={selectedTransaction} 
+        currentUserId={user?._id} 
+      />
 
       {/* Footer Insight */}
       <div className="mt-12 text-center pb-10">

@@ -23,6 +23,7 @@ import {
 import { fetchMyAccounts } from '../store/slices/accountSlice';
 import TPINInput from '../components/TPINInput';
 import { toast } from 'react-toastify';
+import TransactionDetailsModal from '../components/TransactionDetailsModal';
 
 const Transfer = () => {
   const dispatch = useDispatch();
@@ -36,6 +37,7 @@ const Transfer = () => {
   const [tpinError, setTpinError] = useState('');
   const [totpToken, setTotpToken] = useState('');
   const [totpError, setTotpError] = useState('');
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   const { searchResults, loading, error, success, lastTransaction } = useSelector((state) => state.transaction);
   const { accounts } = useSelector((state) => state.account);
@@ -97,6 +99,7 @@ const Transfer = () => {
     }
 
     const transferData = {
+      senderAccountId: selectedAccount._id,
       receiverId: selectedReceiver._id,
       amount: parseFloat(amount),
       description: description || `Transfer to ${selectedReceiver.firstName}`,
@@ -428,6 +431,13 @@ const Transfer = () => {
               </div>
             </div>
 
+            <button 
+              onClick={() => setIsDetailsModalOpen(true)}
+              className="text-indigo-600 font-black text-xs uppercase tracking-widest mb-8 hover:underline"
+            >
+              View Full Receipt
+            </button>
+
             <div className="grid grid-cols-2 gap-4">
               <button 
                 onClick={() => {
@@ -452,6 +462,12 @@ const Transfer = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      <TransactionDetailsModal 
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        transaction={lastTransaction}
+        currentUserId={currentUser?._id}
+      />
     </div>
   );
 };

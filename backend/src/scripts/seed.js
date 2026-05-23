@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import User from '../models/user.model.js';
 import Account from '../models/account.model.js';
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
@@ -18,14 +19,14 @@ const connectDB = async () => {
 const seedDatabase = async () => {
   try {
     await connectDB();
-
-    console.log('Clearing existing data...');
-    await User.deleteMany();
-    await Account.deleteMany();
+    // Do not clear existing data to avoid affecting existing users and accounts
+    // console.log('Clearing existing data...');
+    // await User.deleteMany();
+    // await Account.deleteMany();
 
     console.log('Inserting dummy users...');
 
-    const users = await User.insertMany([
+    const userData = [
       {
         firstName: 'System',
         lastName: 'Manager',
@@ -43,20 +44,49 @@ const seedDatabase = async () => {
         role: 'CASHIER'
       },
       {
-        firstName: 'John',
-        lastName: 'Doe',
+        firstName: 'Mr.',
+        lastName: 'Customer',
         email: 'customer@portalrupee.com',
         mobile: '9000000003',
         password: 'password123',
+        tpin: '111111',
+        role: 'CUSTOMER'
+      },
+      {
+        firstName: 'Mrs.',
+        lastName: 'Customer',
+        email: 'customer2@portalrupee.com',
+        mobile: '9000000004',
+        password: 'password123',
+        tpin: '111111',
         role: 'CUSTOMER'
       }
-    ]);
+    ];
 
-    const customer = users.find(u => u.role === 'CUSTOMER');
+    const users = [];
+    for (const u of userData) {
+      // Hash password and tpin
+      const hashedUser = { ...u };
+      if (u.password) hashedUser.password = await bcrypt.hash(u.password, 12);
+      if (u.tpin) {
+        hashedUser.tpin = await bcrypt.hash(u.tpin, 12);
+        hashedUser.tpinSet = true;
+      }
+
+      const user = await User.findOneAndUpdate(
+        { email: u.email },
+        { $set: hashedUser },
+        { upsert: true, new: true, runValidators: true }
+      );
+      users.push(user);
+    }
+
+    const customer = users.find(u => u.email === 'customer@portalrupee.com');
+    const receiver = users.find(u => u.email === 'customer2@portalrupee.com');
 
     console.log('Inserting dummy accounts...');
 
-    await Account.insertMany([
+    const accountData = [
       {
         user: customer._id,
         accountNumber: '1000000001',
@@ -70,8 +100,23 @@ const seedDatabase = async () => {
         accountType: 'CURRENT',
         balance: 15300,
         status: 'ACTIVE'
+      },
+      {
+        user: receiver._id,
+        accountNumber: '1000000003',
+        accountType: 'SAVINGS',
+        balance: 5000,
+        status: 'ACTIVE'
       }
-    ]);
+    ];
+
+    for (const a of accountData) {
+      await Account.findOneAndUpdate(
+        { accountNumber: a.accountNumber },
+        { $set: a },
+        { upsert: true, new: true }
+      );
+    }
 
     console.log('Database seeded successfully!');
     process.exit(0);

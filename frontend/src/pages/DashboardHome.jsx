@@ -17,6 +17,7 @@ import AccountSummaryCard from '../components/AccountSummaryCard';
 import CreateAccountModal from '../components/CreateAccountModal';
 import DepositModal from '../components/DepositModal';
 import WithdrawModal from '../components/WithdrawModal';
+import TransactionDetailsModal from '../components/TransactionDetailsModal';
 
 const DashboardHome = () => {
   const dispatch = useDispatch();
@@ -26,6 +27,8 @@ const DashboardHome = () => {
   const [isOpeningAccount, setIsOpeningAccount] = useState(false);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (user?._id) {
@@ -64,11 +67,10 @@ const DashboardHome = () => {
     },
   ];
 
-  const mockTransactions = [
-    { id: 1, type: 'DEPOSIT', amount: 3500, date: '2026-04-12', name: 'Cash Deposit', status: 'COMPLETED' },
-    { id: 2, type: 'TRANSFER', amount: -600, date: '2026-04-11', name: 'Cafe 2004', status: 'COMPLETED' },
-    { id: 3, type: 'WITHDRAWAL', amount: -2000, date: '2026-04-10', name: 'ATM Withdrawal', status: 'PENDING' },
-  ];
+  const handleViewDetails = (tx) => {
+    setSelectedTransaction(tx);
+    setIsModalOpen(true);
+  };
 
   if (loading && !summary.accountCount) {
     return (
@@ -268,42 +270,61 @@ const DashboardHome = () => {
         <div className="lg:col-span-2 premium-card p-4 sm:p-8 bg-white border border-slate-100 shadow-sm rounded-[2.5rem]">
           <div className="flex items-center justify-between mb-8 px-2">
             <h3 className="text-slate-800 text-xl font-black tracking-tight">Recent Transactions</h3>
-            <button className="text-indigo-600 hover:text-indigo-700 text-sm font-bold hover:underline">View All</button>
+            <button 
+              onClick={() => navigate('/dashboard/transactions')}
+              className="text-indigo-600 hover:text-indigo-700 text-sm font-bold hover:underline"
+            >
+              View All
+            </button>
           </div>
 
           <div className="space-y-4">
-            {mockTransactions.map((tx) => (
-              <div key={tx.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 hover:bg-slate-50 transition-colors rounded-3xl group cursor-pointer gap-4">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className={`w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center
-                    ${tx.type === 'DEPOSIT' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}
-                  `}>
-                    {tx.type === 'DEPOSIT' ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
-                  </div>
-                  <div className="min-w-0 overflow-hidden">
-                    <p className="text-slate-900 font-bold truncate">{tx.name}</p>
-                    <p className="text-slate-400 text-xs font-bold flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {tx.date}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex sm:flex-col justify-between items-end sm:text-right">
-                  <p className={`font-black text-lg ${tx.amount > 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
-                    {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
-                  </p>
-                  <span className={`text-[10px] font-black tracking-widest px-2 py-0.5 rounded-full uppercase
-                    ${tx.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}
-                  `}>
-                    {tx.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+            {summary?.recentActivity?.map((tx, idx) => {
+              const isReceiver = (tx.receiver?._id || tx.receiver) === user?._id;
+              let isCredit = false;
+              if (tx.type === 'DEPOSIT') isCredit = true;
+              if (tx.type === 'WITHDRAW') isCredit = false;
+              if (tx.type === 'TRANSFER') isCredit = isReceiver;
 
-            {mockTransactions.length === 0 && (
+              return (
+                <div 
+                  key={tx._id || idx} 
+                  onClick={() => handleViewDetails(tx)}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 hover:bg-slate-50 transition-colors rounded-3xl group cursor-pointer gap-4 border border-transparent hover:border-slate-100"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className={`w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center
+                      ${isCredit ? 'bg-emerald-50 text-emerald-600' : 
+                        tx.type === 'TRANSFER' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600'}
+                    `}>
+                      {isCredit ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
+                    </div>
+                    <div className="min-w-0 overflow-hidden">
+                      <p className="text-slate-900 font-bold truncate">{tx.description || 'Transaction'}</p>
+                      <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 mt-0.5">
+                        <Clock className="w-3 h-3" /> {new Date(tx.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex sm:flex-col justify-between items-end sm:text-right">
+                    <p className={`font-black text-lg ${isCredit ? 'text-emerald-600' : 'text-slate-900'}`}>
+                      {isCredit ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </p>
+                    <span className={`text-[9px] font-black tracking-widest px-2.5 py-1 rounded-full uppercase
+                      ${tx.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-700' : 
+                        tx.status === 'PENDING' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}
+                    `}>
+                      {tx.status}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {(!summary?.recentActivity || summary.recentActivity.length === 0) && (
               <div className="flex flex-col items-center justify-center py-12 text-slate-400">
                 <Clock className="w-12 h-12 mb-4 opacity-20" />
-                <p className="font-bold">No recent transactions</p>
+                <p className="font-bold text-sm">No recent transactions</p>
               </div>
             )}
           </div>
@@ -336,6 +357,12 @@ const DashboardHome = () => {
         isOpen={isWithdrawOpen}
         onClose={() => setIsWithdrawOpen(false)}
         accounts={summary?.accounts}
+      />
+      <TransactionDetailsModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        transaction={selectedTransaction} 
+        currentUserId={user?._id} 
       />
     </div>
   );

@@ -2,9 +2,8 @@ import React from 'react';
 import { ChevronLeft, ChevronRight, ChevronFirst, ChevronLast } from 'lucide-react';
 
 const Pagination = ({ pagination, onPageChange }) => {
+  if (!pagination || !pagination.pages || pagination.pages <= 1) return null;
   const { page, pages, total, limit } = pagination;
-
-  if (pages <= 1) return null;
 
   const renderPageNumbers = () => {
     const pageNumbers = [];

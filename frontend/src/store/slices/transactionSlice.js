@@ -169,8 +169,8 @@ const transactionSlice = createSlice({
       })
       .addCase(fetchTransactions.fulfilled, (state, action) => {
         state.loading = false;
-        state.history = action.payload.data.transactions;
-        state.pagination = action.payload.pagination;
+        state.history = action.payload.data?.transactions || [];
+        state.pagination = action.payload.pagination || initialState.pagination;
       })
       .addCase(fetchTransactions.rejected, (state, action) => {
         state.loading = false;
