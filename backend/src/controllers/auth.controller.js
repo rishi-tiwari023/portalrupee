@@ -3,6 +3,8 @@ import AppError from '../utils/AppError.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt.utils.js';
 import speakeasy from 'speakeasy';
 import { decrypt } from '../utils/encryption.util.js';
+import { generateOTP, storeOTP, verifyOTP as verifyOTPUtil } from '../utils/otp.util.js';
+import { sendOTPMail } from '../utils/mailer.js';
 
 /**
  * Register a new user
@@ -139,6 +141,58 @@ export const verify2FA = async (req, res, next) => {
         accessToken,
         refreshToken,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const sendOTP = async (req, res, next) => {
+  try {
+    const { email, purpose = 'general' } = req.body;
+
+    if (!email) {
+      return next(new AppError('Email address is required', 400));
+    }
+
+    if (purpose === 'password_reset' || purpose === 'tpin_reset') {
+      const user = await User.findOne({ email });
+      if (!user) {
+        return next(new AppError('No user found with this email address', 404));
+      }
+    }
+
+    const otp = generateOTP();
+    await storeOTP(email, otp, purpose);
+
+    await sendOTPMail(email, otp);
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP sent to your email successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyOTP = async (req, res, next) => {
+  try {
+    const { email, otp, purpose = 'general' } = req.body;
+
+    if (!email || !otp) {
+      return next(new AppError('Email and OTP are required', 400));
+    }
+
+    const isValid = await verifyOTPUtil(email, otp, purpose);
+
+    if (!isValid) {
+      return next(new AppError('Invalid or expired OTP', 400));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP verified successfully',
     });
   } catch (error) {
     next(error);
