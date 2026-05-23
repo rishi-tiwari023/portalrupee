@@ -17,7 +17,11 @@ const createTransporter = async () => {
   const isPlaceholder = (str) => {
     if (!str) return true;
     const s = str.trim();
-    return s === '' || s === 'your_smtp_username' || s === 'your_smtp_password';
+    return s === '' || 
+           s === 'your_smtp_username' || 
+           s === 'your_smtp_password' ||
+           s === 'your_gmail_address@gmail.com' ||
+           s === 'your_gmail_app_password';
   };
 
   if (user && pass && !isPlaceholder(user) && !isPlaceholder(pass)) {

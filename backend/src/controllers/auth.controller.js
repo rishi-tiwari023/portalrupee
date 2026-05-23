@@ -3,7 +3,7 @@ import AppError from '../utils/AppError.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt.utils.js';
 import speakeasy from 'speakeasy';
 import { decrypt } from '../utils/encryption.util.js';
-import { generateOTP, storeOTP, verifyOTP as verifyOTPUtil } from '../utils/otp.util.js';
+import { generateOTP, storeOTP, verifyOTP as verifyOTPUtil, isOTPVerified, clearOTPVerification } from '../utils/otp.util.js';
 import { sendOTPMail } from '../utils/mailer.js';
 
 /**
@@ -193,6 +193,41 @@ export const verifyOTP = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'OTP verified successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Reset password (verified by OTP)
+ */
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    // Check if OTP was verified for this email and purpose 'password_reset'
+    const isVerified = await isOTPVerified(email, 'password_reset');
+    if (!isVerified) {
+      return next(new AppError('Please verify your email via OTP first', 400));
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    // Update password
+    user.password = password;
+    await user.save();
+
+    // Clear verification flag from Redis
+    await clearOTPVerification(email, 'password_reset');
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully',
     });
   } catch (error) {
     next(error);
