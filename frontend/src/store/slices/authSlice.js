@@ -71,6 +71,18 @@ export const verifyOTP = createAsyncThunk(
   }
 );
 
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async ({ email, password }, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/reset-password', { email, password });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to reset password');
+    }
+  }
+);
+
 export const get2FASetup = createAsyncThunk(
   'auth/get2FASetup',
   async (_, { rejectWithValue }) => {
@@ -272,6 +284,19 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // resetPassword
+      .addCase(resetPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

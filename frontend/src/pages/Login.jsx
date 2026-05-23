@@ -5,7 +5,7 @@ import { useFormik } from 'formik';
 import * as zod from 'zod';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
 import { motion, AnimatePresence } from 'framer-motion';
-import { loginUser, verify2FA, sendOTP, verifyOTP } from '../store/slices/authSlice';
+import { loginUser, verify2FA, sendOTP, verifyOTP, resetPassword } from '../store/slices/authSlice';
 import { Shield, Mail, Lock, LogIn, AlertCircle, Eye, EyeOff, ArrowRight, Rocket, Loader2, X, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import OTPInput from '../components/OTPInput';
@@ -29,6 +29,9 @@ const Login = () => {
   const [forgotStep, setForgotStep] = useState('email');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [otpCode, setOtpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showResetPasswords, setShowResetPasswords] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -105,9 +108,38 @@ const Login = () => {
       const resultAction = await dispatch(verifyOTP({ email: forgotEmail, otp, purpose: 'password_reset' }));
       if (verifyOTP.fulfilled.match(resultAction)) {
         toast.success('OTP verified successfully!');
-        setForgotStep('success');
+        setForgotStep('reset');
       } else {
         toast.error(resultAction.payload || 'Invalid or expired OTP');
+      }
+    } catch (err) {
+      toast.error('An unexpected error occurred');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      const resultAction = await dispatch(resetPassword({ email: forgotEmail, password: newPassword }));
+      if (resetPassword.fulfilled.match(resultAction)) {
+        toast.success('Password updated successfully!');
+        setNewPassword('');
+        setConfirmPassword('');
+        setForgotStep('success');
+      } else {
+        toast.error(resultAction.payload || 'Failed to reset password. Please try again.');
       }
     } catch (err) {
       toast.error('An unexpected error occurred');
@@ -196,6 +228,8 @@ const Login = () => {
                       setForgotStep('email');
                       setShowForgotModal(false);
                       setOtpCode('');
+                      setNewPassword('');
+                      setConfirmPassword('');
                       setShowForgotModal(true);
                     }}
                     className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer"
@@ -412,15 +446,76 @@ const Login = () => {
                   </div>
                 )}
 
+                {forgotStep === 'reset' && (
+                  <div className="space-y-6 text-left">
+                    <div>
+                      <h3 className="text-2xl font-black text-slate-900 tracking-tight text-center">New Password</h3>
+                      <p className="text-slate-500 font-medium text-sm mt-2 text-center">
+                        Please set your new secure password.
+                      </p>
+                    </div>
+
+                    <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700 ml-1">New Password</label>
+                        <div className="relative group">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                          <input
+                            type={showResetPasswords ? 'text' : 'password'}
+                            required
+                            placeholder="••••••••"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl outline-none transition-all placeholder:text-slate-400"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700 ml-1">Confirm New Password</label>
+                        <div className="relative group">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                          <input
+                            type={showResetPasswords ? 'text' : 'password'}
+                            required
+                            placeholder="••••••••"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl outline-none transition-all placeholder:text-slate-400"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between px-1">
+                        <button
+                          type="button"
+                          onClick={() => setShowResetPasswords(!showResetPasswords)}
+                          className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                        >
+                          {showResetPasswords ? 'Hide Passwords' : 'Show Passwords'}
+                        </button>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={forgotLoading}
+                        className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white rounded-2xl font-bold transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                      >
+                        {forgotLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update Password'}
+                      </button>
+                    </form>
+                  </div>
+                )}
+
                 {forgotStep === 'success' && (
                   <div className="space-y-6">
                     <div className="mx-auto w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500">
                       <CheckCircle2 size={36} />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-black text-slate-900 tracking-tight">Identity Verified</h3>
+                      <h3 className="text-2xl font-black text-slate-900 tracking-tight">Password Updated</h3>
                       <p className="text-slate-500 font-medium text-sm mt-2">
-                        Your email address has been successfully verified!
+                        Your password has been successfully updated!
                       </p>
                     </div>
 
