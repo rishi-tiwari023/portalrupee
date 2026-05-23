@@ -47,6 +47,30 @@ export const verify2FA = createAsyncThunk(
   }
 );
 
+export const sendOTP = createAsyncThunk(
+  'auth/sendOTP',
+  async ({ email, purpose }, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/send-otp', { email, purpose });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to send OTP');
+    }
+  }
+);
+
+export const verifyOTP = createAsyncThunk(
+  'auth/verifyOTP',
+  async ({ email, otp, purpose }, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/verify-otp', { email, otp, purpose });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to verify OTP');
+    }
+  }
+);
+
 export const get2FASetup = createAsyncThunk(
   'auth/get2FASetup',
   async (_, { rejectWithValue }) => {
