@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { User, Mail, Shield, Phone, Calendar, MapPin, Edit3, X, Save, Loader2, ArrowRight } from 'lucide-react';
 /* eslint-disable no-unused-vars */
@@ -374,14 +375,38 @@ const Profile = () => {
         <div className="p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
           <div className="flex items-center justify-between mb-4">
             <span className="text-slate-600 font-medium">KYC Verification</span>
-            <span className="px-2 py-1 bg-amber-100 text-amber-600 text-[10px] font-bold rounded shadow-sm uppercase font-display">Pending</span>
+            {user?.kycStatus === 'PENDING' ? (
+              <span className="px-2 py-1 bg-amber-100 text-amber-600 text-[10px] font-bold rounded shadow-sm uppercase font-display">Under Review</span>
+            ) : user?.kycStatus === 'VERIFIED' ? (
+              <span className="px-2 py-1 bg-emerald-100 text-emerald-600 text-[10px] font-bold rounded shadow-sm uppercase font-display">Verified</span>
+            ) : (
+              <span className="px-2 py-1 bg-amber-100 text-amber-600 text-[10px] font-bold rounded shadow-sm uppercase font-display">Pending</span>
+            )}
           </div>
-          <p className="text-sm text-slate-400 leading-relaxed max-w-2xl mb-4 font-medium">
-            Your account is currently in "Limited" mode. Complete your KYC verification to unlock full transaction limits and messaging features.
-          </p>
-          <button className="px-6 py-3 bg-white text-indigo-600 border border-indigo-100 rounded-xl font-bold shadow-sm hover:bg-indigo-50 transition-all">
-            Start KYC Verification
-          </button>
+          
+          {user?.kycStatus === 'PENDING' ? (
+            <>
+              <p className="text-sm text-slate-400 leading-relaxed max-w-2xl mb-4 font-medium">
+                Your verification documents have been received and are currently under review by our audit team. This process typically takes under 24 hours.
+              </p>
+              <Link to="/dashboard/kyc" className="inline-block px-6 py-3 bg-white text-indigo-600 border border-indigo-100 rounded-xl font-bold shadow-sm hover:bg-indigo-50 transition-all text-center text-sm">
+                View Submitted Documents
+              </Link>
+            </>
+          ) : user?.kycStatus === 'VERIFIED' ? (
+            <p className="text-sm text-slate-400 leading-relaxed max-w-2xl font-medium">
+              Your identity has been fully verified! Your account limits have been lifted, and you now have unrestricted access to all features.
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-slate-400 leading-relaxed max-w-2xl mb-4 font-medium">
+                Your account is currently in "Limited" mode. Complete your KYC verification to unlock full transaction limits and messaging features.
+              </p>
+              <Link to="/dashboard/kyc" className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-md hover:bg-indigo-700 transition-all text-center text-sm shadow-indigo-100">
+                Start KYC Verification
+              </Link>
+            </>
+          )}
         </div>
 
         <div className="mt-8 pt-8 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-8">

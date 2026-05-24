@@ -17,6 +17,7 @@ import Profile from './pages/Profile';
 import Accounts from './pages/Accounts';
 import Transfer from './pages/Transfer';
 import Transactions from './pages/Transactions';
+import KYC from './pages/KYC';
 
 import './App.css';
 
@@ -62,6 +63,10 @@ const router = createBrowserRouter([
       {
         path: 'transactions',
         element: <Transactions />
+      },
+      {
+        path: 'kyc',
+        element: <KYC />
       },
       {
         path: 'settings',
