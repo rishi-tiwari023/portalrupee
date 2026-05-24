@@ -15,6 +15,7 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 import accountRoutes from './routes/account.routes.js';
 import twoFactorRoutes from './routes/2fa.routes.js';
 import transactionRoutes from './routes/transaction.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
 
 const app = express();
 
@@ -36,6 +37,8 @@ app.use('/api/v1/2fa', twoFactorRoutes);
 app.use('/api/v1/accounts', accountRoutes);
 app.use('/api/v1/transactions', transactionRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/uploads', uploadRoutes);
+
 
 // Health Check
 app.get('/health', (req, res) => {
