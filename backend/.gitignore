@@ -16,3 +16,6 @@ logs/
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Local upload fallback storage
+uploads/
