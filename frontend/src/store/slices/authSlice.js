@@ -167,6 +167,18 @@ export const changeTPIN = createAsyncThunk(
   }
 );
 
+export const submitKYC = createAsyncThunk(
+  'auth/submitKYC',
+  async ({ idDocKey, sigDocKey }, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/users/kyc', { idDocKey, sigDocKey });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to submit KYC');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -321,6 +333,20 @@ const authSlice = createSlice({
         state.loading = false;
       })
       .addCase(changeTPIN.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // submitKYC
+      .addCase(submitKYC.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(submitKYC.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.data?.user || action.payload.data;
+        state.error = null;
+      })
+      .addCase(submitKYC.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
