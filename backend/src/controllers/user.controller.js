@@ -100,3 +100,39 @@ export const searchUsers = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Submit KYC documents
+ */
+export const submitKYC = async (req, res, next) => {
+  try {
+    const { idDocKey, sigDocKey } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        kycDocumentKey: idDocKey,
+        kycSignatureKey: sigDocKey,
+        kycStatus: 'PENDING',
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updatedUser) {
+      return next(new AppError('User not found', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'KYC documents submitted successfully',
+      data: {
+        user: updatedUser,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

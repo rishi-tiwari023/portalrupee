@@ -16,3 +16,14 @@ export const searchUserSchema = z.object({
     query: z.string().min(1, 'Search query is required'),
   }),
 });
+
+export const submitKYCSchema = z.object({
+  body: z.object({
+    idDocKey: z.string({
+      required_error: 'Identification document key is required',
+    }).min(1, 'Identification document key is required'),
+    sigDocKey: z.string({
+      required_error: 'Signature document key is required',
+    }).min(1, 'Signature document key is required'),
+  }),
+});
