@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, ArrowLeft, CheckCircle2, FileText, Sparkles, Award } from 'lucide-react';
 import { toast } from 'react-toastify';
 import FileUpload from '../components/FileUpload';
-import { updateUser } from '../store/slices/authSlice';
+import { updateUser, submitKYC } from '../store/slices/authSlice';
 
 /**
  * Premium KYC Submission Page integrating multiple FileUpload instances
@@ -32,16 +32,19 @@ const KYC = () => {
 
     setSubmitting(true);
 
-    // Simulate API delay for premium experience
-    setTimeout(() => {
+    try {
+      await dispatch(submitKYC({
+        idDocKey: idDoc.key,
+        sigDocKey: sigDoc.key,
+      })).unwrap();
+
       setSubmitting(false);
       setIsSubmitted(true);
       toast.success('KYC Documents submitted for verification successfully!');
-
-      dispatch(updateUser({
-        kycStatus: 'PENDING',
-      }));
-    }, 2000);
+    } catch (error) {
+      setSubmitting(false);
+      toast.error(error || 'Failed to submit KYC documents.');
+    }
   };
 
   const pageVariants = {
