@@ -52,6 +52,17 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
+    kycStatus: {
+      type: String,
+      enum: ['NOT_STARTED', 'PENDING', 'VERIFIED', 'REJECTED'],
+      default: 'NOT_STARTED',
+    },
+    kycDocumentKey: {
+      type: String,
+    },
+    kycSignatureKey: {
+      type: String,
+    },
   },
   {
     timestamps: true,
