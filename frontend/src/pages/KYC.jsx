@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, ArrowLeft, CheckCircle2, FileText, Sparkles, Award } from 'lucide-react';
+import { Shield, ArrowLeft, CheckCircle2, FileText, Sparkles, Award, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import FileUpload from '../components/FileUpload';
 import { updateUser, submitKYC } from '../store/slices/authSlice';
+import api from '../api/axios';
 
 /**
  * Premium KYC Submission Page integrating multiple FileUpload instances
@@ -20,7 +21,25 @@ const KYC = () => {
   const [idDoc, setIdDoc] = useState(null);
   const [sigDoc, setSigDoc] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [viewingDoc, setViewingDoc] = useState(null);
+  const [isLoadingDoc, setIsLoadingDoc] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(
+    user?.kycStatus === 'PENDING' || user?.kycStatus === 'VERIFIED'
+  );
+
+  const handleViewDocument = async (e, key) => {
+    e.preventDefault();
+    if (isLoadingDoc) return;
+    setIsLoadingDoc(true);
+    try {
+      const response = await api.get(`/uploads/url/${key}`);
+      setViewingDoc({ url: response.data.url, key });
+    } catch (error) {
+      toast.error('Failed to load secure document viewer.');
+    } finally {
+      setIsLoadingDoc(false);
+    }
+  };
 
   // Form submit handler
   const handleSubmit = async (e) => {
@@ -246,11 +265,23 @@ const KYC = () => {
                 </div>
                 <div className="flex justify-between items-center pb-3 border-b border-slate-200/50">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Document 1 (Identity)</span>
-                  <span className="text-xs font-bold text-slate-600">{idDoc?.originalName || 'identity_document.pdf'}</span>
+                  {user?.kycDocumentKey ? (
+                    <button type="button" onClick={(e) => handleViewDocument(e, user.kycDocumentKey)} className="text-xs font-bold text-indigo-600 hover:underline">
+                      View Identity Document
+                    </button>
+                  ) : (
+                    <span className="text-xs font-bold text-slate-600">{idDoc?.originalName || 'identity_document.pdf'}</span>
+                  )}
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Document 2 (Signature)</span>
-                  <span className="text-xs font-bold text-slate-600">{sigDoc?.originalName || 'signature_specimen.png'}</span>
+                  {user?.kycSignatureKey ? (
+                    <button type="button" onClick={(e) => handleViewDocument(e, user.kycSignatureKey)} className="text-xs font-bold text-indigo-600 hover:underline">
+                      View Signature Document
+                    </button>
+                  ) : (
+                    <span className="text-xs font-bold text-slate-600">{sigDoc?.originalName || 'signature_specimen.png'}</span>
+                  )}
                 </div>
               </div>
 
@@ -273,6 +304,58 @@ const KYC = () => {
                 </button>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Secure Document Viewer Modal */}
+      <AnimatePresence>
+        {viewingDoc && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex bg-white"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full h-full relative flex flex-col"
+            >
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                    <Shield size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800">Secure Viewer</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">End-to-End Encrypted</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewingDoc(null)}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="flex-1 w-full h-full bg-slate-100/50 flex items-center justify-center p-4 md:p-8">
+                {viewingDoc.key.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) ? (
+                  <img
+                    src={viewingDoc.url}
+                    alt="Secure Document Viewer"
+                    className="max-w-full max-h-full object-contain drop-shadow-xl"
+                  />
+                ) : (
+                  <iframe
+                    src={viewingDoc.url}
+                    title="Secure Document Viewer"
+                    className="w-full h-full border-none bg-white drop-shadow-xl rounded-xl"
+                  />
+                )}
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
