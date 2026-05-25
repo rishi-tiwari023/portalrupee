@@ -93,3 +93,21 @@ export const viewFile = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Get Secure URL for viewing (JSON response)
+ */
+export const getUrl = async (req, res, next) => {
+  try {
+    const { key } = req.params;
+    let url;
+    if (useLocalFallback) {
+      url = await getPresignedUrlForViewing(key, 900);
+    } else {
+      url = await getPresignedUrlForViewing(key, 900);
+    }
+    res.status(200).json({ success: true, url });
+  } catch (error) {
+    next(error);
+  }
+};
