@@ -167,6 +167,19 @@ export const changeTPIN = createAsyncThunk(
   }
 );
 
+export const resetTPIN = createAsyncThunk(
+  'auth/resetTPIN',
+  async (tpin, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/tpin/reset', { tpin });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to reset TPIN');
+    }
+  }
+);
+
+
 export const submitKYC = createAsyncThunk(
   'auth/submitKYC',
   async ({ idDocKey, sigDocKey }, { rejectWithValue }) => {
@@ -336,6 +349,20 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      // resetTPIN
+      .addCase(resetTPIN.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetTPIN.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(resetTPIN.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
       // submitKYC
       .addCase(submitKYC.pending, (state) => {
         state.loading = true;
