@@ -21,3 +21,13 @@ export const changeTPINSchema = z.object({
       .regex(/^\d+$/, 'New TPIN must only contain numbers'),
   }),
 });
+
+export const resetTPINSchema = z.object({
+  body: z.object({
+    tpin: z
+      .string()
+      .length(6, 'TPIN must be exactly 6 digits')
+      .regex(/^\d+$/, 'TPIN must only contain numbers'),
+  }),
+});
+

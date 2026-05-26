@@ -7,7 +7,7 @@ import net from 'net';
 import { connectRedis, redisClient } from '../src/config/redis.js';
 import { generateOTP, storeOTP, verifyOTP, isOTPVerified } from '../src/utils/otp.util.js';
 import User from '../src/models/user.model.js';
-import { resetPassword } from '../src/controllers/auth.controller.js';
+import { resetTPIN } from '../src/controllers/tpin.controller.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, '../.env') });
@@ -40,6 +40,7 @@ const checkRedisRunning = (url) => {
   });
 };
 
+// In-memory Redis mock fallback
 const mockStore = {};
 const setupRedisMock = () => {
   console.log('Setting up in-memory Redis mock fallback for tests...');
@@ -58,8 +59,8 @@ const setupRedisMock = () => {
   };
 };
 
-async function runResetPasswordTests() {
-  console.log('--- Starting Reset Password Controller Tests ---');
+async function runResetTPINTests() {
+  console.log('--- Starting Reset TPIN Controller Tests ---');
 
   try {
     console.log('Connecting to MongoDB...');
@@ -77,11 +78,10 @@ async function runResetPasswordTests() {
     }
 
 
-
-    const email = 'test-reset-user@example.com';
-    const originalPassword = 'oldSecurePassword123';
-    const newPassword = 'newSecurePassword456';
-    const purpose = 'password_reset';
+    const email = 'test-tpin-user@example.com';
+    const initialTpin = '123456';
+    const newTpin = '987654';
+    const purpose = 'tpin_reset';
 
     // Cleanup existing test user if any
     await User.deleteOne({ email });
@@ -90,17 +90,24 @@ async function runResetPasswordTests() {
     console.log('\nCreating test user in MongoDB...');
     const user = await User.create({
       firstName: 'Test',
-      lastName: 'Reset',
+      lastName: 'TPIN',
       email,
-      mobile: '9999999999',
-      password: originalPassword,
-      role: 'CUSTOMER'
+      mobile: '8888888888',
+      password: 'securePassword123',
+      role: 'CUSTOMER',
+      tpin: initialTpin
     });
     console.log('Test user created.');
 
-    // 1. Try to reset password without OTP verification
-    console.log('\nTesting reset password without OTP verification (should fail)...');
-    let mockReq = { body: { email, password: newPassword } };
+    // 1. Try to reset TPIN without OTP verification
+    console.log('\nTesting reset TPIN without OTP verification (should fail)...');
+    let mockReq = {
+      body: { tpin: newTpin },
+      user: {
+        id: user._id,
+        email: user.email
+      }
+    };
     let mockRes = {
       status: function (code) {
         this.statusCode = code;
@@ -118,11 +125,11 @@ async function runResetPasswordTests() {
       nextError = err;
     };
 
-    await resetPassword(mockReq, mockRes, mockNext);
+    await resetTPIN(mockReq, mockRes, mockNext);
     if (!nextCalled || !nextError || nextError.statusCode !== 400) {
       throw new Error(`Expected verification check to fail, but it succeeded or returned wrong error: ${nextError?.message}`);
     }
-    console.log('Successfully rejected reset without OTP.');
+    console.log('Successfully rejected reset without OTP verification.');
 
     // 2. Generate and verify OTP
     console.log('\nGenerating and verifying OTP...');
@@ -134,34 +141,35 @@ async function runResetPasswordTests() {
     }
     console.log('OTP verified successfully. Verification flag set.');
 
-    // 3. Try to reset password with verified OTP
-    console.log('\nTesting reset password with valid OTP verification...');
+    // 3. Reset TPIN with verified OTP
+    console.log('\nTesting reset TPIN with valid OTP verification...');
     nextCalled = false;
     nextError = null;
     mockRes.statusCode = null;
     mockRes.responseData = null;
 
-    await resetPassword(mockReq, mockRes, mockNext);
+    await resetTPIN(mockReq, mockRes, mockNext);
     if (nextCalled && nextError) {
-      throw new Error(`Expected reset password to succeed, but next was called with error: ${nextError.message}`);
+      throw new Error(`Expected reset TPIN to succeed, but next was called with error: ${nextError.message}`);
     }
 
-    if (mockRes.statusCode !== 200 || !mockRes.responseData.success) {
+    if (mockRes.statusCode !== 200 || mockRes.responseData.status !== 'success') {
       throw new Error(`Expected HTTP 200 success response, got: ${mockRes.statusCode}`);
     }
-    console.log('Reset password controller completed successfully.');
+    console.log('Reset TPIN controller completed successfully.');
 
-    // 4. Verify password was updated and hashed in DB
-    console.log('\nVerifying updated password in MongoDB...');
-    const updatedUser = await User.findOne({ email }).select('+password');
-    const isOldMatch = await bcrypt.compare(originalPassword, updatedUser.password);
-    const isNewMatch = await bcrypt.compare(newPassword, updatedUser.password);
+    // 4. Verify TPIN was updated and hashed in DB
+    console.log('\nVerifying updated TPIN in MongoDB...');
+    const updatedUser = await User.findOne({ email }).select('+tpin');
+    const isOldMatch = await bcrypt.compare(initialTpin, updatedUser.tpin);
+    const isNewMatch = await bcrypt.compare(newTpin, updatedUser.tpin);
 
-    console.log(`Compare with old password: ${isOldMatch} (expected: false)`);
-    console.log(`Compare with new password: ${isNewMatch} (expected: true)`);
+    console.log(`Compare with old TPIN: ${isOldMatch} (expected: false)`);
+    console.log(`Compare with new TPIN: ${isNewMatch} (expected: true)`);
+    console.log(`tpinSet status: ${updatedUser.tpinSet} (expected: true)`);
 
-    if (isOldMatch || !isNewMatch) {
-      throw new Error('Password was not correctly updated/hashed in the database!');
+    if (isOldMatch || !isNewMatch || !updatedUser.tpinSet) {
+      throw new Error('TPIN was not correctly updated/hashed in the database!');
     }
     console.log('Database verification passed.');
 
@@ -175,7 +183,7 @@ async function runResetPasswordTests() {
     console.log('Redis flag verification passed.');
 
     console.log('\n======================================');
-    console.log('ALL RESET PASSWORD TESTS PASSED SUCCESSFULLY!');
+    console.log('ALL RESET TPIN TESTS PASSED SUCCESSFULLY!');
     console.log('======================================');
 
     // Cleanup test user
@@ -193,4 +201,4 @@ async function runResetPasswordTests() {
   }
 }
 
-runResetPasswordTests();
+runResetTPINTests();
