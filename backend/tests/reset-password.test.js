@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import net from 'net';
 import { connectRedis, redisClient } from '../src/config/redis.js';
 import { generateOTP, storeOTP, verifyOTP, isOTPVerified } from '../src/utils/otp.util.js';
 import User from '../src/models/user.model.js';
@@ -10,6 +11,52 @@ import { resetPassword } from '../src/controllers/auth.controller.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, '../.env') });
+
+const checkRedisRunning = (url) => {
+  return new Promise((resolve) => {
+    let port = 6379;
+    let host = '127.0.0.1';
+    try {
+      const parsed = new URL(url);
+      port = parsed.port || 6379;
+      host = parsed.hostname || '127.0.0.1';
+    } catch (e) {}
+
+    const socket = new net.Socket();
+    socket.setTimeout(1000);
+    socket.once('connect', () => {
+      socket.destroy();
+      resolve(true);
+    });
+    socket.once('timeout', () => {
+      socket.destroy();
+      resolve(false);
+    });
+    socket.once('error', () => {
+      socket.destroy();
+      resolve(false);
+    });
+    socket.connect(port, host);
+  });
+};
+
+const mockStore = {};
+const setupRedisMock = () => {
+  console.log('Setting up in-memory Redis mock fallback for tests...');
+  redisClient.connect = async () => { console.log('Mock Redis Connected.'); };
+  redisClient.quit = async () => { console.log('Mock Redis Quitted.'); };
+  redisClient.set = async (key, val, options) => {
+    mockStore[key] = val.toString();
+    return 'OK';
+  };
+  redisClient.get = async (key) => {
+    return mockStore[key] || null;
+  };
+  redisClient.del = async (key) => {
+    delete mockStore[key];
+    return 1;
+  };
+};
 
 async function runResetPasswordTests() {
   console.log('--- Starting Reset Password Controller Tests ---');
@@ -19,9 +66,17 @@ async function runResetPasswordTests() {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB Connected.');
 
-    console.log('Connecting to Redis...');
-    await connectRedis();
-    console.log('Redis connected successfully.');
+    const redisRunning = await checkRedisRunning(process.env.REDIS_URL || 'redis://localhost:6379');
+    if (redisRunning) {
+      console.log('Connecting to Redis...');
+      await connectRedis();
+      console.log('Redis connected successfully.');
+    } else {
+      console.warn('Redis is not running. Setting up mock Redis fallback.');
+      setupRedisMock();
+    }
+
+
 
     const email = 'test-reset-user@example.com';
     const originalPassword = 'oldSecurePassword123';
@@ -131,7 +186,9 @@ async function runResetPasswordTests() {
     console.error(error);
   } finally {
     await mongoose.disconnect();
-    await redisClient.quit();
+    try {
+      await redisClient.quit();
+    } catch (e) {}
     console.log('\nDisconnected databases. Exiting.');
   }
 }
