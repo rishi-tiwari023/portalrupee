@@ -11,6 +11,7 @@ import { updateProfile, setTPIN, updateUser, changeTPIN } from '../store/slices/
 import { toast } from 'react-toastify';
 import TPINSetupWizard from '../components/TPINSetupWizard';
 import TwoFactorSetup from '../components/TwoFactorSetup';
+import TPINRecoveryModal from '../components/TPINRecoveryModal';
 
 const profileSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -25,6 +26,8 @@ const Profile = () => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [showTPINWizard, setShowTPINWizard] = React.useState(false);
   const [show2FAWizard, setShow2FAWizard] = React.useState(false);
+  const [showTPINRecovery, setShowTPINRecovery] = React.useState(false);
+
 
   const handleTPINSuccess = async (payload) => {
     try {
@@ -342,6 +345,7 @@ const Profile = () => {
                 <TPINSetupWizard
                   onCancel={() => setShowTPINWizard(false)}
                   onSuccess={handleTPINSuccess}
+                  onForgotTpin={() => { setShowTPINWizard(false); setShowTPINRecovery(true); }}
                   isChangeMode={user?.tpinSet}
                   title={user?.tpinSet ? "Change TPIN" : "Setup TPIN"}
                 />
@@ -420,6 +424,16 @@ const Profile = () => {
           </div>
         </div>
       </motion.div>
+      
+      <AnimatePresence>
+        {showTPINRecovery && (
+          <TPINRecoveryModal 
+            isOpen={showTPINRecovery} 
+            onClose={() => setShowTPINRecovery(false)}
+            onSuccess={() => setShowTPINWizard(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

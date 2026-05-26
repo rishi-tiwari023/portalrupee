@@ -24,6 +24,7 @@ import { fetchMyAccounts } from '../store/slices/accountSlice';
 import TPINInput from '../components/TPINInput';
 import { toast } from 'react-toastify';
 import TransactionDetailsModal from '../components/TransactionDetailsModal';
+import TPINRecoveryModal from '../components/TPINRecoveryModal';
 
 const Transfer = () => {
   const dispatch = useDispatch();
@@ -38,6 +39,8 @@ const Transfer = () => {
   const [totpToken, setTotpToken] = useState('');
   const [totpError, setTotpError] = useState('');
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [showTPINRecovery, setShowTPINRecovery] = useState(false);
+
 
   const { searchResults, loading, error, success, lastTransaction } = useSelector((state) => state.transaction);
   const { accounts } = useSelector((state) => state.account);
@@ -360,6 +363,13 @@ const Transfer = () => {
                 error={tpinError}
                 onEnter={handleTransfer}
               />
+              <button
+                type="button"
+                onClick={() => setShowTPINRecovery(true)}
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors mt-3 cursor-pointer"
+              >
+                Forgot TPIN?
+              </button>
             </div>
 
             {currentUser?.twoFactorEnabled && (
@@ -468,6 +478,15 @@ const Transfer = () => {
         transaction={lastTransaction}
         currentUserId={currentUser?._id}
       />
+      <AnimatePresence>
+        {showTPINRecovery && (
+          <TPINRecoveryModal 
+            isOpen={showTPINRecovery} 
+            onClose={() => setShowTPINRecovery(false)}
+            onSuccess={() => setShowTPINRecovery(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

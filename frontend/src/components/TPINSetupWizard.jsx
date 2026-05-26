@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Lock, Loader2 } from 'lucide-react';
 import TPINInput from './TPINInput';
 
-const TPINSetupWizard = ({ onSuccess, onCancel, isChangeMode = false, title = "Setup Transaction PIN" }) => {
+const TPINSetupWizard = ({ onSuccess, onCancel, onForgotTpin, isChangeMode = false, title = "Setup Transaction PIN" }) => {
   const [step, setStep] = useState(isChangeMode ? 0 : 1);
   const [oldPin, setOldPin] = useState("");
   const [pin, setPin] = useState("");
@@ -79,6 +79,17 @@ const TPINSetupWizard = ({ onSuccess, onCancel, isChangeMode = false, title = "S
               error={error}
               onEnter={handleNext}
             />
+            {onForgotTpin && (
+              <div className="flex justify-center -mt-4">
+                <button
+                  type="button"
+                  onClick={onForgotTpin}
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer text-center"
+                >
+                  Forgot TPIN?
+                </button>
+              </div>
+            )}
             
             <div className="flex flex-col gap-3">
               <button
