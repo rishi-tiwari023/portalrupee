@@ -15,7 +15,43 @@ const loginSchema = zod.object({
   password: zod.string().min(6, 'Password must be at least 6 characters'),
 });
 
+const RecoveryProgress = ({ currentStep, steps }) => {
+  return (
+    <div className="mb-8 flex items-center justify-center">
+      {steps.map((label, index) => {
+        const stepNum = index + 1;
+        const isActive = currentStep === stepNum;
+        const isCompleted = currentStep > stepNum;
+        return (
+          <React.Fragment key={index}>
+            <div className="flex flex-col items-center relative">
+              <div 
+                className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] transition-all duration-300 shadow-sm
+                  ${isCompleted 
+                    ? 'bg-emerald-500 text-white shadow-emerald-100' 
+                    : isActive 
+                      ? 'bg-indigo-600 text-white ring-4 ring-indigo-500/10 shadow-indigo-100 scale-110' 
+                      : 'bg-slate-100 text-slate-400 border border-slate-200'}
+                `}
+              >
+                {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : stepNum}
+              </div>
+              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-2.5 absolute -bottom-4.5 whitespace-nowrap">
+                {label}
+              </span>
+            </div>
+            {index < steps.length - 1 && (
+              <div className={`w-8 h-[2px] mx-1.5 rounded-full transition-all duration-500 ${isCompleted ? 'bg-emerald-500' : 'bg-slate-100'}`} />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+};
+
 const Login = () => {
+
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -379,6 +415,18 @@ const Login = () => {
                 <div className="mx-auto w-16 h-16 bg-indigo-50 rounded-[1.5rem] flex items-center justify-center text-indigo-600">
                   <Shield size={32} />
                 </div>
+
+                <div className="py-2">
+                  <RecoveryProgress 
+                    currentStep={
+                      forgotStep === 'email' ? 1 :
+                      forgotStep === 'otp' ? 2 :
+                      forgotStep === 'reset' ? 3 : 4
+                    } 
+                    steps={['Send OTP', 'Verify', 'Reset Password', 'Success']} 
+                  />
+                </div>
+
 
                 {forgotStep === 'email' && (
                   <div className="space-y-6">
