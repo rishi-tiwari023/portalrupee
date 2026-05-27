@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getMe } from './store/slices/authSlice';
 import PublicLayout from './layouts/PublicLayout';
 import ProtectedLayout from './layouts/ProtectedLayout';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import RoleBasedRoute from './components/RoleBasedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -100,6 +100,40 @@ function App() {
       dispatch(getMe());
     }
   }, [dispatch, token, user]);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      toast.dismiss('offline-alert');
+      toast.success('System Alert: Connection restored. You are back online!', {
+        toastId: 'online-alert',
+        autoClose: 3000,
+        className: 'premium-toast',
+      });
+    };
+
+    const handleOffline = () => {
+      toast.error('System Alert: You are currently offline. Some features may not work.', {
+        toastId: 'offline-alert',
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+        className: 'premium-toast',
+      });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Initial check
+    if (!navigator.onLine) {
+      handleOffline();
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   return (
     <div className="App antialiased selection:bg-indigo-100 selection:text-indigo-900 font-sans">
