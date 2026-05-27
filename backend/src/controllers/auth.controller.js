@@ -4,7 +4,7 @@ import { generateAccessToken, generateRefreshToken } from '../utils/jwt.utils.js
 import speakeasy from 'speakeasy';
 import { decrypt } from '../utils/encryption.util.js';
 import { generateOTP, storeOTP, verifyOTP as verifyOTPUtil, isOTPVerified, clearOTPVerification } from '../utils/otp.util.js';
-import { sendOTPMail } from '../utils/mailer.js';
+import { sendOTPMail, sendWelcomeMail } from '../utils/mailer.js';
 
 /**
  * Register a new user
@@ -38,6 +38,11 @@ export const register = async (req, res, next) => {
     // Generate tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
+
+    // Send welcome email asynchronously
+    sendWelcomeMail(email, firstName).catch((err) => {
+      console.error(`Failed to send welcome email to ${email}:`, err);
+    });
 
     res.status(201).json({
       success: true,
