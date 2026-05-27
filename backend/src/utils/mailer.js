@@ -63,9 +63,35 @@ const createTransporter = async () => {
 /**
  * Sends a One-Time Password (OTP) email using a premium HTML template
  */
-export const sendOTPMail = async (email, otp) => {
+export const sendOTPMail = async (email, otp, purpose = 'general') => {
   const mailTransporter = await createTransporter();
   const from = process.env.EMAIL_FROM;
+
+  let title = 'One-Time Password (OTP)';
+  let intro = 'Use the following code to verify your action on PortalRupee.';
+  let cardBg = '#f5f3ff';
+  let cardBorder = '#ddd6fe';
+  let textColor = '#4f46e5';
+
+  if (purpose === 'password_reset') {
+    title = 'Password Reset Verification';
+    intro = 'Use the following code to securely reset your password on PortalRupee.';
+    cardBg = '#fee2e2';
+    cardBorder = '#fecaca';
+    textColor = '#dc2626';
+  } else if (purpose === 'tpin_reset') {
+    title = 'TPIN Reset Verification';
+    intro = 'Use the following code to securely reset your Transaction PIN (TPIN).';
+    cardBg = '#e0f2fe';
+    cardBorder = '#bae6fd';
+    textColor = '#0284c7';
+  } else if (purpose === 'disable_2fa') {
+    title = 'Disable 2FA Verification';
+    intro = 'Use the following code to disable Two-Factor Authentication on your account.';
+    cardBg = '#ffedd5';
+    cardBorder = '#fed7aa';
+    textColor = '#ea580c';
+  }
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -73,7 +99,7 @@ export const sendOTPMail = async (email, otp) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>PortalRupee Verification Code</title>
+      <title>PortalRupee ${title}</title>
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         body {
@@ -134,8 +160,8 @@ export const sendOTPMail = async (email, otp) => {
           text-align: left;
         }
         .otp-card {
-          background: #f5f3ff;
-          border: 2px solid #ddd6fe;
+          background: ${cardBg};
+          border: 2px solid ${cardBorder};
           border-radius: 20px;
           padding: 24px;
           margin: 24px auto;
@@ -146,7 +172,7 @@ export const sendOTPMail = async (email, otp) => {
           font-size: 38px;
           font-weight: 900;
           letter-spacing: 0.25em;
-          color: #4f46e5;
+          color: ${textColor};
           margin: 0;
         }
         .alert-box {
@@ -187,9 +213,9 @@ export const sendOTPMail = async (email, otp) => {
           <p>Secure Verification</p>
         </div>
         <div class="content">
-          <h2 class="greeting">One-Time Password (OTP)</h2>
+          <h2 class="greeting">${title}</h2>
           <p class="intro-text">
-            Use the following code to verify your action on PortalRupee. This OTP is confidential and valid for <strong>5 minutes</strong>.
+            ${intro} This OTP is confidential and valid for <strong>5 minutes</strong>.
           </p>
           
           <div class="otp-card">
@@ -214,8 +240,8 @@ export const sendOTPMail = async (email, otp) => {
   const mailOptions = {
     from,
     to: email,
-    subject: `PortalRupee Verification Code: ${otp}`,
-    text: `Your PortalRupee verification code is ${otp}. It will expire in 5 minutes.`,
+    subject: `PortalRupee ${title}: ${otp}`,
+    text: `Your PortalRupee ${title} code is ${otp}. It will expire in 5 minutes.`,
     html: htmlContent,
   };
 

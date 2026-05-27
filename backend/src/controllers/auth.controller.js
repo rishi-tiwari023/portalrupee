@@ -170,7 +170,7 @@ export const sendOTP = async (req, res, next) => {
     const otp = generateOTP();
     await storeOTP(email, otp, purpose);
 
-    await sendOTPMail(email, otp);
+    await sendOTPMail(email, otp, purpose);
 
     res.status(200).json({
       success: true,
