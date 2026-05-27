@@ -9,26 +9,17 @@ const createTransporter = async () => {
   if (transporter) return transporter;
 
   const resendApiKey = process.env.RESEND_API_KEY;
-  const isProduction = process.env.NODE_ENV === 'production';
-  const host = process.env.SMTP_HOST;
-  const port = parseInt(process.env.SMTP_PORT || '587', 10);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const secure = process.env.SMTP_SECURE === 'true';
 
   const isPlaceholder = (str) => {
     if (!str) return true;
     const s = str.trim();
     return s === '' || 
-           s === 'your_smtp_username' || 
-           s === 'your_smtp_password' ||
-           s === 'your_gmail_address@gmail.com' ||
-           s === 'your_gmail_app_password';
+           s === 'your_resend_api_key_here';
   };
 
-  // If in production and a Resend API key is configured, use Resend SMTP
-  if (isProduction && resendApiKey && !isPlaceholder(resendApiKey)) {
-    console.log('Configuring Resend.io SMTP transport for production');
+  // If a Resend API key is configured, use Resend SMTP
+  if (resendApiKey && !isPlaceholder(resendApiKey)) {
+    console.log('Configuring Resend.io SMTP transport');
     transporter = nodemailer.createTransport({
       host: 'smtp.resend.com',
       port: 465,
@@ -36,19 +27,6 @@ const createTransporter = async () => {
       auth: {
         user: 'resend',
         pass: resendApiKey.trim(),
-      },
-    });
-  }
-  // Otherwise, fallback to configured custom SMTP if valid
-  else if (user && pass && !isPlaceholder(user) && !isPlaceholder(pass)) {
-    console.log(`Configuring custom SMTP transport with ${host}:${port}`);
-    transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      auth: {
-        user: user.trim(),
-        pass: pass.trim(),
       },
     });
   }
@@ -87,7 +65,7 @@ const createTransporter = async () => {
  */
 export const sendOTPMail = async (email, otp) => {
   const mailTransporter = await createTransporter();
-  const from = process.env.EMAIL_FROM || 'noreply@portalrupee.com';
+  const from = process.env.EMAIL_FROM;
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -249,7 +227,7 @@ export const sendOTPMail = async (email, otp) => {
  */
 export const sendWelcomeMail = async (email, name) => {
   const mailTransporter = await createTransporter();
-  const from = process.env.EMAIL_FROM || 'noreply@portalrupee.com';
+  const from = process.env.EMAIL_FROM;
 
   const htmlContent = `
     <!DOCTYPE html>
