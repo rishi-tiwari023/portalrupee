@@ -5,7 +5,7 @@ import { useFormik } from 'formik';
 import * as zod from 'zod';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
 import { motion, AnimatePresence } from 'framer-motion';
-import { loginUser, verify2FA, sendOTP, verifyOTP, resetPassword } from '../store/slices/authSlice';
+import { loginUser, verify2FA, sendOTP, verifyOTP, resetPassword, disable2FAViaOTP } from '../store/slices/authSlice';
 import { Shield, Mail, Lock, LogIn, AlertCircle, Eye, EyeOff, ArrowRight, Rocket, Loader2, X, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import OTPInput from '../components/OTPInput';
@@ -69,6 +69,10 @@ const Login = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showResetPasswords, setShowResetPasswords] = useState(false);
 
+  const [forgot2FAMode, setForgot2FAMode] = useState(false);
+  const [forgot2FALoading, setForgot2FALoading] = useState(false);
+  const [forgot2FAOtp, setForgot2FAOtp] = useState('');
+
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -112,6 +116,62 @@ const Login = () => {
       navigate('/dashboard');
     } else {
       toast.error(resultAction.payload || 'Invalid 2FA code');
+    }
+  };
+
+  const handleSendDisable2FAOTP = async () => {
+    setForgot2FALoading(true);
+    try {
+      const resultAction = await dispatch(sendOTP({ email: userEmail, purpose: 'disable_2fa' }));
+      if (sendOTP.fulfilled.match(resultAction)) {
+        toast.success('Verification OTP sent to your email');
+        setForgot2FAMode(true);
+      } else {
+        toast.error(resultAction.payload || 'Failed to send OTP.');
+      }
+    } catch (err) {
+      toast.error('An unexpected error occurred');
+    } finally {
+      setForgot2FALoading(false);
+    }
+  };
+
+  const handleVerifyDisable2FA = async (otp) => {
+    setForgot2FALoading(true);
+    try {
+      const verifyResult = await dispatch(verifyOTP({ email: userEmail, otp, purpose: 'disable_2fa' }));
+      if (verifyOTP.fulfilled.match(verifyResult)) {
+        const disableResult = await dispatch(disable2FAViaOTP({ email: userEmail }));
+        if (disable2FAViaOTP.fulfilled.match(disableResult)) {
+          toast.success('2FA disabled and identity verified!', {
+            icon: <Rocket size={20} className="text-indigo-600" />,
+            className: 'premium-toast'
+          });
+          navigate('/dashboard');
+        } else {
+          toast.error(disableResult.payload || 'Failed to disable 2FA');
+        }
+      } else {
+        toast.error(verifyResult.payload || 'Invalid or expired OTP');
+      }
+    } catch (err) {
+      toast.error('An unexpected error occurred');
+    } finally {
+      setForgot2FALoading(false);
+    }
+  };
+  
+  const handleResendDisable2FAOTP = async () => {
+    try {
+      const resultAction = await dispatch(sendOTP({ email: userEmail, purpose: 'disable_2fa' }));
+      if (sendOTP.fulfilled.match(resultAction)) {
+        toast.success('Verification OTP resent successfully');
+      } else {
+        toast.error(resultAction.payload || 'Failed to resend OTP');
+        throw new Error('Failed');
+      }
+    } catch (err) {
+      throw err;
     }
   };
 
@@ -324,45 +384,84 @@ const Login = () => {
                   <Shield size={40} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-slate-800">2FA Verification</h3>
+                  <h3 className="text-2xl font-bold text-slate-800">
+                    {forgot2FAMode ? 'Disable 2FA' : '2FA Verification'}
+                  </h3>
                   <p className="text-sm text-slate-500 font-medium px-4">
-                    Enter the 6-digit code from your Google Authenticator app
+                    {forgot2FAMode 
+                      ? `Enter the 6-digit code sent to ${userEmail}` 
+                      : 'Enter the 6-digit code from your Google Authenticator app'}
                   </p>
                 </div>
               </div>
 
-              <form onSubmit={handle2FAVerify} className="space-y-6">
-                <div className="space-y-2">
-                  <div className="relative group">
-                    <input
-                      autoFocus
-                      type="text"
-                      maxLength={6}
-                      placeholder="000 000"
-                      value={otpToken}
-                      onChange={(e) => setOtpToken(e.target.value.replace(/\D/g, ''))}
-                      className="w-full px-4 py-6 bg-slate-100/50 border-2 border-transparent focus:border-indigo-500 rounded-3xl text-center text-4xl font-black tracking-[0.3em] focus:outline-none transition-all placeholder:text-slate-200"
+              {!forgot2FAMode ? (
+                <form onSubmit={handle2FAVerify} className="space-y-6">
+                  <div className="space-y-2">
+                    <div className="relative group">
+                      <input
+                        autoFocus
+                        type="text"
+                        maxLength={6}
+                        placeholder="000 000"
+                        value={otpToken}
+                        onChange={(e) => setOtpToken(e.target.value.replace(/\D/g, ''))}
+                        className="w-full px-4 py-6 bg-slate-100/50 border-2 border-transparent focus:border-indigo-500 rounded-3xl text-center text-4xl font-black tracking-[0.3em] focus:outline-none transition-all placeholder:text-slate-200"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-4">
+                    <button
+                      type="submit"
+                      disabled={loading || otpToken.length !== 6}
+                      className="w-full py-5 bg-indigo-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:bg-indigo-300"
+                    >
+                      {loading ? <Loader2 className="animate-spin" /> : <>Verify & Access <ArrowRight size={20} /></>}
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={handleSendDisable2FAOTP}
+                      disabled={forgot2FALoading}
+                      className="text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
+                    >
+                      {forgot2FALoading ? 'Sending OTP...' : 'Lost Authenticator Device? Disable 2FA via OTP'}
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setRequires2FA(false)}
+                      className="text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      Back to Login
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-6">
+                  <div className="py-2">
+                    <OTPInput
+                      numInputs={6}
+                      value={forgot2FAOtp}
+                      onChange={setForgot2FAOtp}
+                      onComplete={handleVerifyDisable2FA}
+                      onResend={handleResendDisable2FAOTP}
+                      isResending={forgot2FALoading}
                     />
                   </div>
+                  
+                  <div className="flex flex-col gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setForgot2FAMode(false)}
+                      className="text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors text-center"
+                    >
+                      Back to Authenticator Code
+                    </button>
+                  </div>
                 </div>
-
-                <div className="flex flex-col gap-4">
-                  <button
-                    type="submit"
-                    disabled={loading || otpToken.length !== 6}
-                    className="w-full py-5 bg-indigo-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:bg-indigo-300"
-                  >
-                    {loading ? <Loader2 className="animate-spin" /> : <>Verify & Access <ArrowRight size={20} /></>}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRequires2FA(false)}
-                    className="text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    Back to Login
-                  </button>
-                </div>
-              </form>
+              )}
             </motion.div>
           )}
 

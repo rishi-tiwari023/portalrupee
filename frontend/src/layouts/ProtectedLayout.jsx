@@ -2,11 +2,25 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Sidebar from '../components/Sidebar';
 import { Bell, Search, Menu } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 const ProtectedLayout = () => {
   const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (user && user.twoFactorEnabled === false) {
+      const hasSeenPrompt = sessionStorage.getItem('2fa_prompt_seen');
+      if (!hasSeenPrompt) {
+        toast.warn('Security Alert: Please enable Two-Factor Authentication to secure your account!', {
+          autoClose: 10000,
+          className: 'premium-toast',
+        });
+        sessionStorage.setItem('2fa_prompt_seen', 'true');
+      }
+    }
+  }, [user]);
 
   if (loading) {
     return (

@@ -119,6 +119,18 @@ export const disable2FA = createAsyncThunk(
   }
 );
 
+export const disable2FAViaOTP = createAsyncThunk(
+  'auth/disable2FAViaOTP',
+  async ({ email }, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/disable-2fa-login', { email });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to disable 2FA via OTP');
+    }
+  }
+);
+
 export const getMe = createAsyncThunk(
   'auth/getMe',
   async (_, { rejectWithValue }) => {
@@ -281,6 +293,22 @@ const authSlice = createSlice({
       })
       .addCase(disable2FA.fulfilled, (state, action) => {
         state.user.twoFactorEnabled = false;
+      })
+      // Disable 2FA via OTP
+      .addCase(disable2FAViaOTP.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(disable2FAViaOTP.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.data.user;
+        state.token = action.payload.data.accessToken;
+        localStorage.setItem('portalrupee_token', action.payload.data.accessToken);
+      })
+      .addCase(disable2FAViaOTP.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
       // Get Me
       .addCase(getMe.pending, (state) => {
