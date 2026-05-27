@@ -160,7 +160,7 @@ export const sendOTP = async (req, res, next) => {
       return next(new AppError('Email address is required', 400));
     }
 
-    if (purpose === 'password_reset' || purpose === 'tpin_reset') {
+    if (purpose === 'password_reset' || purpose === 'tpin_reset' || purpose === 'disable_2fa') {
       const user = await User.findOne({ email });
       if (!user) {
         return next(new AppError('No user found with this email address', 404));
@@ -238,3 +238,52 @@ export const resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Disable 2FA via OTP during login
+ */
+export const disable2FALogin = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    // Check if OTP was verified for this email and purpose 'disable_2fa'
+    const isVerified = await isOTPVerified(email, 'disable_2fa');
+    if (!isVerified) {
+      return next(new AppError('Please verify your email via OTP first', 400));
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    // Disable 2FA
+    user.twoFactorEnabled = false;
+    user.twoFactorSecret = undefined;
+    await user.save();
+
+    // Clear verification flag from Redis
+    await clearOTPVerification(email, 'disable_2fa');
+
+    // Generate tokens
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    
+    // Remove password from output
+    user.password = undefined;
+
+    res.status(200).json({
+      success: true,
+      message: '2FA disabled and logged in successfully',
+      data: {
+        user,
+        accessToken,
+        refreshToken,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
