@@ -12,12 +12,13 @@ import { toast } from 'react-toastify';
 import TPINSetupWizard from '../components/TPINSetupWizard';
 import TwoFactorSetup from '../components/TwoFactorSetup';
 import TPINRecoveryModal from '../components/TPINRecoveryModal';
+import { sanitizeInput } from '../utils/sanitize';
 
 const profileSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  mobile: z.string().min(10, 'Mobile number must be at least 10 digits'),
+  mobile: z.string().regex(/^\d{10}$/, 'Mobile number must be exactly 10 digits'),
 });
 
 const Profile = () => {
@@ -59,7 +60,13 @@ const Profile = () => {
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
-        await dispatch(updateProfile(values)).unwrap();
+        const sanitizedValues = {
+          firstName: sanitizeInput(values.firstName),
+          lastName: sanitizeInput(values.lastName),
+          email: sanitizeInput(values.email),
+          mobile: sanitizeInput(values.mobile),
+        };
+        await dispatch(updateProfile(sanitizedValues)).unwrap();
         toast.success('Profile updated successfully!');
         setIsEditing(false);
       } catch (error) {

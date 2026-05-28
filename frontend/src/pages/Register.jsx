@@ -9,13 +9,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Mail, Phone, Lock, UserPlus, AlertCircle, Eye, EyeOff, ShieldCheck, CreditCard, PartyPopper } from 'lucide-react';
 import { registerUser } from '../store/slices/authSlice';
 import { toast } from 'react-toastify';
+import { sanitizeInput } from '../utils/sanitize';
 
 const registerSchema = zod.object({
     name: zod.string().min(2, 'Name must be at least 2 characters'),
     email: zod.string().email('Invalid email address'),
-    mobile: zod.string().regex(/^[0-9]{10}$/, 'Mobile must be 10 digits'),
-    password: zod.string().min(6, 'Password must be at least 6 characters'),
-    confirmPassword: zod.string().min(6, 'Confirm password must be at least 6 characters'),
+    mobile: zod.string().regex(/^[0-9]{10}$/, 'Mobile must be exactly 10 digits'),
+    password: zod
+        .string()
+        .min(8, 'Password must be at least 8 characters')
+        .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/,
+            'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+        ),
+    confirmPassword: zod.string().min(8, 'Confirm password must be at least 8 characters'),
     role: zod.enum(['CUSTOMER', 'CASHIER', 'MANAGER']),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -43,13 +50,16 @@ const Register = () => {
             
             // Split name into firstName and lastName
             const nameParts = name.trim().split(/\s+/);
-            const firstName = nameParts[0] || '';
-            const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : (firstName ? '' : '');
+            const firstName = sanitizeInput(nameParts[0] || '');
+            const lastName = sanitizeInput(nameParts.length > 1 ? nameParts.slice(1).join(' ') : (firstName ? '' : ''));
             
             const registerData = {
                 firstName,
                 lastName: lastName || ' ', // Backend might require non-empty last name
-                ...otherData
+                email: sanitizeInput(otherData.email),
+                mobile: sanitizeInput(otherData.mobile),
+                password: otherData.password,
+                role: otherData.role
             };
 
             const resultAction = await dispatch(registerUser(registerData));
