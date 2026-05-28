@@ -25,6 +25,7 @@ import TPINInput from '../components/TPINInput';
 import { toast } from 'react-toastify';
 import TransactionDetailsModal from '../components/TransactionDetailsModal';
 import TPINRecoveryModal from '../components/TPINRecoveryModal';
+import { sanitizeInput } from '../utils/sanitize';
 
 const Transfer = () => {
   const dispatch = useDispatch();
@@ -64,8 +65,9 @@ const Transfer = () => {
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchQuery.length > 2) {
-        dispatch(searchUsers(searchQuery));
+      const cleanQuery = sanitizeInput(searchQuery).trim();
+      if (cleanQuery.length > 2) {
+        dispatch(searchUsers(cleanQuery));
       } else {
         dispatch(clearSearchResults());
       }
@@ -96,8 +98,8 @@ const Transfer = () => {
   };
 
   const handleTransfer = async () => {
-    if (tpin.length !== 6) {
-      setTpinError('Please enter your 6-digit TPIN');
+    if (tpin.length !== 6 || !/^\d{6}$/.test(tpin)) {
+      setTpinError('TPIN must be exactly 6 digits');
       return;
     }
 
@@ -105,7 +107,7 @@ const Transfer = () => {
       senderAccountId: selectedAccount._id,
       receiverId: selectedReceiver._id,
       amount: parseFloat(amount),
-      description: description || `Transfer to ${selectedReceiver.firstName}`,
+      description: sanitizeInput(description) || `Transfer to ${selectedReceiver.firstName}`,
       tpin,
       totpToken: currentUser?.twoFactorEnabled ? totpToken : undefined
     };

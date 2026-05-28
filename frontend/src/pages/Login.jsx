@@ -9,6 +9,7 @@ import { loginUser, verify2FA, sendOTP, verifyOTP, resetPassword, disable2FAViaO
 import { Shield, Mail, Lock, LogIn, AlertCircle, Eye, EyeOff, ArrowRight, Rocket, Loader2, X, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import OTPInput from '../components/OTPInput';
+import { sanitizeInput } from '../utils/sanitize';
 
 const loginSchema = zod.object({
   email: zod.string().email('Invalid email address'),
@@ -177,16 +178,18 @@ const Login = () => {
 
   const handleSendForgotOTP = async (e) => {
     e.preventDefault();
-    if (!forgotEmail) {
+    const cleanEmail = sanitizeInput(forgotEmail);
+    if (!cleanEmail) {
       toast.error('Please enter your email address');
       return;
     }
 
     setForgotLoading(true);
     try {
-      const resultAction = await dispatch(sendOTP({ email: forgotEmail, purpose: 'password_reset' }));
+      const resultAction = await dispatch(sendOTP({ email: cleanEmail, purpose: 'password_reset' }));
       if (sendOTP.fulfilled.match(resultAction)) {
         toast.success('Verification OTP sent to your email');
+        setForgotEmail(cleanEmail);
         setForgotStep('otp');
       } else {
         toast.error(resultAction.payload || 'Failed to send OTP. Please check your email.');
@@ -217,8 +220,13 @@ const Login = () => {
 
   const handleResetPasswordSubmit = async (e) => {
     e.preventDefault();
-    if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+    const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!complexityRegex.test(newPassword)) {
+      toast.error('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
       return;
     }
     if (newPassword !== confirmPassword) {
