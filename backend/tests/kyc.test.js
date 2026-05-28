@@ -10,16 +10,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, '../.env') });
 
 async function runKycTests() {
-  console.log('--- Starting Day 17 KYC Document Upload Controller & Validator Tests ---');
-
   try {
     console.log('Connecting to MongoDB...');
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB Connected.');
 
     const email = 'test-kyc-user@example.com';
-    const mockIdDocKey = 'kyc-identity-key-12345.pdf';
-    const mockSigDocKey = 'kyc-signature-key-54321.png';
+    const mockIdDocKey = '11111111-2222-3333-4444-555555555555.pdf';
+    const mockSigDocKey = '66666666-7777-8888-9999-000000000000.png';
 
     // 1. Cleanup existing test user
     await User.deleteOne({ email });

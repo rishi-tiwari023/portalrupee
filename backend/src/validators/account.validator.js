@@ -17,3 +17,22 @@ export const updateStatusSchema = z.object({
     }),
   }),
 });
+
+export const getAccountByNumberSchema = z.object({
+  params: z.object({
+    accountNumber: z.string().regex(/^\d{10}$/, 'Account number must be exactly 10 digits'),
+  }),
+});
+
+export const getAccountDetailsSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid account ID format'),
+  }),
+});
+
+export const getAccountBalanceSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid account ID format'),
+  }),
+});
+
