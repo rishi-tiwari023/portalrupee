@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { sendOTP, verifyOTP, resetTPIN, updateUser } from '../store/slices/authSlice';
 import OTPInput from './OTPInput';
 import TPINInput from './TPINInput';
+import { sanitizeInput } from '../utils/sanitize';
 
 const RecoveryProgress = ({ currentStep, steps }) => {
   return (
@@ -59,14 +60,15 @@ const TPINRecoveryModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleSendOTP = async (e) => {
     e.preventDefault();
-    if (!email) {
+    const cleanEmail = sanitizeInput(email);
+    if (!cleanEmail) {
       toast.error('No email address associated with this account');
       return;
     }
 
     setForgotLoading(true);
     try {
-      const resultAction = await dispatch(sendOTP({ email, purpose: 'tpin_reset' }));
+      const resultAction = await dispatch(sendOTP({ email: cleanEmail, purpose: 'tpin_reset' }));
       if (sendOTP.fulfilled.match(resultAction)) {
         toast.success('Verification OTP sent to your email');
         setForgotStep('otp');
@@ -83,7 +85,7 @@ const TPINRecoveryModal = ({ isOpen, onClose, onSuccess }) => {
   const handleVerifyOTP = async (otp) => {
     setForgotLoading(true);
     try {
-      const resultAction = await dispatch(verifyOTP({ email, otp, purpose: 'tpin_reset' }));
+      const resultAction = await dispatch(verifyOTP({ email: sanitizeInput(email), otp, purpose: 'tpin_reset' }));
       if (verifyOTP.fulfilled.match(resultAction)) {
         toast.success('OTP verified successfully!');
         setForgotStep('reset');
@@ -99,7 +101,7 @@ const TPINRecoveryModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleResendOTP = async () => {
     try {
-      const resultAction = await dispatch(sendOTP({ email, purpose: 'tpin_reset' }));
+      const resultAction = await dispatch(sendOTP({ email: sanitizeInput(email), purpose: 'tpin_reset' }));
       if (sendOTP.fulfilled.match(resultAction)) {
         toast.success('Verification OTP resent successfully');
       } else {
@@ -113,7 +115,7 @@ const TPINRecoveryModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleResetTPIN = async (e) => {
     e.preventDefault();
-    if (newTpin.length !== 6 || confirmTpin.length !== 6) {
+    if (newTpin.length !== 6 || confirmTpin.length !== 6 || !/^\d{6}$/.test(newTpin) || !/^\d{6}$/.test(confirmTpin)) {
       setTpinError('TPIN must be exactly 6 digits');
       return;
     }
