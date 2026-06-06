@@ -2,7 +2,7 @@
 
 **Project Start**: April 8, 2026  
 **Project Resumption**: May 23, 2026  
-**Project Completion Goal**: June 7, 2026  
+**Project Completion Goal**: June 15, 2026  
 **Team**: 1 Backend Engineer, 1 Frontend Engineer
 
 ---
@@ -219,15 +219,23 @@
   - Sanitize all user inputs before rendering.
   - Implement client-side security checks.
 
-**Day 21 (May 29): Review & Bug Fixes**
+---
 
-- **Both**: Security audit (Check for common vulnerabilities). Test OTP delivery speed.
+## Placement & Practical Examinations Hiatus
+
+> [!NOTE]
+> **Placement & Practical Examinations Hiatus (May 29, 2026 – June 5, 2026)**  
+> Following the completion of Phase 3, development was temporarily paused to focus on university practical examinations and participate in two campus placement drives. Additionally, an university exam retake was required on June 5th due to a paper leak. With these crucial academic and career milestones successfully addressed, project development resumes on June 6, 2026, starting with Phase 4.
 
 ---
 
 ## Phase 4: Messaging & Real-time Integration (Week 4)
 
-**Day 22 (May 30): Socket.io Setup**
+**Day 21 (Jun 06): Review & Bug Fixes**
+
+- **Both**: Security audit (Check for common vulnerabilities). Test OTP delivery speed.
+
+**Day 22 (Jun 07): Socket.io Setup**
 
 - **Backend**:
   - Initialize Socket.io server with Express.
@@ -236,7 +244,7 @@
   - Initialize Socket-client and setup provider.
   - Add "Online/Offline" status indicator.
 
-**Day 23 (May 31): Permission-Based Messaging**
+**Day 23 (Jun 08): Permission-Based Messaging**
 
 - **Backend**:
   - Create Chat Room logic based on Transaction history.
@@ -244,7 +252,7 @@
 - **Frontend**:
   - Build "Messages" sidebar filtered by transacting users.
 
-**Day 24 (Jun 01): Real-time Chat**
+**Day 24 (Jun 09): Real-time Chat**
 
 - **Backend**:
   - Implement Message schema and persistence in MongoDB.
@@ -253,28 +261,28 @@
   - Build Chat UI (Bubbles, timestamps, scroll management).
   - Implement real-time typing indicators.
 
-**Day 25 (Jun 02): Live Notifications**
+**Day 25 (Jun 10): Live Notifications**
 
 - **Backend**:
   - Emit socket events for real-time transaction/message alerts.
 - **Frontend**:
   - Design Notification Bell component with real-time count.
 
-**Day 26 (Jun 03): Expenditure Analytics**
+**Day 26 (Jun 11): Expenditure Analytics**
 
 - **Backend**:
   - Build MongoDB Aggregation Pipelines for spending patterns.
 - **Frontend**:
   - Integrate Charts (Recharts/Chart.js) for expense visualization.
 
-**Day 27 (Jun 04): PDF Statement Generation**
+**Day 27 (Jun 12): PDF Statement Generation**
 
 - **Backend**:
   - Implement EJS template and PDF generation logic (Puppeteer/html-pdf).
 - **Frontend**:
   - Add "Download Statement" buttons with date filtering.
 
-**Day 28 (Jun 05): Admin/Manager Dashboard**
+**Day 28 (Jun 13): Admin/Manager Dashboard**
 
 - **Backend**:
   - Build APIs for system stats and user approval queues.
@@ -285,7 +293,7 @@
 
 ## Phase 5: Final Polish & Delivery (Final Days)
 
-**Day 29 (Jun 06): Optimization**
+**Day 29 (Jun 14): Optimization**
 
 - **Backend**:
   - Query indexing and response compression.
@@ -293,7 +301,7 @@
   - Code splitting and image lazy loading.
   - Run Lighthouse audit and fix performance bottlenecks.
 
-**Day 30 (Jun 07): Deployment & Handover**
+**Day 30 (Jun 15): Deployment & Handover**
 
 - **Backend**:
   - Finalize README and Postman collections.
@@ -307,6 +315,6 @@
 
 - [x] Core Auth & Role Management Working (Day 7 - Apr 14)
 - [x] Transaction Engine (Transfer/PIN) Working (Day 14 - Apr 21)
-- [ ] S3 Files & OTP Verification Ready (Day 21 - May 29)
-- [ ] Real-time Chat & Analytics Deployed (Day 28 - Jun 05)
-- [ ] Production Deployment Complete (Day 30 - Jun 07)
+- [x] S3 Files & OTP Verification Ready (Day 21 - Jun 06)
+- [ ] Real-time Chat & Analytics Deployed (Day 28 - Jun 13)
+- [ ] Production Deployment Complete (Day 30 - Jun 15)
