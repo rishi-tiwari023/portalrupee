@@ -6,6 +6,13 @@ import { decrypt } from '../utils/encryption.util.js';
 import { generateOTP, storeOTP, verifyOTP as verifyOTPUtil, isOTPVerified, clearOTPVerification } from '../utils/otp.util.js';
 import { sendOTPMail, sendWelcomeMail } from '../utils/mailer.js';
 
+const cookieOptions = {
+  expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+};
+
 /**
  * Register a new user
  */
@@ -38,6 +45,8 @@ export const register = async (req, res, next) => {
     // Generate tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
+
+    res.cookie('jwt', accessToken, cookieOptions);
 
     // Send welcome email asynchronously
     sendWelcomeMail(email, firstName).catch((err) => {
@@ -91,6 +100,8 @@ export const login = async (req, res, next) => {
       });
     }
 
+    res.cookie('jwt', accessToken, cookieOptions);
+
     res.status(200).json({
       success: true,
       message: 'Logged in successfully',
@@ -137,6 +148,8 @@ export const verify2FA = async (req, res, next) => {
     // Generate tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
+
+    res.cookie('jwt', accessToken, cookieOptions);
 
     res.status(200).json({
       success: true,
@@ -273,6 +286,8 @@ export const disable2FALogin = async (req, res, next) => {
     // Remove password from output
     user.password = undefined;
 
+    res.cookie('jwt', accessToken, cookieOptions);
+
     res.status(200).json({
       success: true,
       message: '2FA disabled and logged in successfully',
@@ -285,5 +300,18 @@ export const disable2FALogin = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+/**
+ * Logout user
+ */
+export const logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  });
+  res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 

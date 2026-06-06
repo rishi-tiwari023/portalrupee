@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../store/slices/authSlice';
+import { logoutUser } from '../store/slices/authSlice';
 import logo from '../assets/logo.png';
 /* eslint-disable no-unused-vars */
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,7 +16,7 @@ const Navbar = () => {
     const dropdownRef = useRef(null);
 
     const handleLogout = () => {
-        dispatch(logout());
+        dispatch(logoutUser());
         setShowDropdown(false);
     };
 

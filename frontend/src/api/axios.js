@@ -6,15 +6,12 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
-// Request interceptor for adding JWT token
+// Request interceptor (Optional now, just passes config through)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('portalrupee_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => {

@@ -1,13 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/axios';
 
-const token = localStorage.getItem('portalrupee_token');
-
 const initialState = {
   user: null,
-  token: token || null,
-  isAuthenticated: !!token,
-  loading: !!token,
+  isAuthenticated: false,
+  loading: true, // loading true initially to allow getMe to run
   error: null,
 };
 
@@ -31,6 +28,18 @@ export const loginUser = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Login failed');
+    }
+  }
+);
+
+export const logoutUser = createAsyncThunk(
+  'auth/logout',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/logout');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Logout failed');
     }
   }
 );
@@ -216,8 +225,8 @@ const authSlice = createSlice({
       state.loading = false;
       state.isAuthenticated = true;
       state.user = action.payload.user;
-      state.token = action.payload.token;
-      localStorage.setItem('portalrupee_token', action.payload.token);
+      
+      
     },
     loginFailure: (state, action) => {
       state.loading = false;
@@ -225,9 +234,9 @@ const authSlice = createSlice({
     },
     logout: (state) => {
       state.user = null;
-      state.token = null;
+      
       state.isAuthenticated = false;
-      localStorage.removeItem('portalrupee_token');
+      
     },
     updateUser: (state, action) => {
       state.user = { ...state.user, ...action.payload };
@@ -244,8 +253,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.data.user;
-        state.token = action.payload.data.accessToken;
-        localStorage.setItem('portalrupee_token', action.payload.data.accessToken);
+        
+        
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -264,8 +273,8 @@ const authSlice = createSlice({
         }
         state.isAuthenticated = true;
         state.user = action.payload.data.user;
-        state.token = action.payload.data.accessToken;
-        localStorage.setItem('portalrupee_token', action.payload.data.accessToken);
+        
+        
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -280,8 +289,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.data.user;
-        state.token = action.payload.data.accessToken;
-        localStorage.setItem('portalrupee_token', action.payload.data.accessToken);
+        
+        
       })
       .addCase(verify2FA.rejected, (state, action) => {
         state.loading = false;
@@ -303,8 +312,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.data.user;
-        state.token = action.payload.data.accessToken;
-        localStorage.setItem('portalrupee_token', action.payload.data.accessToken);
+        
+        
       })
       .addCase(disable2FAViaOTP.rejected, (state, action) => {
         state.loading = false;
@@ -323,8 +332,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = false;
         state.user = null;
-        state.token = null;
-        localStorage.removeItem('portalrupee_token');
+        
+        
       })
       // Update Profile
       .addCase(updateProfile.pending, (state) => {

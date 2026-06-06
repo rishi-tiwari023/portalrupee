@@ -95,11 +95,12 @@ function App() {
   const { token, user } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    // If we have a token but no user data, fetch it
-    if (token && !user) {
+    // With HttpOnly cookies, we don't have the token in JS. 
+    // Always attempt to fetch the user profile on initial load.
+    if (!user) {
       dispatch(getMe());
     }
-  }, [dispatch, token, user]);
+  }, [dispatch, user]);
 
   useEffect(() => {
     const handleOnline = () => {

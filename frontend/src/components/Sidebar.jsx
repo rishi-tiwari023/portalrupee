@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../store/slices/authSlice';
+import { logoutUser } from '../store/slices/authSlice';
 import {
   CreditCard,
   LayoutDashboard,
@@ -117,7 +117,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
       {/* User Quick Switcher or Log Out */}
       <div className="p-4 mt-auto border-t border-slate-50">
         <button
-          onClick={() => dispatch(logout())}
+          onClick={() => dispatch(logoutUser())}
           className={`
             flex items-center w-full px-4 py-3.5 text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition-all duration-300 rounded-2xl group
             ${!isExpanded ? 'justify-center' : ''}
