@@ -34,5 +34,8 @@ export const getAccountBalanceSchema = z.object({
   params: z.object({
     id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid account ID format'),
   }),
+  body: z.object({
+    totpToken: z.string().length(6, 'TOTP Token must be exactly 6 digits').regex(/^\d+$/, 'TOTP must only contain numbers').optional()
+  }).optional()
 });
 

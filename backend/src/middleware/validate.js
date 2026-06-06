@@ -8,9 +8,9 @@ const validate = (schema) => (req, res, next) => {
       params: req.params,
     });
 
-    req.body = validData.body;
-    req.query = validData.query;
-    req.params = validData.params;
+    req.body = validData.body || {};
+    req.query = validData.query || {};
+    req.params = validData.params || {};
 
     next();
   } catch (error) {
