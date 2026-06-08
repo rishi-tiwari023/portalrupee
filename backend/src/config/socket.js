@@ -2,6 +2,7 @@ import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
 import User from '../models/user.model.js';
+import { checkChatPermission } from '../utils/chat.util.js';
 
 let io;
 
@@ -54,6 +55,39 @@ export const initializeSocket = (server) => {
 
     // Join a personal room for user-specific events
     socket.join(socket.user._id.toString());
+
+    // Permission-based joining of chat rooms
+    socket.on('join_chat', async (data, callback) => {
+      try {
+        const { targetUserId } = data || {};
+        if (!targetUserId) {
+          if (callback) callback({ status: 'error', message: 'targetUserId is required' });
+          return;
+        }
+
+        const hasPermission = await checkChatPermission(socket.user._id, targetUserId);
+        if (!hasPermission) {
+          if (callback) {
+            callback({ 
+              status: 'error', 
+              message: 'Messaging is not allowed. No transaction history found between users.' 
+            });
+          }
+          return;
+        }
+
+        const roomId = `chat_${[socket.user._id.toString(), targetUserId.toString()].sort().join('_')}`;
+        socket.join(roomId);
+        console.log(`Socket: User ${socket.user._id} joined room ${roomId}`);
+
+        if (callback) {
+          callback({ status: 'success', roomId, targetUserId });
+        }
+      } catch (error) {
+        console.error('Socket join_chat error:', error);
+        if (callback) callback({ status: 'error', message: 'Internal server error' });
+      }
+    });
 
     socket.on('disconnect', () => {
       console.log(`Socket User disconnected: ${socket.user.firstName} (Socket: ${socket.id})`);
