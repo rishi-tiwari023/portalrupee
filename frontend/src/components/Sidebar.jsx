@@ -12,7 +12,8 @@ import {
   User,
   Users,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  MessageSquare
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
@@ -28,6 +29,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
     { name: 'Accounts', icon: CreditCard, path: '/dashboard/accounts' },
     { name: 'Transfer', icon: ArrowLeftRight, path: '/dashboard/transfer' },
     { name: 'Transactions', icon: History, path: '/dashboard/transactions' },
+    { name: 'Messages', icon: MessageSquare, path: '/dashboard/messages' },
     { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
   ];
 
