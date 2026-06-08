@@ -4,10 +4,12 @@ import Sidebar from '../components/Sidebar';
 import { Bell, Search, Menu } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { useSocket } from '../context/SocketContext';
 
 const ProtectedLayout = () => {
   const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { isConnected } = useSocket();
 
   useEffect(() => {
     if (user && user.twoFactorEnabled === false) {
@@ -70,6 +72,12 @@ const ProtectedLayout = () => {
           </div>
 
           <div className="flex items-center gap-6">
+            {/* Connection Status */}
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/50 border border-white/50">
+              <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'}`} />
+              <span className="text-xs font-bold text-slate-600">{isConnected ? 'Online' : 'Connecting...'}</span>
+            </div>
+
             <button className="relative p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 hover:shadow-lg hover:shadow-indigo-500/5 transition-all group">
               <Bell className="w-5 h-5 group-hover:shake" />
               <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
