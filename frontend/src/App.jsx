@@ -7,6 +7,7 @@ import ProtectedLayout from './layouts/ProtectedLayout';
 import { ToastContainer, toast } from 'react-toastify';
 import RoleBasedRoute from './components/RoleBasedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
+import { SocketProvider } from './context/SocketContext';
 
 // Pages
 import Home from './pages/Home';
@@ -139,7 +140,9 @@ function App() {
   return (
     <div className="App antialiased selection:bg-indigo-100 selection:text-indigo-900 font-sans">
       <ErrorBoundary>
-        <RouterProvider router={router} />
+        <SocketProvider>
+          <RouterProvider router={router} />
+        </SocketProvider>
       </ErrorBoundary>
       <ToastContainer
         position="top-right"
