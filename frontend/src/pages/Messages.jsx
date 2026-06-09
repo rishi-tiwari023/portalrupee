@@ -26,6 +26,8 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [globalSearchResults, setGlobalSearchResults] = useState([]);
+  const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
 
   // Selected conversation state
   const [selectedContact, setSelectedContact] = useState(null);
@@ -172,13 +174,47 @@ const Messages = () => {
     });
   };
 
-  // Filter contacts by search term
-  const filteredRooms = rooms.filter((room) => {
+  // Global user search (debounced)
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setGlobalSearchResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsSearchingGlobal(true);
+        const res = await api.get(`/users/search?query=${searchTerm}`);
+        if (res.data?.status === 'success') {
+          setGlobalSearchResults(res.data.data.users);
+        }
+      } catch (err) {
+        console.error('Global search error:', err);
+      } finally {
+        setIsSearchingGlobal(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Merge local rooms and global search results
+  const filteredLocalRooms = rooms.filter((room) => {
     const fullName = `${room.user.firstName} ${room.user.lastName}`.toLowerCase();
     const email = room.user.email.toLowerCase();
     const query = searchTerm.toLowerCase();
     return fullName.includes(query) || email.includes(query);
   });
+
+  const localRoomUserIds = new Set(rooms.map(r => r.user._id));
+  const additionalGlobalUsers = globalSearchResults
+    .filter(u => !localRoomUserIds.has(u._id))
+    .map(u => ({
+      user: { ...u, role: u.role || 'USER' },
+      lastTransaction: null
+    }));
+
+  const displayList = [...filteredLocalRooms, ...additionalGlobalUsers];
 
   // Helper to get initials
   const getInitials = (firstName = '', lastName = '') => {
@@ -213,7 +249,7 @@ const Messages = () => {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Filter transacted users..."
+            placeholder="Search users by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-11 pr-4 py-3 bg-slate-100/50 focus:bg-white border border-transparent focus:border-indigo-200 outline-none rounded-2xl text-sm font-medium text-slate-700 placeholder:text-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-500/5 transition-all duration-300"
@@ -222,26 +258,26 @@ const Messages = () => {
 
         {/* Contacts List */}
         <div className="flex-1 overflow-y-auto no-scrollbar space-y-3">
-          {loading ? (
+          {loading && !searchTerm ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <div className="w-8 h-8 border-3 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-              <p className="text-xs font-bold text-slate-400">Loading transacted users...</p>
+              <p className="text-xs font-bold text-slate-400">Loading contacts...</p>
             </div>
           ) : error ? (
             <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-xs font-bold flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
-          ) : filteredRooms.length === 0 ? (
+          ) : displayList.length === 0 ? (
             <div className="flex flex-col items-center justify-center text-center py-12 px-4 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
               <Lock className="w-10 h-10 text-slate-300 mb-3" />
-              <h4 className="text-sm font-black text-slate-700 mb-1">No Contacts Available</h4>
+              <h4 className="text-sm font-black text-slate-700 mb-1">No Contacts Found</h4>
               <p className="text-slate-500 text-[11px] font-medium leading-relaxed max-w-[200px]">
-                Messaging is only allowed with users you have actively transacted with.
+                {isSearchingGlobal ? 'Searching network...' : 'Search for a user by email to start messaging.'}
               </p>
             </div>
           ) : (
-            filteredRooms.map((room) => {
+            displayList.map((room) => {
               const isSelected = selectedContact?.user?._id === room.user._id;
               return (
                 <div
@@ -273,19 +309,23 @@ const Messages = () => {
                         </span>
                       </div>
                       <p className="text-[10px] text-slate-400 mt-1 truncate">
-                        Last txn: <span className="font-extrabold text-slate-500">₹{room.lastTransaction.amount}</span>
+                        Last txn: <span className="font-extrabold text-slate-500">
+                          {room.lastTransaction ? `₹${room.lastTransaction.amount}` : 'None'}
+                        </span>
                       </p>
                     </div>
                   </div>
 
                   <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-0.5">
-                      <Clock className="w-3 h-3" />
-                      {new Date(room.lastTransaction.createdAt).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </span>
+                    {room.lastTransaction && (
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-0.5">
+                        <Clock className="w-3 h-3" />
+                        {new Date(room.lastTransaction.createdAt).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -313,21 +353,12 @@ const Messages = () => {
 
             <div className="relative z-10 max-w-md flex flex-col items-center">
               <div className="w-20 h-20 bg-indigo-50 rounded-[2rem] border border-indigo-100 flex items-center justify-center mb-6 shadow-inner animate-pulse">
-                <Lock className="w-10 h-10 text-indigo-600" />
+                <MessageSquare className="w-10 h-10 text-indigo-600" />
               </div>
-              <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-3">Secure Communication Workspace</h3>
+              <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-3">Open Communication Workspace</h3>
               <p className="text-slate-500 text-sm font-medium leading-relaxed mb-6">
-                To guarantee account security, PortalRupee enforces **Permission-Based Messaging**. Direct messages are enabled exclusively between accounts with successful transaction history.
+                Connect seamlessly with any registered user. Search by email or select an existing contact to start messaging instantly.
               </p>
-              <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-2xl p-4 flex items-start gap-3 text-left">
-                <HelpCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h5 className="text-xs font-black text-indigo-950 uppercase tracking-wide mb-1">How it works:</h5>
-                  <p className="text-slate-600 text-xs font-medium leading-relaxed">
-                    Once a successful funds transfer occurs between you and another customer, cashier, or manager, a communication tunnel is automatically unlocked.
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         ) : (
@@ -382,15 +413,24 @@ const Messages = () => {
             </div>
 
             {/* Quick Transaction Info Reference */}
-            <div className="px-8 py-3 bg-indigo-50/30 border-b border-indigo-50/50 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-indigo-900 font-medium text-xs">
-                <ArrowUpRight className="w-4 h-4 text-indigo-600" />
-                <span>Transaction Context: Successful TRANSFER</span>
+            {selectedContact.lastTransaction ? (
+              <div className="px-8 py-3 bg-indigo-50/30 border-b border-indigo-50/50 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-indigo-900 font-medium text-xs">
+                  <ArrowUpRight className="w-4 h-4 text-indigo-600" />
+                  <span>Transaction Context: {selectedContact.lastTransaction.status} TRANSFER</span>
+                </div>
+                <span className="text-xs font-black text-indigo-700">
+                  Amount: ₹{selectedContact.lastTransaction.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </span>
               </div>
-              <span className="text-xs font-black text-indigo-700">
-                Amount: ₹{selectedContact.lastTransaction.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </span>
-            </div>
+            ) : (
+              <div className="px-8 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-slate-600 font-medium text-xs">
+                  <UserCheck className="w-4 h-4 text-slate-400" />
+                  <span>Open Ecosystem Messaging (No Transaction History)</span>
+                </div>
+              </div>
+            )}
 
             {/* Message Pane Area */}
             <div className="flex-1 p-6 overflow-y-auto bg-slate-50/30 flex flex-col gap-4">
