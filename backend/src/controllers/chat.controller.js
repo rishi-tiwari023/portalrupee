@@ -11,11 +11,10 @@ export const getChatRooms = async (req, res, next) => {
 
     // Aggregate unique transacted users
     const rooms = await Transaction.aggregate([
-      // 1. Match successful transfer transactions where the current user is sender or receiver
+      // 1. Match transfer transactions where the current user is sender or receiver (success or failed)
       {
         $match: {
           type: 'TRANSFER',
-          status: 'SUCCESS',
           $or: [
             { sender: currentUserId },
             { receiver: currentUserId }
@@ -35,7 +34,8 @@ export const getChatRooms = async (req, res, next) => {
           createdAt: 1,
           amount: 1,
           transactionId: 1,
-          description: 1
+          description: 1,
+          status: 1
         }
       },
       // 3. Filter out any self-transfers (just in case)
@@ -83,6 +83,7 @@ export const getChatRooms = async (req, res, next) => {
             transactionId: '$lastTransaction.transactionId',
             amount: '$lastTransaction.amount',
             description: '$lastTransaction.description',
+            status: '$lastTransaction.status',
             createdAt: '$lastTransaction.createdAt'
           }
         }
@@ -93,11 +94,80 @@ export const getChatRooms = async (req, res, next) => {
       }
     ]);
 
+    // Find all users the current user has messaged
+    const messagedUsersAgg = await Message.aggregate([
+      {
+        $match: {
+          $or: [
+            { sender: currentUserId },
+            { receiver: currentUserId }
+          ]
+        }
+      },
+      {
+        $project: {
+          otherUser: {
+            $cond: {
+              if: { $eq: ['$sender', currentUserId] },
+              then: '$receiver',
+              else: '$sender'
+            }
+          },
+          createdAt: 1
+        }
+      },
+      {
+        $group: {
+          _id: '$otherUser',
+          lastMessageAt: { $max: '$createdAt' }
+        }
+      }
+    ]);
+
+    const existingUserIds = new Set(rooms.map(r => r.user._id.toString()));
+    const missingUserIds = messagedUsersAgg
+      .map(m => m._id)
+      .filter(id => !existingUserIds.has(id.toString()));
+
+    let combinedRooms = [...rooms];
+
+    // Add lastActivity for sorting
+    combinedRooms.forEach(r => {
+      const msgAgg = messagedUsersAgg.find(m => m._id.toString() === r.user._id.toString());
+      const txDate = new Date(r.lastTransaction.createdAt);
+      const msgDate = msgAgg ? new Date(msgAgg.lastMessageAt) : new Date(0);
+      r.lastActivity = txDate > msgDate ? txDate : msgDate;
+    });
+
+    if (missingUserIds.length > 0) {
+      const missingUsers = await User.find({ _id: { $in: missingUserIds } }).select('firstName lastName email role');
+      
+      const additionalRooms = missingUsers.map(u => {
+        const msgAgg = messagedUsersAgg.find(m => m._id.toString() === u._id.toString());
+        return {
+          user: {
+            _id: u._id,
+            firstName: u.firstName,
+            lastName: u.lastName,
+            email: u.email,
+            role: u.role
+          },
+          lastTransaction: null,
+          lastActivity: msgAgg ? msgAgg.lastMessageAt : new Date(0)
+        };
+      });
+
+      combinedRooms = [...combinedRooms, ...additionalRooms];
+    }
+
+    // Sort combined rooms by lastActivity descending
+    combinedRooms.sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity));
+
     res.status(200).json({
       status: 'success',
-      results: rooms.length,
+      results: combinedRooms.length,
       data: {
-        rooms
+        rooms: combinedRooms
       }
     });
   } catch (error) {

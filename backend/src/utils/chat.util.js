@@ -9,14 +9,6 @@ export const checkChatPermission = async (user1Id, user2Id) => {
 
   if (u1Str === u2Str) return false; // Cannot chat with self
 
-  const transactionExists = await Transaction.exists({
-    type: 'TRANSFER',
-    status: 'SUCCESS',
-    $or: [
-      { sender: user1Id, receiver: user2Id },
-      { sender: user2Id, receiver: user1Id }
-    ]
-  });
-
-  return !!transactionExists;
+  // Open ecosystem messaging
+  return true;
 };

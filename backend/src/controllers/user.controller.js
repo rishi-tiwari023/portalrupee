@@ -87,7 +87,7 @@ export const searchUsers = async (req, res, next) => {
         },
         { _id: { $ne: req.user.id } }, // Exclude self
       ],
-    }).select('firstName lastName email mobile');
+    }).select('firstName lastName email mobile role');
 
     res.status(200).json({
       status: 'success',
