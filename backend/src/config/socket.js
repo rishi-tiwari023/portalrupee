@@ -126,6 +126,14 @@ export const initializeSocket = (server) => {
       }
     });
 
+    socket.on('typing', ({ roomId }) => {
+      if (roomId) socket.to(roomId).emit('typing', { userId: socket.user._id });
+    });
+
+    socket.on('stop_typing', ({ roomId }) => {
+      if (roomId) socket.to(roomId).emit('stop_typing', { userId: socket.user._id });
+    });
+
     socket.on('disconnect', () => {
       console.log(`Socket User disconnected: ${socket.user.firstName} (Socket: ${socket.id})`);
     });

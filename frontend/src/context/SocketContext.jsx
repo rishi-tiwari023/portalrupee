@@ -17,7 +17,7 @@ export const SocketProvider = ({ children }) => {
     let newSocket;
     
     if (isAuthenticated && user) {
-      const SOCKET_URL = import.meta.env.VITE_API_BASE_URL;
+      const SOCKET_URL = new URL(import.meta.env.VITE_API_BASE_URL).origin;
       
       newSocket = io(SOCKET_URL, {
         withCredentials: true,

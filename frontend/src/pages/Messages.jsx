@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useSocket } from '../context/SocketContext';
 import api from '../api/axios';
@@ -32,6 +32,13 @@ const Messages = () => {
   const [isVerifyingPermission, setIsVerifyingPermission] = useState(false);
   const [activeRoomId, setActiveRoomId] = useState(null);
   const [socketError, setSocketError] = useState(null);
+
+  // Chat specific state
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [remoteTyping, setRemoteTyping] = useState(false);
+  const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
   // Fetch transacted contacts (chat rooms)
   const fetchRooms = useCallback(async () => {
@@ -76,11 +83,21 @@ const Messages = () => {
       }
 
       // Emit join_chat event to check transaction-based permission and join room
-      socket.emit('join_chat', { targetUserId: selectedContact.user._id }, (response) => {
+      socket.emit('join_chat', { targetUserId: selectedContact.user._id }, async (response) => {
         setIsVerifyingPermission(false);
         if (response.status === 'success') {
           setActiveRoomId(response.roomId);
           console.log(`Successfully connected to chat tunnel: ${response.roomId}`);
+          
+          // Fetch previous messages
+          try {
+            const historyRes = await api.get(`/chats/${selectedContact.user._id}/messages?limit=100`);
+            if (historyRes.data?.status === 'success') {
+              setChatMessages(historyRes.data.data.messages.reverse());
+            }
+          } catch (err) {
+            console.error('Failed to fetch chat history:', err);
+          }
         } else {
           setSocketError(response.message || 'You do not have permission to message this user.');
         }
@@ -90,6 +107,70 @@ const Messages = () => {
     joinChatRoom();
 
   }, [selectedContact, socket, isConnected]);
+
+  // Socket listeners for real-time events
+  useEffect(() => {
+    if (!socket || !activeRoomId) return;
+
+    const handleReceiveMessage = (message) => {
+      setChatMessages((prev) => [...prev, message]);
+    };
+
+    const handleTyping = ({ userId }) => {
+      if (userId === selectedContact?.user?._id) setRemoteTyping(true);
+    };
+
+    const handleStopTyping = ({ userId }) => {
+      if (userId === selectedContact?.user?._id) setRemoteTyping(false);
+    };
+
+    socket.on('receive_message', handleReceiveMessage);
+    socket.on('typing', handleTyping);
+    socket.on('stop_typing', handleStopTyping);
+
+    return () => {
+      socket.off('receive_message', handleReceiveMessage);
+      socket.off('typing', handleTyping);
+      socket.off('stop_typing', handleStopTyping);
+    };
+  }, [socket, activeRoomId, selectedContact]);
+
+  // Auto-scroll
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages, remoteTyping]);
+
+  // Handlers
+  const handleInputChange = (e) => {
+    setNewMessage(e.target.value);
+    if (socket && activeRoomId) {
+      socket.emit('typing', { roomId: activeRoomId });
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        socket.emit('stop_typing', { roomId: activeRoomId });
+      }, 1500);
+    }
+  };
+
+  const handleSendMessage = (e) => {
+    e?.preventDefault();
+    if (!newMessage.trim() || !socket || !activeRoomId) return;
+
+    const content = newMessage.trim();
+    setNewMessage('');
+    
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    socket.emit('stop_typing', { roomId: activeRoomId });
+
+    socket.emit('send_message', {
+      targetUserId: selectedContact.user._id,
+      content
+    });
+  };
 
   // Filter contacts by search term
   const filteredRooms = rooms.filter((room) => {
@@ -312,14 +393,14 @@ const Messages = () => {
             </div>
 
             {/* Message Pane Area */}
-            <div className="flex-1 p-8 overflow-y-auto bg-slate-50/30 flex flex-col justify-center items-center text-center">
+            <div className="flex-1 p-6 overflow-y-auto bg-slate-50/30 flex flex-col gap-4">
               {isVerifyingPermission ? (
-                <div className="flex flex-col items-center gap-4">
+                <div className="flex-1 flex flex-col items-center justify-center gap-4">
                   <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
                   <p className="text-sm font-bold text-slate-400">Negotiating cryptographic keys...</p>
                 </div>
               ) : socketError ? (
-                <div className="max-w-sm flex flex-col items-center">
+                <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto text-center">
                   <div className="w-16 h-16 bg-rose-50 rounded-2xl border border-rose-100 text-rose-600 flex items-center justify-center mb-4 shadow-sm">
                     <ShieldAlert className="w-8 h-8" />
                   </div>
@@ -329,44 +410,65 @@ const Messages = () => {
                   </p>
                 </div>
               ) : activeRoomId ? (
-                <div className="max-w-md flex flex-col items-center animate-in fade-in duration-500">
-                  <div className="w-16 h-16 bg-emerald-50 rounded-3xl border border-emerald-100 text-emerald-600 flex items-center justify-center mb-5 shadow-md shadow-emerald-50">
-                    <ShieldCheck className="w-8 h-8" />
+                <>
+                  <div className="flex flex-col items-center py-6 mb-4">
+                    <ShieldCheck className="w-8 h-8 text-emerald-500 mb-2" />
+                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-wider">End-to-End Encrypted Tunnel Established</p>
                   </div>
-                  <h4 className="text-lg font-black text-slate-800 mb-2">Permission Authenticated Successfully</h4>
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-sm mb-4">
-                    A secure communication tunnel has been established on room:
-                  </p>
-                  <code className="px-4 py-2 bg-slate-100 text-[10px] font-mono text-slate-600 rounded-xl border border-slate-200 mb-6 select-all">
-                    {activeRoomId}
-                  </code>
-                  <div className="px-5 py-3.5 bg-indigo-50 text-indigo-900 border border-indigo-100 rounded-2xl flex items-center gap-3 max-w-xs text-left">
-                    <HelpCircle className="w-5 h-5 text-indigo-600 flex-shrink-0" />
-                    <span className="text-[11px] font-bold leading-relaxed">
-                      Messaging interface components, message bubbles, and real-time typing indicators are slated for Day 24.
-                    </span>
-                  </div>
-                </div>
+                  
+                  {chatMessages.map((msg, index) => {
+                    const isOwn = msg.sender === user?._id;
+                    return (
+                      <div key={msg._id || index} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                        <div className={`max-w-[75%] rounded-2xl px-5 py-3 ${
+                          isOwn 
+                            ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-200 rounded-tr-sm' 
+                            : 'bg-white border border-slate-100 text-slate-800 shadow-sm rounded-tl-sm'
+                        }`}>
+                          <p className="text-sm font-medium leading-relaxed break-words">{msg.content}</p>
+                          <div className={`text-[9px] font-bold mt-1.5 flex justify-end ${isOwn ? 'text-indigo-200' : 'text-slate-400'}`}>
+                            {new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {remoteTyping && (
+                    <div className="flex justify-start animate-in fade-in duration-300">
+                      <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1 shadow-sm">
+                        <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </>
               ) : null}
             </div>
 
-            {/* Mock Chat Input Footer */}
-            <div className="p-6 border-t border-slate-100 bg-white">
-              <div className="flex gap-4 items-center bg-slate-100/50 px-4 py-3 rounded-2xl border border-white/50 w-full max-w-4xl mx-auto opacity-75">
-                <input
-                  type="text"
-                  disabled
-                  placeholder="Messaging functions unlock on Day 24..."
-                  className="bg-transparent border-none outline-none text-xs font-semibold text-slate-400 placeholder:text-slate-400 w-full cursor-not-allowed"
-                />
-                <button
-                  disabled
-                  className="p-2.5 bg-slate-200 text-slate-400 rounded-xl transition-all cursor-not-allowed"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
+            {/* Chat Input Footer */}
+            {activeRoomId && !isVerifyingPermission && !socketError && (
+              <div className="p-5 border-t border-slate-100 bg-white">
+                <form onSubmit={handleSendMessage} className="flex gap-3 items-center bg-slate-50 px-2 py-2 rounded-2xl border border-slate-200 focus-within:border-indigo-300 focus-within:ring-4 focus-within:ring-indigo-50 transition-all">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={handleInputChange}
+                    placeholder="Type your secure message..."
+                    className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-slate-800 placeholder:text-slate-400 px-3 py-1.5"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newMessage.trim()}
+                    className="p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 active:scale-95 disabled:opacity-50 disabled:active:scale-100 transition-all shadow-md shadow-indigo-200 disabled:shadow-none flex items-center justify-center"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
               </div>
-            </div>
+            )}
 
           </div>
         )}
