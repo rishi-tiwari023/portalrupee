@@ -3,6 +3,7 @@ import Transaction from '../models/transaction.model.js';
 import User from '../models/user.model.js';
 import AppError from '../utils/AppError.js';
 import { checkChatPermission } from '../utils/chat.util.js';
+import Message from '../models/message.model.js';
 
 export const getChatRooms = async (req, res, next) => {
   try {
@@ -123,6 +124,61 @@ export const checkPermission = async (req, res, next) => {
       status: 'success',
       data: {
         hasPermission
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMessages = async (req, res, next) => {
+  try {
+    const { targetUserId } = req.params;
+    const currentUserId = req.user.id;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 50;
+    const skip = (page - 1) * limit;
+
+    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
+      return next(new AppError('Invalid target user ID', 400));
+    }
+
+    const targetUserExists = await User.exists({ _id: targetUserId });
+    if (!targetUserExists) {
+      return next(new AppError('Target user not found', 404));
+    }
+
+    const hasPermission = await checkChatPermission(currentUserId, targetUserId);
+    if (!hasPermission) {
+      return next(new AppError('Messaging is not allowed. No transaction history found between users.', 403));
+    }
+
+    const roomId = `chat_${[currentUserId.toString(), targetUserId.toString()].sort().join('_')}`;
+
+    // Mark messages sent by the target user to the current user as read
+    await Message.updateMany(
+      { roomId, sender: targetUserId, receiver: currentUserId, read: false },
+      { $set: { read: true } }
+    );
+
+    const messages = await Message.find({ roomId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalMessages = await Message.countDocuments({ roomId });
+
+    res.status(200).json({
+      status: 'success',
+      results: messages.length,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(totalMessages / limit),
+        totalResults: totalMessages
+      },
+      data: {
+        messages
       }
     });
   } catch (error) {

@@ -1,5 +1,5 @@
 import express from 'express';
-import { getChatRooms, checkPermission } from '../controllers/chat.controller.js';
+import { getChatRooms, checkPermission, getMessages } from '../controllers/chat.controller.js';
 import { isAuth } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -9,5 +9,6 @@ router.use(isAuth);
 
 router.route('/rooms').get(getChatRooms);
 router.route('/permission/:targetUserId').get(checkPermission);
+router.route('/:targetUserId/messages').get(getMessages);
 
 export default router;
