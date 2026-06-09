@@ -14,7 +14,8 @@ import {
   HelpCircle,
   AlertCircle,
   Lock,
-  UserCheck
+  UserCheck,
+  ArrowLeft
 } from 'lucide-react';
 
 const Messages = () => {
@@ -222,10 +223,10 @@ const Messages = () => {
   };
 
   return (
-    <div className="w-full h-[calc(100vh-10rem)] lg:h-[calc(100vh-12rem)] flex flex-col lg:flex-row gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="w-full h-[calc(100vh-10rem)] lg:h-[calc(100vh-12rem)] flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* 1. Conversations Sidebar (Left Panel) */}
-      <div className="w-full lg:w-96 flex flex-col bg-white border border-slate-100 shadow-xl shadow-slate-100/40 rounded-[2.5rem] p-6 h-full min-h-[400px]">
+      <div className={`w-full max-w-3xl mx-auto flex-col bg-white border border-slate-100 shadow-xl shadow-slate-100/40 rounded-[2.5rem] p-6 h-full min-h-[400px] ${selectedContact ? 'hidden' : 'flex'}`}>
         {/* Header & Refresh */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -343,7 +344,7 @@ const Messages = () => {
       </div>
 
       {/* 2. Chat Workspace (Right Panel) */}
-      <div className="flex-1 flex flex-col bg-white border border-slate-100 shadow-xl shadow-slate-100/40 rounded-[2.5rem] overflow-hidden h-full">
+      <div className={`w-full max-w-4xl mx-auto flex-col bg-white border border-slate-100 shadow-xl shadow-slate-100/40 rounded-[2.5rem] overflow-hidden h-full ${!selectedContact ? 'hidden' : 'flex'}`}>
         
         {!selectedContact ? (
           /* Empty Workspace State */
@@ -367,6 +368,13 @@ const Messages = () => {
             {/* Chat Header */}
             <div className="px-8 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/20">
               <div className="flex items-center gap-4">
+                {/* Back Button */}
+                <button
+                  onClick={() => setSelectedContact(null)}
+                  className="p-2 -ml-2 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-indigo-600 active:scale-95 transition-all shadow-sm"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
                 {/* Contact Initials Avatar */}
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-500 p-[2px]">
                   <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center text-indigo-700 font-extrabold text-sm">
