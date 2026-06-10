@@ -148,3 +148,8 @@ export const getIO = () => {
   }
   return io;
 };
+
+export const setIO = (mockIO) => {
+  io = mockIO;
+};
+
