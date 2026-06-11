@@ -57,16 +57,16 @@ const getTrendPlaceholders = (startDate, endDate, format) => {
     while (current <= endDate) {
       const dateStr = current.toISOString().split('T')[0];
       placeholders[dateStr] = 0;
-      current.setDate(current.getDate() + 1);
+      current.setUTCDate(current.getUTCDate() + 1);
     }
   } else if (format === '%Y-%m') {
-    current.setDate(1); // avoid overflow gotchas
+    current.setUTCDate(1);
     while (current <= endDate) {
-      const year = current.getFullYear();
-      const month = String(current.getMonth() + 1).padStart(2, '0');
+      const year = current.getUTCFullYear();
+      const month = String(current.getUTCMonth() + 1).padStart(2, '0');
       const dateStr = `${year}-${month}`;
       placeholders[dateStr] = 0;
-      current.setMonth(current.getMonth() + 1);
+      current.setUTCMonth(current.getUTCMonth() + 1);
     }
   }
   return placeholders;
