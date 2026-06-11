@@ -20,7 +20,7 @@ export const updateStatusSchema = z.object({
 
 export const getAccountByNumberSchema = z.object({
   params: z.object({
-    accountNumber: z.string().regex(/^\d{10}$/, 'Account number must be exactly 10 digits'),
+    accountNumber: z.string().regex(/^\d{12}$/, 'Account number must be exactly 12 digits'),
   }),
 });
 

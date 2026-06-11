@@ -6,7 +6,7 @@ export const depositSchema = z.object({
       .string({
         required_error: 'Account number is required',
       })
-      .regex(/^\d{10}$/, 'Account number must be exactly 10 digits'),
+      .regex(/^\d{12}$/, 'Account number must be exactly 12 digits'),
     amount: z
       .number({
         required_error: 'Amount is required',
@@ -23,7 +23,7 @@ export const withdrawSchema = z.object({
       .string({
         required_error: 'Account number is required',
       })
-      .regex(/^\d{10}$/, 'Account number must be exactly 10 digits'),
+      .regex(/^\d{12}$/, 'Account number must be exactly 12 digits'),
     amount: z
       .number({
         required_error: 'Amount is required',
