@@ -13,7 +13,8 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
-  MessageSquare
+  MessageSquare,
+  TrendingUp
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
@@ -27,6 +28,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', end: true },
     { name: 'Profile', icon: User, path: '/dashboard/profile' },
     { name: 'Accounts', icon: CreditCard, path: '/dashboard/accounts' },
+    { name: 'Analytics', icon: TrendingUp, path: '/dashboard/analytics' },
     { name: 'Transfer', icon: ArrowLeftRight, path: '/dashboard/transfer' },
     { name: 'Transactions', icon: History, path: '/dashboard/transactions' },
     { name: 'Messages', icon: MessageSquare, path: '/dashboard/messages' },

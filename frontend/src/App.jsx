@@ -20,6 +20,7 @@ import Transfer from './pages/Transfer';
 import Transactions from './pages/Transactions';
 import KYC from './pages/KYC';
 import Messages from './pages/Messages';
+import Analytics from './pages/Analytics';
 
 import './App.css';
 
@@ -65,6 +66,10 @@ const router = createBrowserRouter([
       {
         path: 'transactions',
         element: <Transactions />
+      },
+      {
+        path: 'analytics',
+        element: <Analytics />
       },
       {
         path: 'kyc',
