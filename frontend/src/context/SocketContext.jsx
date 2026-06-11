@@ -82,7 +82,7 @@ export const SocketProvider = ({ children }) => {
       // Listen for transaction notifications
       newSocket.on('new_transaction_notification', (data) => {
         const newNotif = {
-          id: data.transactionId || `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          id: data.transactionId ? `${data.transactionId}_${data.subType || data.type}` : `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           type: data.type, // 'DEPOSIT', 'WITHDRAW', 'TRANSFER'
           subType: data.subType, // 'SENT', 'RECEIVED'
           amount: data.amount,
