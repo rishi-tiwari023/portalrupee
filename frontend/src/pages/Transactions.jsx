@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTransactions } from '../store/slices/transactionSlice';
+import { fetchMyAccounts } from '../store/slices/accountSlice';
 import { 
   Download, 
   History, 
@@ -8,16 +9,19 @@ import {
   Calendar,
   Filter as FilterIcon,
   RefreshCcw,
-  ArrowRight
+  ArrowRight,
+  FileText
 } from 'lucide-react';
 import TransactionTable from '../components/TransactionTable';
 import TransactionFilters from '../components/TransactionFilters';
 import Pagination from '../components/Pagination';
 import TransactionDetailsModal from '../components/TransactionDetailsModal';
+import DownloadStatementModal from '../components/DownloadStatementModal';
 
 const Transactions = () => {
   const dispatch = useDispatch();
   const { history, pagination, loading, error } = useSelector((state) => state.transaction);
+  const { accounts } = useSelector((state) => state.account);
   const { user } = useSelector((state) => state.auth);
   const [filters, setFilters] = useState({
     page: 1,
@@ -33,6 +37,7 @@ const Transactions = () => {
 
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isStatementModalOpen, setIsStatementModalOpen] = useState(false);
 
   const loadTransactions = useCallback(() => {
     // Sanitize filters before sending to API
@@ -45,6 +50,10 @@ const Transactions = () => {
   useEffect(() => {
     loadTransactions();
   }, [loadTransactions]);
+
+  useEffect(() => {
+    dispatch(fetchMyAccounts());
+  }, [dispatch]);
 
   const handleFilterChange = (newFilters) => {
     setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
@@ -132,13 +141,22 @@ const Transactions = () => {
           >
             <RefreshCcw className={`w-5 h-5 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
           </button>
+
+          <button
+            onClick={() => setIsStatementModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-4 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-3xl font-black text-sm hover:bg-indigo-100 hover:border-indigo-200 transition-all shadow-lg shadow-indigo-100 active:scale-95"
+          >
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">PDF Statement</span>
+          </button>
+
           <button
             onClick={exportToCSV}
             disabled={!history || history.length === 0}
             className="flex items-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-3xl font-black text-sm hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
             <Download className="w-4 h-4" />
-            <span>Export CSV</span>
+            <span className="hidden sm:inline">Export CSV</span>
           </button>
         </div>
       </div>
@@ -185,6 +203,12 @@ const Transactions = () => {
         onClose={handleCloseModal} 
         transaction={selectedTransaction} 
         currentUserId={user?._id} 
+      />
+
+      <DownloadStatementModal
+        isOpen={isStatementModalOpen}
+        onClose={() => setIsStatementModalOpen(false)}
+        accounts={accounts}
       />
 
       {/* Footer Insight */}
