@@ -61,3 +61,15 @@ export const getTransactionHistorySchema = z.object({
     userId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid user ID format').optional(),
   }),
 });
+
+export const generateStatementSchema = z.object({
+  query: z.object({
+    accountId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid account ID format').optional(),
+    startDate: z.string({
+      required_error: 'Start date is required',
+    }),
+    endDate: z.string({
+      required_error: 'End date is required',
+    }),
+  }),
+});

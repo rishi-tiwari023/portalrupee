@@ -4,6 +4,7 @@ import {
   withdraw,
   transferMoney,
   getTransactionHistory,
+  generateStatement,
 } from '../controllers/transaction.controller.js';
 import { isAuth, verifyTPIN } from '../middleware/authMiddleware.js';
 import { auditLogger } from '../middleware/audit.middleware.js';
@@ -13,6 +14,7 @@ import {
   withdrawSchema,
   transferSchema,
   getTransactionHistorySchema,
+  generateStatementSchema,
 } from '../validators/transaction.validator.js';
 
 const router = express.Router();
@@ -35,6 +37,13 @@ router.post('/deposit', auditLogger('DEPOSIT', 'TRANSACTION'), validate(depositS
 router.post('/withdraw', auditLogger('WITHDRAW', 'TRANSACTION'), validate(withdrawSchema), withdraw);
 
 router.post('/transfer', verifyTPIN, auditLogger('TRANSFER', 'TRANSACTION'), validate(transferSchema), transferMoney);
+
+/**
+ * @route   GET /api/v1/transactions/statement
+ * @desc    Generate PDF statement
+ * @access  Private
+ */
+router.get('/statement', validate(generateStatementSchema), generateStatement);
 
 /**
  * @route   GET /api/v1/transactions
