@@ -505,13 +505,15 @@ export const generateStatement = async (req, res, next) => {
     const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
     await browser.close();
 
+    const buffer = Buffer.from(pdfBuffer);
+
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename=statement-${account.accountNumber}.pdf`,
-      'Content-Length': pdfBuffer.length
+      'Content-Length': buffer.length
     });
 
-    res.send(pdfBuffer);
+    res.send(buffer);
   } catch (error) {
     console.error('Generate Statement Error:', error);
     next(error);
