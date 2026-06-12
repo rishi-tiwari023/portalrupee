@@ -7,6 +7,13 @@ import speakeasy from 'speakeasy';
 import { decrypt } from '../utils/encryption.util.js';
 import { runInTransaction } from '../utils/transaction.util.js';
 import { getIO } from '../config/socket.js';
+import puppeteer from 'puppeteer';
+import ejs from 'ejs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * @desc    Deposit money to an account
@@ -418,6 +425,95 @@ export const getTransactionHistory = async (req, res, next) => {
     });
   } catch (error) {
     console.error('Transaction History Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * @desc    Generate PDF statement for an account
+ * @route   GET /api/v1/transactions/statement
+ * @access  Private
+ */
+export const generateStatement = async (req, res, next) => {
+  try {
+    const { accountId, startDate, endDate } = req.query;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return next(new AppError('Invalid date format', 400));
+    }
+
+    // Role-based scoping
+    let accountQuery = { status: 'ACTIVE' };
+    
+    if (accountId) {
+      accountQuery._id = accountId;
+    }
+
+    if (req.user.role === 'CUSTOMER') {
+      accountQuery.user = req.user.id;
+    }
+
+    const account = await Account.findOne(accountQuery).populate('user', 'firstName lastName email mobile');
+
+    if (!account) {
+      return next(new AppError('Account not found or unauthorized', 404));
+    }
+
+    const query = {
+      $or: [
+        { senderAccount: account._id },
+        { receiverAccount: account._id }
+      ],
+      createdAt: { $gte: start, $lte: end }
+    };
+
+    const transactions = await Transaction.find(query)
+      .populate('senderAccount', 'accountNumber type')
+      .populate('receiverAccount', 'accountNumber type')
+      .sort({ createdAt: 1 }); // Chronological order for statement
+
+    const formattedTransactions = transactions.map(txn => {
+      const isCredit = txn.receiverAccount && txn.receiverAccount._id.toString() === account._id.toString();
+      return {
+        date: new Date(txn.createdAt).toLocaleString(),
+        id: txn.transactionId,
+        description: txn.description || txn.type,
+        type: isCredit ? 'CREDIT' : 'DEBIT',
+        amount: txn.amount,
+        isCredit
+      };
+    });
+
+    const templatePath = path.join(__dirname, '../templates/statement.ejs');
+    
+    const html = await ejs.renderFile(templatePath, {
+      user: account.user,
+      account,
+      startDate: start.toLocaleDateString(),
+      endDate: end.toLocaleDateString(),
+      transactions: formattedTransactions
+    });
+
+    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+    
+    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
+    await browser.close();
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=statement-${account.accountNumber}.pdf`,
+      'Content-Length': pdfBuffer.length
+    });
+
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Generate Statement Error:', error);
     next(error);
   }
 };
