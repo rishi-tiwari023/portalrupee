@@ -21,6 +21,7 @@ import Transactions from './pages/Transactions';
 import KYC from './pages/KYC';
 import Messages from './pages/Messages';
 import Analytics from './pages/Analytics';
+import Users from './pages/Users';
 
 import './App.css';
 
@@ -89,7 +90,7 @@ const router = createBrowserRouter([
         children: [
           {
             path: 'users',
-            element: <div className="p-8 h-full flex items-center justify-center text-slate-400 font-medium text-xl bg-white/50 backdrop-blur-sm rounded-3xl border border-white font-bold">User Management (Manager Only)</div>
+            element: <Users />
           }
         ]
       }
