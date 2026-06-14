@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getMe } from './store/slices/authSlice';
@@ -9,21 +9,25 @@ import RoleBasedRoute from './components/RoleBasedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import { SocketProvider } from './context/SocketContext';
 
-// Pages
-import Home from './pages/Home';
-import DashboardHome from './pages/DashboardHome';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Profile from './pages/Profile';
-import Accounts from './pages/Accounts';
-import Transfer from './pages/Transfer';
-import Transactions from './pages/Transactions';
-import KYC from './pages/KYC';
-import Messages from './pages/Messages';
-import Analytics from './pages/Analytics';
-import Users from './pages/Users';
-
 import './App.css';
+
+// Page Loader spinner for lazy chunks
+const PageLoader = () => (
+  <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 bg-slate-50/20 backdrop-blur-sm rounded-3xl border border-white/40">
+    <div className="w-10 h-10 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin mb-4" />
+    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase animate-pulse">Loading PortalRupee...</p>
+  </div>
+);
+
+// Lazy route helper wrapper
+const lazyRoute = (importFunc) => {
+  const LazyComponent = lazy(importFunc);
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <LazyComponent />
+    </Suspense>
+  );
+};
 
 const router = createBrowserRouter([
   {
@@ -32,15 +36,15 @@ const router = createBrowserRouter([
     children: [
       {
         path: '',
-        element: <Home />,
+        element: lazyRoute(() => import('./pages/Home')),
       },
       {
         path: 'login',
-        element: <Login />
+        element: lazyRoute(() => import('./pages/Login'))
       },
       {
         path: 'register',
-        element: <Register />
+        element: lazyRoute(() => import('./pages/Register'))
       }
     ],
   },
@@ -50,35 +54,35 @@ const router = createBrowserRouter([
     children: [
       {
         path: '',
-        element: <DashboardHome />,
+        element: lazyRoute(() => import('./pages/DashboardHome')),
       },
       {
         path: 'profile',
-        element: <Profile />,
+        element: lazyRoute(() => import('./pages/Profile')),
       },
       {
         path: 'accounts',
-        element: <Accounts />
+        element: lazyRoute(() => import('./pages/Accounts'))
       },
       {
         path: 'transfer',
-        element: <Transfer />
+        element: lazyRoute(() => import('./pages/Transfer'))
       },
       {
         path: 'transactions',
-        element: <Transactions />
+        element: lazyRoute(() => import('./pages/Transactions'))
       },
       {
         path: 'analytics',
-        element: <Analytics />
+        element: lazyRoute(() => import('./pages/Analytics'))
       },
       {
         path: 'kyc',
-        element: <KYC />
+        element: lazyRoute(() => import('./pages/KYC'))
       },
       {
         path: 'messages',
-        element: <Messages />
+        element: lazyRoute(() => import('./pages/Messages'))
       },
       {
         path: 'settings',
@@ -90,7 +94,7 @@ const router = createBrowserRouter([
         children: [
           {
             path: 'users',
-            element: <Users />
+            element: lazyRoute(() => import('./pages/Users'))
           }
         ]
       }
