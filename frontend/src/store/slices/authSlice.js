@@ -319,6 +319,22 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      // Logout
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.isAuthenticated = false;
+        state.error = null;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.user = null;
+        state.isAuthenticated = false;
+      })
       // Get Me
       .addCase(getMe.pending, (state) => {
         state.loading = true;
