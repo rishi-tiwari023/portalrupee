@@ -301,13 +301,61 @@
   - Code splitting and image lazy loading.
   - Run Lighthouse audit and fix performance bottlenecks.
 
-**Day 30 (Jun 15): Deployment & Handover**
+**Day 30 (Jun 15): Message Queue Implementation**
+
+- **Backend**:
+  - Implement message queue for transaction alerts (Credit/Debit Alerts).
+  - Implement message queue for chat messages.
+  - Implement message queue for email notifications.
+  - Implement message queue for audit logs.
+- **Frontend**:
+  - Integrate real-time notification alerts from the message queue.
+
+**Day 31 (Jun 16): Settings, Dashboard & UI Refinements**
+
+- **Backend**:
+  - Endpoint for user profile image upload to S3.
+  - Endpoint to fetch correct last login details and KYC status.
+- **Frontend**:
+  - Setting panel implementation.
+  - Under profile, show correct last login details (remove demo data).
+  - Under user profile, allow user to add an image (saved in S3) which must also be available in the navbar.
+  - Dashboard: Remove "Apply for a Premium Card" section and its logic.
+  - Accounts: Fetch KYC status dynamically from the backend.
+  - Navbar: Remove search transaction bar.
+
+**Day 32 (Jun 17): Cashier & Manager Role Dashboards**
+
+- **Backend**:
+  - Endpoints for Cashier approval of added funds.
+  - Endpoints for Manager account freezing capability.
+- **Frontend**:
+  - CASHIER Dashboard: Require cashier approval when a user adds funds. Sidebar must include profile settings and approve txn pages.
+  - MANAGER Dashboard: Restrict to profile settings and user management only, along with a new page for freezing accounts.
+
+**Day 33 (Jun 18): Public Pages & Auth UI Updates**
+
+- **Backend**:
+  - Static endpoints or routing for new public pages.
+- **Frontend**:
+  - Login/Register: Remove LinkedIn, X, GitHub, email login options, and app title/logo from footer (keep just the copyright line).
+  - Public Layout: Implement "Contact Us" and "What is PortalRupee" pages that don't require authentication.
+  - Create Terms and Conditions page.
+  - Create Guidelines and Interest Information pages.
+
+**Day 34 (Jun 19): Deployment & Handover**
 
 - **Backend**:
   - Finalize README and Postman collections.
   - Production deployment and CI/CD final check.
 - **Frontend**:
   - Production build and final browser testing.
+
+**Day 35 (Jun 20): Deployment Verification**
+
+- **Backend & Frontend**:
+  - Domain configuration and verification.
+  - Production logs checking and monitoring setup.
 
 ---
 
@@ -316,5 +364,5 @@
 - [x] Core Auth & Role Management Working (Day 7 - Apr 14)
 - [x] Transaction Engine (Transfer/PIN) Working (Day 14 - Apr 21)
 - [x] S3 Files & OTP Verification Ready (Day 21 - Jun 06)
-- [ ] Real-time Chat & Analytics Deployed (Day 28 - Jun 13)
-- [ ] Production Deployment Complete (Day 30 - Jun 15)
+- [x] Real-time Chat & Analytics Deployed (Day 28 - Jun 13)
+- [ ] Production Deployment Complete (Day 34 - Jun 19)

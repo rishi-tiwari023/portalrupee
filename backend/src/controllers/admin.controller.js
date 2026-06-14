@@ -13,6 +13,10 @@ export const updateUserRole = async (req, res, next) => {
     const { userId } = req.params;
     const { role } = req.body;
 
+    if (req.user.id === userId && role !== 'MANAGER') {
+      return next(new AppError('You cannot downgrade your own role', 403));
+    }
+
     const user = await User.findByIdAndUpdate(
       userId,
       { role },
