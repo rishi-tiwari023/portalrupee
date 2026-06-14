@@ -823,6 +823,7 @@ const Users = () => {
                             src={viewingKyc.kycDocumentUrl}
                             alt="Government ID Specimen"
                             className="max-w-full max-h-full object-contain"
+                            loading="lazy"
                           />
                         )
                       ) : (
@@ -850,6 +851,7 @@ const Users = () => {
                             src={viewingKyc.kycSignatureUrl}
                             alt="Signature Specimen"
                             className="max-w-full max-h-full object-contain hover:scale-105 transition-transform cursor-zoom-in"
+                            loading="lazy"
                           />
                         )
                       ) : (

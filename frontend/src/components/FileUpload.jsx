@@ -274,6 +274,7 @@ const FileUpload = ({
                   src={previewUrl}
                   alt="Uploaded preview"
                   className="max-h-[150px] object-contain rounded-xl"
+                  loading="lazy"
                   onError={(e) => {
                     e.target.style.display = 'none';
                     setPreviewUrl(null);
