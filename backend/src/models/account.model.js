@@ -36,5 +36,8 @@ const accountSchema = new mongoose.Schema(
   }
 );
 
+// Indexes for performance optimization
+accountSchema.index({ user: 1 });
+
 const Account = mongoose.model('Account', accountSchema);
 export default Account;
