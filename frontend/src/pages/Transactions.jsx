@@ -112,6 +112,38 @@ const Transactions = () => {
     document.body.removeChild(link);
   };
 
+  if (loading && (!history || history.length === 0)) {
+    return (
+      <div className="w-full animate-pulse space-y-8 mt-4">
+        {/* Header Skeleton */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-4">
+             <div className="flex items-center gap-3">
+               <div className="h-10 w-10 bg-slate-100 rounded-2xl" />
+               <div className="h-6 w-32 bg-slate-100 rounded-full" />
+             </div>
+             <div className="h-10 w-64 bg-slate-100 rounded-lg" />
+             <div className="h-4 w-96 bg-slate-100 rounded" />
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 bg-slate-100 rounded-2xl" />
+            <div className="h-12 w-40 bg-slate-100 rounded-3xl" />
+            <div className="h-12 w-40 bg-slate-100 rounded-3xl" />
+          </div>
+        </div>
+
+        {/* Info Banner Skeleton */}
+        <div className="h-16 w-full bg-slate-100 rounded-3xl" />
+
+        {/* Filters Section Skeleton */}
+        <div className="h-20 w-full bg-slate-100 rounded-[2rem]" />
+
+        {/* Table Area Skeleton */}
+        <div className="h-[500px] w-full bg-slate-100 rounded-[2.5rem]" />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Section */}

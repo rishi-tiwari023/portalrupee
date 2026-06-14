@@ -12,9 +12,9 @@ import {
 const TransactionTable = ({ transactions, isLoading, currentUserId, onViewDetails }) => {
   if (isLoading) {
     return (
-      <div className="w-full space-y-4">
+      <div className="w-full space-y-4 animate-pulse">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-20 w-full bg-slate-50 animate-pulse rounded-3xl border border-slate-100" />
+          <div key={i} className="h-20 w-full bg-slate-200 rounded-[2rem]" />
         ))}
       </div>
     );

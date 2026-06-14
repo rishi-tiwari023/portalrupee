@@ -46,6 +46,34 @@ const Accounts = () => {
     return matchesSearch && matchesFilter;
   });
 
+  if (loading && accounts.length === 0) {
+    return (
+      <div className="w-full animate-pulse space-y-10 mt-4">
+        {/* Header Skeleton */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-3">
+             <div className="h-10 w-48 bg-slate-100 rounded-lg" />
+             <div className="h-4 w-72 bg-slate-100 rounded" />
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 bg-slate-100 rounded-2xl" />
+            <div className="h-12 w-40 bg-slate-100 rounded-2xl" />
+          </div>
+        </div>
+
+        {/* Stats Ribbon Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="h-28 bg-slate-100 rounded-[2rem]" />
+          <div className="h-28 bg-slate-100 rounded-[2rem]" />
+          <div className="h-28 bg-slate-100 rounded-[2rem]" />
+        </div>
+
+        {/* Filters & Content Skeleton */}
+        <div className="h-[500px] bg-slate-100 rounded-[2.5rem]" />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Section */}
@@ -145,12 +173,7 @@ const Accounts = () => {
           </div>
         </div>
 
-        {loading && accounts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4" />
-            <p className="font-bold text-slate-400 tracking-widest uppercase text-xs">Loading Accounts...</p>
-          </div>
-        ) : filteredAccounts.length > 0 ? (
+        {filteredAccounts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             {filteredAccounts.map((account) => (
               <AccountSummaryCard key={account._id} account={account} />

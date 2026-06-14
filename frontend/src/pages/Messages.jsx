@@ -260,9 +260,16 @@ const Messages = () => {
         {/* Contacts List */}
         <div className="flex-1 overflow-y-auto no-scrollbar space-y-3">
           {loading && !searchTerm ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-3">
-              <div className="w-8 h-8 border-3 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-              <p className="text-xs font-bold text-slate-400">Loading contacts...</p>
+            <div className="flex flex-col gap-3 animate-pulse">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3.5 p-3.5 rounded-2xl border border-slate-100 bg-white">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-200 flex-shrink-0" />
+                  <div className="w-full space-y-2">
+                    <div className="h-4 w-32 bg-slate-200 rounded" />
+                    <div className="h-3 w-24 bg-slate-200 rounded" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : error ? (
             <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-xs font-bold flex items-center gap-2">
@@ -443,9 +450,10 @@ const Messages = () => {
             {/* Message Pane Area */}
             <div className="flex-1 p-6 overflow-y-auto bg-slate-50/30 flex flex-col gap-4">
               {isVerifyingPermission ? (
-                <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                  <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-                  <p className="text-sm font-bold text-slate-400">Negotiating cryptographic keys...</p>
+                <div className="flex-1 flex flex-col gap-4 animate-pulse p-4">
+                  <div className="flex justify-end"><div className="w-48 h-12 bg-slate-200 rounded-2xl rounded-tr-sm" /></div>
+                  <div className="flex justify-start"><div className="w-64 h-16 bg-slate-200 rounded-2xl rounded-tl-sm" /></div>
+                  <div className="flex justify-end"><div className="w-32 h-12 bg-slate-200 rounded-2xl rounded-tr-sm" /></div>
                 </div>
               ) : socketError ? (
                 <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto text-center">

@@ -92,6 +92,25 @@ const Profile = () => {
     visible: { opacity: 1, x: 0 }
   };
 
+  if (loading && !user) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-8 animate-pulse mt-4">
+        {/* Header Profile Skeleton */}
+        <div className="h-48 bg-slate-100 rounded-[2rem] w-full border border-slate-100"></div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Contact Info Skeleton */}
+          <div className="h-72 bg-slate-100 rounded-[2rem] border border-slate-100"></div>
+          {/* Security Skeleton */}
+          <div className="h-72 bg-slate-100 rounded-[2rem] border border-slate-100"></div>
+        </div>
+
+        {/* Account Status Skeleton */}
+        <div className="h-56 bg-slate-100 rounded-[2rem] w-full border border-slate-100"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Header Profile Section */}

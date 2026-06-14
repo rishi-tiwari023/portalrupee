@@ -74,8 +74,34 @@ const DashboardHome = () => {
 
   if (loading && !summary.accountCount) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+      <div className="w-full animate-pulse space-y-10 mt-4">
+        {/* Header Skeleton */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="space-y-3">
+            <div className="h-10 w-48 bg-slate-200 rounded-lg"></div>
+            <div className="h-4 w-72 bg-slate-200 rounded"></div>
+          </div>
+          <div className="h-10 w-32 bg-slate-200 rounded-xl"></div>
+        </div>
+
+        {/* Main Stats Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            <div className="h-64 bg-slate-200 rounded-[2.5rem]"></div>
+            <div className="h-64 bg-slate-200 rounded-[2.5rem]"></div>
+          </div>
+          <div className="h-64 bg-slate-200 rounded-[2.5rem]"></div>
+        </div>
+
+        {/* Accounts Skeleton */}
+        <div className="space-y-6">
+          <div className="h-8 w-40 bg-slate-200 rounded-lg"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="h-40 bg-slate-200 rounded-3xl"></div>
+            <div className="h-40 bg-slate-200 rounded-3xl"></div>
+            <div className="h-40 bg-slate-200 rounded-3xl"></div>
+          </div>
+        </div>
       </div>
     );
   }
