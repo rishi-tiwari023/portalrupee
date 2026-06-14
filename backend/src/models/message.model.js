@@ -30,4 +30,9 @@ const messageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for performance optimization
+messageSchema.index({ sender: 1 });
+messageSchema.index({ receiver: 1 });
+messageSchema.index({ roomId: 1, createdAt: -1 });
+
 export default mongoose.model('Message', messageSchema);

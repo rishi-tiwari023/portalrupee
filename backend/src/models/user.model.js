@@ -69,6 +69,11 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+// Indexes for performance optimization
+userSchema.index({ kycStatus: 1, updatedAt: 1 });
+userSchema.index({ role: 1, createdAt: -1 });
+userSchema.index({ createdAt: -1 });
+
 // Hash password and TPIN before saving
 userSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
