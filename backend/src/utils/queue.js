@@ -1,8 +1,8 @@
-import redisClient from '../config/redis.js';
 import Message from '../models/message.model.js';
 import { getIO } from '../config/socket.js';
 import { sendOTPMail, sendWelcomeMail } from './mailer.js';
 import AuditLog from '../models/auditLog.model.js';
+import { getChannel } from '../config/rabbitmq.js';
 
 // Queue names
 const QUEUES = {
@@ -14,17 +14,19 @@ const QUEUES = {
 
 /**
  * Enqueues a transaction notification job.
- * Falls back to direct socket emission if Redis is unavailable.
+ * Falls back to direct socket emission if RabbitMQ is unavailable.
  */
 export const enqueueTransactionAlert = async (data) => {
   try {
-    if (!redisClient.isOpen) {
-      console.warn('Redis client is not open. Executing fallback for transaction alert.');
+    const channel = getChannel();
+    if (!channel) {
+      console.warn('RabbitMQ channel is not open. Executing fallback for transaction alert.');
       const io = getIO();
       io.to(data.userId).emit('new_transaction_notification', data);
       return;
     }
-    await redisClient.rPush(QUEUES.TRANSACTION_ALERTS, JSON.stringify(data));
+    await channel.assertQueue(QUEUES.TRANSACTION_ALERTS, { durable: true });
+    channel.sendToQueue(QUEUES.TRANSACTION_ALERTS, Buffer.from(JSON.stringify(data)), { persistent: true });
   } catch (err) {
     console.error('Failed to enqueue transaction alert:', err);
     try {
@@ -38,19 +40,21 @@ export const enqueueTransactionAlert = async (data) => {
 
 /**
  * Enqueues a chat message processing job.
- * Falls back to direct DB creation and socket emission if Redis is unavailable.
+ * Falls back to direct DB creation and socket emission if RabbitMQ is unavailable.
  */
 export const enqueueChatMessage = async (data) => {
   try {
-    if (!redisClient.isOpen) {
-      console.warn('Redis client is not open. Executing fallback for chat message.');
+    const channel = getChannel();
+    if (!channel) {
+      console.warn('RabbitMQ channel is not open. Executing fallback for chat message.');
       const newMessage = await Message.create(data);
       const io = getIO();
       io.to(data.roomId).emit('receive_message', newMessage);
       io.to(data.receiver).emit('new_message_notification', newMessage);
       return;
     }
-    await redisClient.rPush(QUEUES.CHAT_MESSAGES, JSON.stringify(data));
+    await channel.assertQueue(QUEUES.CHAT_MESSAGES, { durable: true });
+    channel.sendToQueue(QUEUES.CHAT_MESSAGES, Buffer.from(JSON.stringify(data)), { persistent: true });
   } catch (err) {
     console.error('Failed to enqueue chat message:', err);
     try {
@@ -66,12 +70,13 @@ export const enqueueChatMessage = async (data) => {
 
 /**
  * Enqueues an email dispatch job.
- * Falls back to immediate async mail sending if Redis is unavailable.
+ * Falls back to immediate async mail sending if RabbitMQ is unavailable.
  */
 export const enqueueEmail = async (data) => {
   try {
-    if (!redisClient.isOpen) {
-      console.warn('Redis client is not open. Executing fallback for email dispatch.');
+    const channel = getChannel();
+    if (!channel) {
+      console.warn('RabbitMQ channel is not open. Executing fallback for email dispatch.');
       if (data.type === 'welcome') {
         sendWelcomeMail(data.email, data.name).catch(console.error);
       } else if (data.type === 'otp') {
@@ -79,7 +84,8 @@ export const enqueueEmail = async (data) => {
       }
       return;
     }
-    await redisClient.rPush(QUEUES.EMAILS, JSON.stringify(data));
+    await channel.assertQueue(QUEUES.EMAILS, { durable: true });
+    channel.sendToQueue(QUEUES.EMAILS, Buffer.from(JSON.stringify(data)), { persistent: true });
   } catch (err) {
     console.error('Failed to enqueue email:', err);
     if (data.type === 'welcome') {
@@ -92,16 +98,18 @@ export const enqueueEmail = async (data) => {
 
 /**
  * Enqueues an audit log persistence job.
- * Falls back to direct DB creation if Redis is unavailable.
+ * Falls back to direct DB creation if RabbitMQ is unavailable.
  */
 export const enqueueAuditLog = async (data) => {
   try {
-    if (!redisClient.isOpen) {
-      console.warn('Redis client is not open. Executing fallback for audit log.');
+    const channel = getChannel();
+    if (!channel) {
+      console.warn('RabbitMQ channel is not open. Executing fallback for audit log.');
       await AuditLog.create(data);
       return;
     }
-    await redisClient.rPush(QUEUES.AUDIT_LOGS, JSON.stringify(data));
+    await channel.assertQueue(QUEUES.AUDIT_LOGS, { durable: true });
+    channel.sendToQueue(QUEUES.AUDIT_LOGS, Buffer.from(JSON.stringify(data)), { persistent: true });
   } catch (err) {
     console.error('Failed to enqueue audit log:', err);
     try {
@@ -150,95 +158,51 @@ const processAuditLog = async (data) => {
   await AuditLog.create(data);
 };
 
-// Queue Worker Control State
-let isRunning = false;
+let isWorkerRunning = false;
 
 /**
- * Starts the Redis list-based Queue Worker Loop.
+ * Starts the RabbitMQ Queue Worker Consumers.
  */
-export const startQueueWorker = () => {
-  if (isRunning) return;
-  isRunning = true;
+export const startQueueWorker = async () => {
+  if (isWorkerRunning) return;
+  
+  const channel = getChannel();
+  if (!channel) {
+    console.error('Cannot start queue worker: RabbitMQ channel is not initialized.');
+    return;
+  }
 
-  console.log('Queue Worker Loop Initialized');
+  isWorkerRunning = true;
+  console.log('RabbitMQ Queue Worker Initialized');
 
-  const workerLoop = async () => {
-    while (isRunning) {
-      try {
-        if (!redisClient.isOpen) {
-          // Wait if Redis client is offline
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          continue;
-        }
-
-        let processedAny = false;
-
-        // 1. Transaction Alerts
+  const setupConsumer = async (queueName, processorFn) => {
+    await channel.assertQueue(queueName, { durable: true });
+    channel.consume(queueName, async (msg) => {
+      if (msg !== null) {
         try {
-          const txJob = await redisClient.lPop(QUEUES.TRANSACTION_ALERTS);
-          if (txJob) {
-            processedAny = true;
-            const data = JSON.parse(txJob);
-            await processTransactionAlert(data);
-          }
+          const data = JSON.parse(msg.content.toString());
+          await processorFn(data);
+          channel.ack(msg);
         } catch (err) {
-          console.error('Worker error processing transaction alert:', err);
+          console.error(`Worker error processing ${queueName}:`, err);
+          // Nack message, don't requeue to avoid infinite loops on bad data
+          channel.nack(msg, false, false);
         }
-
-        // 2. Chat Messages
-        try {
-          const chatJob = await redisClient.lPop(QUEUES.CHAT_MESSAGES);
-          if (chatJob) {
-            processedAny = true;
-            const data = JSON.parse(chatJob);
-            await processChatMessage(data);
-          }
-        } catch (err) {
-          console.error('Worker error processing chat message:', err);
-        }
-
-        // 3. Emails
-        try {
-          const emailJob = await redisClient.lPop(QUEUES.EMAILS);
-          if (emailJob) {
-            processedAny = true;
-            const data = JSON.parse(emailJob);
-            await processEmail(data);
-          }
-        } catch (err) {
-          console.error('Worker error processing email:', err);
-        }
-
-        // 4. Audit Logs
-        try {
-          const auditJob = await redisClient.lPop(QUEUES.AUDIT_LOGS);
-          if (auditJob) {
-            processedAny = true;
-            const data = JSON.parse(auditJob);
-            await processAuditLog(data);
-          }
-        } catch (err) {
-          console.error('Worker error processing audit log:', err);
-        }
-
-        // Prevent heavy loop when queues are idle
-        if (!processedAny) {
-          await new Promise((resolve) => setTimeout(resolve, 200));
-        }
-      } catch (err) {
-        console.error('Queue worker main loop exception:', err);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-    }
+    });
   };
 
-  workerLoop();
+  try {
+    await setupConsumer(QUEUES.TRANSACTION_ALERTS, processTransactionAlert);
+    await setupConsumer(QUEUES.CHAT_MESSAGES, processChatMessage);
+    await setupConsumer(QUEUES.EMAILS, processEmail);
+    await setupConsumer(QUEUES.AUDIT_LOGS, processAuditLog);
+  } catch (err) {
+    console.error('Failed to setup consumers:', err);
+  }
 };
 
-/**
- * Stops the Queue Worker Loop.
- */
 export const stopQueueWorker = () => {
-  isRunning = false;
-  console.log('Queue Worker Loop Stopped');
+  isWorkerRunning = false;
+  console.log('RabbitMQ Queue Worker logic stopped (channels/connections manage actual disconnects)');
 };
