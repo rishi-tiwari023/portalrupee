@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logoutUser } from '../store/slices/authSlice';
 import logo from '../assets/logo.png';
@@ -64,6 +64,17 @@ const Navbar = () => {
     } = useSocket() || {};
     const dispatch = useDispatch();
     const dropdownRef = useRef(null);
+    const navigate = useNavigate();
+
+    const handleNotificationClick = (notif) => {
+        markAsRead(notif.id);
+        setShowNotifications(false);
+        if (notif.type === 'MESSAGE') {
+            navigate('/dashboard/messages');
+        } else if (['DEPOSIT', 'WITHDRAW', 'TRANSFER'].includes(notif.type)) {
+            navigate('/dashboard/transactions');
+        }
+    };
 
     const handleLogout = () => {
         dispatch(logoutUser());
@@ -161,7 +172,7 @@ const Navbar = () => {
                                                 notifications.map((notif) => (
                                                     <div 
                                                         key={notif.id}
-                                                        onClick={() => markAsRead(notif.id)}
+                                                        onClick={() => handleNotificationClick(notif)}
                                                         className={`flex gap-3 p-3 rounded-2xl cursor-pointer transition-colors border border-transparent
                                                             ${notif.read 
                                                                 ? 'hover:bg-slate-50 text-slate-600' 
