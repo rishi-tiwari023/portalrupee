@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
 import User from '../models/user.model.js';
 import { checkChatPermission } from '../utils/chat.util.js';
-import Message from '../models/message.model.js';
+import { enqueueChatMessage } from '../utils/queue.js';
 
 let io;
 
@@ -106,20 +106,25 @@ export const initializeSocket = (server) => {
 
         const roomId = `chat_${[socket.user._id.toString(), targetUserId.toString()].sort().join('_')}`;
         
-        const newMessage = await Message.create({
-          sender: socket.user._id,
+        await enqueueChatMessage({
+          sender: socket.user._id.toString(),
           receiver: targetUserId,
           roomId,
           content
         });
 
-        // Emit receive_message to the chat room
-        io.to(roomId).emit('receive_message', newMessage);
-
-        // Emit generic notification to the target user's personal room
-        socket.to(targetUserId.toString()).emit('new_message_notification', newMessage);
-
-        if (callback) callback({ status: 'success', data: newMessage });
+        if (callback) {
+          callback({
+            status: 'success',
+            data: {
+              sender: socket.user._id.toString(),
+              receiver: targetUserId,
+              roomId,
+              content,
+              createdAt: new Date().toISOString()
+            }
+          });
+        }
       } catch (error) {
         console.error('Socket send_message error:', error);
         if (callback) callback({ status: 'error', message: 'Internal server error' });

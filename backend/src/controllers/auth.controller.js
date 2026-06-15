@@ -4,7 +4,7 @@ import { generateAccessToken, generateRefreshToken } from '../utils/jwt.utils.js
 import speakeasy from 'speakeasy';
 import { decrypt } from '../utils/encryption.util.js';
 import { generateOTP, storeOTP, verifyOTP as verifyOTPUtil, isOTPVerified, clearOTPVerification } from '../utils/otp.util.js';
-import { sendOTPMail, sendWelcomeMail } from '../utils/mailer.js';
+import { enqueueEmail } from '../utils/queue.js';
 
 const cookieOptions = {
   expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
@@ -48,9 +48,11 @@ export const register = async (req, res, next) => {
 
     res.cookie('jwt', accessToken, cookieOptions);
 
-    // Send welcome email asynchronously
-    sendWelcomeMail(email, firstName).catch((err) => {
-      console.error(`Failed to send welcome email to ${email}:`, err);
+    // Queue welcome email
+    await enqueueEmail({
+      type: 'welcome',
+      email,
+      name: firstName,
     });
 
     res.status(201).json({
@@ -183,7 +185,12 @@ export const sendOTP = async (req, res, next) => {
     const otp = generateOTP();
     await storeOTP(email, otp, purpose);
 
-    await sendOTPMail(email, otp, purpose);
+    await enqueueEmail({
+      type: 'otp',
+      email,
+      otp,
+      purpose,
+    });
 
     res.status(200).json({
       success: true,
