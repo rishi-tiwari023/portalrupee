@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import app from './app.js';
 import connectDB from './config/db.js';
 import { connectRedis } from './config/redis.js';
+import { connectRabbitMQ } from './config/rabbitmq.js';
 import { initializeSocket } from './config/socket.js';
 import { startQueueWorker } from './utils/queue.js';
 
@@ -12,7 +13,11 @@ connectDB();
 
 // Connect to Redis
 connectRedis();
-startQueueWorker();
+
+// Connect to RabbitMQ and start worker
+connectRabbitMQ().then(() => {
+  startQueueWorker();
+});
 
 const PORT = process.env.PORT || 5000;
 
