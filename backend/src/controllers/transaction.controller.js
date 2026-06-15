@@ -6,7 +6,7 @@ import AppError from '../utils/AppError.js';
 import speakeasy from 'speakeasy';
 import { decrypt } from '../utils/encryption.util.js';
 import { runInTransaction } from '../utils/transaction.util.js';
-import { getIO } from '../config/socket.js';
+import { enqueueTransactionAlert } from '../utils/queue.js';
 import puppeteer from 'puppeteer';
 import ejs from 'ejs';
 import path from 'path';
@@ -76,19 +76,15 @@ export const deposit = async (req, res, next) => {
       };
     });
 
-    // Emit real-time transaction notification
-    try {
-      const io = getIO();
-      io.to(result.userId.toString()).emit('new_transaction_notification', {
-        transactionId: result.transaction.transactionId,
-        type: 'DEPOSIT',
-        amount,
-        message: `Your account has been credited with ₹${amount} via Deposit.`,
-        createdAt: result.transaction.createdAt,
-      });
-    } catch (socketErr) {
-      console.error('Failed to emit deposit socket notification:', socketErr.message);
-    }
+    // Queue real-time transaction notification
+    await enqueueTransactionAlert({
+      userId: result.userId.toString(),
+      transactionId: result.transaction.transactionId,
+      type: 'DEPOSIT',
+      amount,
+      message: `Your account has been credited with ₹${amount} via Deposit.`,
+      createdAt: result.transaction.createdAt,
+    });
 
     res.status(200).json({
       status: 'success',
@@ -169,19 +165,15 @@ export const withdraw = async (req, res, next) => {
       };
     });
 
-    // Emit real-time transaction notification
-    try {
-      const io = getIO();
-      io.to(result.userId.toString()).emit('new_transaction_notification', {
-        transactionId: result.transaction.transactionId,
-        type: 'WITHDRAW',
-        amount,
-        message: `Your account has been debited with ₹${amount} via Withdrawal.`,
-        createdAt: result.transaction.createdAt,
-      });
-    } catch (socketErr) {
-      console.error('Failed to emit withdrawal socket notification:', socketErr.message);
-    }
+    // Queue real-time transaction notification
+    await enqueueTransactionAlert({
+      userId: result.userId.toString(),
+      transactionId: result.transaction.transactionId,
+      type: 'WITHDRAW',
+      amount,
+      message: `Your account has been debited with ₹${amount} via Withdrawal.`,
+      createdAt: result.transaction.createdAt,
+    });
 
     res.status(200).json({
       status: 'success',
@@ -275,35 +267,30 @@ export const transferMoney = async (req, res, next) => {
       };
     });
 
-    // Emit real-time transaction notification
-    try {
-      const io = getIO();
-      const receiver = await User.findById(receiverId).select('firstName lastName');
-      const receiverName = receiver ? `${receiver.firstName} ${receiver.lastName}` : 'Recipient';
-      const senderName = `${req.user.firstName} ${req.user.lastName}`;
+    // Queue real-time transaction notifications
+    const receiver = await User.findById(receiverId).select('firstName lastName');
+    const receiverName = receiver ? `${receiver.firstName} ${receiver.lastName}` : 'Recipient';
+    const senderName = `${req.user.firstName} ${req.user.lastName}`;
 
-      // Notify sender
-      io.to(senderId.toString()).emit('new_transaction_notification', {
-        transactionId: result.transaction.transactionId,
-        type: 'TRANSFER',
-        subType: 'SENT',
-        amount,
-        message: `Successfully transferred ₹${amount} to ${receiverName}.`,
-        createdAt: result.transaction.createdAt,
-      });
+    await enqueueTransactionAlert({
+      userId: senderId.toString(),
+      transactionId: result.transaction.transactionId,
+      type: 'TRANSFER',
+      subType: 'SENT',
+      amount,
+      message: `Successfully transferred ₹${amount} to ${receiverName}.`,
+      createdAt: result.transaction.createdAt,
+    });
 
-      // Notify receiver
-      io.to(receiverId.toString()).emit('new_transaction_notification', {
-        transactionId: result.transaction.transactionId,
-        type: 'TRANSFER',
-        subType: 'RECEIVED',
-        amount,
-        message: `You received ₹${amount} from ${senderName}.`,
-        createdAt: result.transaction.createdAt,
-      });
-    } catch (socketErr) {
-      console.error('Failed to emit transfer socket notifications:', socketErr.message);
-    }
+    await enqueueTransactionAlert({
+      userId: receiverId.toString(),
+      transactionId: result.transaction.transactionId,
+      type: 'TRANSFER',
+      subType: 'RECEIVED',
+      amount,
+      message: `You received ₹${amount} from ${senderName}.`,
+      createdAt: result.transaction.createdAt,
+    });
 
     res.status(200).json({
       status: 'success',

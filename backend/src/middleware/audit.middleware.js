@@ -1,4 +1,4 @@
-import AuditLog from '../models/auditLog.model.js';
+import { enqueueAuditLog } from '../utils/queue.js';
 
 /**
  * Middleware to record audit logs for successful requests.
@@ -24,7 +24,7 @@ export const auditLogger = (action, resource) => {
             details.body = bodyCopy;
           }
 
-          await AuditLog.create({
+          await enqueueAuditLog({
             actor: req.user?.id || 'SYSTEM',
             action,
             resource,

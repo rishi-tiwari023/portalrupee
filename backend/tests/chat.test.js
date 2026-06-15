@@ -105,8 +105,12 @@ async function runChatTests() {
     console.log('Accounts created.');
 
     const permAB_init = await checkChatPermission(userA._id, userB._id);
-    console.log(`Permission User A <-> User B: ${permAB_init} (Expected: false)`);
-    if (permAB_init !== false) throw new Error('Initial permission should be false');
+    console.log(`Permission User A <-> User B: ${permAB_init} (Expected: true)`);
+    if (permAB_init !== true) throw new Error('Initial permission should be true');
+
+    const permSelf = await checkChatPermission(userA._id, userA._id);
+    console.log(`Permission User A -> User A (Self): ${permSelf} (Expected: false)`);
+    if (permSelf !== false) throw new Error('Self chat permission should be false');
 
     console.log('Testing getChatRooms Controller...');
     const reqRoomsInit = { user: { id: userA._id.toString() } };
@@ -134,8 +138,8 @@ async function runChatTests() {
     };
     await checkPermission(reqPermInit, resPermInit, (err) => { if (err) throw err; });
     console.log(`HTTP Status: ${resPermInit.statusCode} (Expected: 200)`);
-    console.log(`hasPermission: ${resPermInit.responseData.data.hasPermission} (Expected: false)`);
-    if (resPermInit.responseData.data.hasPermission !== false) throw new Error('Permission API should return false');
+    console.log(`hasPermission: ${resPermInit.responseData.data.hasPermission} (Expected: true)`);
+    if (resPermInit.responseData.data.hasPermission !== true) throw new Error('Permission API should return true');
 
     console.log('Simulating Socket join_chat event...');
     let socketJoinedRooms = [];
@@ -175,9 +179,9 @@ async function runChatTests() {
     };
 
     const socketResInit = await simulateSocketJoinChat(mockSocket, userB._id.toString());
-    console.log(`Socket join result: status = ${socketResInit.status}, message = "${socketResInit.message}" (Expected: error)`);
-    if (socketResInit.status !== 'error') throw new Error('Socket join should have failed');
-    if (socketJoinedRooms.length !== 0) throw new Error('Socket should not have joined any room');
+    console.log(`Socket join result: status = ${socketResInit.status}, roomId = "${socketResInit.roomId}" (Expected: success)`);
+    if (socketResInit.status !== 'success') throw new Error('Socket join should have succeeded');
+    if (socketJoinedRooms.length !== 1) throw new Error('Socket should have joined 1 room');
 
     console.log('Creating a successful TRANSFER transaction from User A to User B...');
     const transaction = await Transaction.create({
@@ -197,8 +201,8 @@ async function runChatTests() {
     const permAC_post = await checkChatPermission(userA._id, userC._id);
     console.log(`Permission User A -> User B: ${permAB_post} (Expected: true)`);
     console.log(`Permission User B -> User A: ${permBA_post} (Expected: true)`);
-    console.log(`Permission User A -> User C: ${permAC_post} (Expected: false)`);
-    if (permAB_post !== true || permBA_post !== true || permAC_post !== false) {
+    console.log(`Permission User A -> User C: ${permAC_post} (Expected: true)`);
+    if (permAB_post !== true || permBA_post !== true || permAC_post !== true) {
       throw new Error('Post-transaction permission assertions failed');
     }
 

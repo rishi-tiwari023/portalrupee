@@ -3,6 +3,7 @@ import app from './app.js';
 import connectDB from './config/db.js';
 import { connectRedis } from './config/redis.js';
 import { initializeSocket } from './config/socket.js';
+import { startQueueWorker } from './utils/queue.js';
 
 dotenv.config();
 
@@ -11,6 +12,7 @@ connectDB();
 
 // Connect to Redis
 connectRedis();
+startQueueWorker();
 
 const PORT = process.env.PORT || 5000;
 
