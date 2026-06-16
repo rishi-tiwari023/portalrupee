@@ -34,3 +34,12 @@ export const submitKYCSchema = z.object({
   }),
 });
 
+export const updateProfileImageSchema = z.object({
+  body: z.object({
+    profileImageKey: z
+      .string({
+        required_error: 'Profile image key is required',
+      })
+      .regex(keyRegex, 'Invalid profile image key format'),
+  }),
+});
