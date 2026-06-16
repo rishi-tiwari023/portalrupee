@@ -164,6 +164,18 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
+export const updateProfileImage = createAsyncThunk(
+  'auth/updateProfileImage',
+  async (profileImageKey, { rejectWithValue }) => {
+    try {
+      const response = await api.patch('/users/profile/image', { profileImageKey });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Profile image update failed');
+    }
+  }
+);
+
 export const setTPIN = createAsyncThunk(
   'auth/setTPIN',
   async (tpin, { rejectWithValue }) => {
@@ -362,6 +374,22 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Update Profile Image
+      .addCase(updateProfileImage.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfileImage.fulfilled, (state, action) => {
+        state.loading = false;
+        if (state.user && action.payload.data?.profileImageKey) {
+            state.user.profileImageKey = action.payload.data.profileImageKey;
+        }
+        state.error = null;
+      })
+      .addCase(updateProfileImage.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
