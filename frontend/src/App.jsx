@@ -86,7 +86,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'settings',
-        element: <div className="p-8 h-full flex items-center justify-center text-slate-400 font-medium text-xl bg-white/50 backdrop-blur-sm rounded-3xl border border-white">Settings panel (Pending)</div>
+        element: lazyRoute(() => import('./pages/Settings'))
       },
       // Admin/Manager Only Routes
       {
