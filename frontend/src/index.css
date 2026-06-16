@@ -2,6 +2,8 @@
 
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 @layer base {
   :root {
     --color-primary: #4F46E5;
@@ -79,4 +81,117 @@
 
 .Toastify__toast--warning.premium-toast {
   border-left: 4px solid #f59e0b !important;
+}
+
+/* Global Dark Mode Overrides */
+.dark body {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+.dark .bg-white {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark .bg-\[\#fcfdfe\] {
+  background-color: #0f172a !important;
+}
+
+.dark .bg-slate-50\/50,
+.dark .bg-slate-100\/50,
+.dark .bg-white\/40,
+.dark .bg-white\/50,
+.dark .bg-white\/60,
+.dark .bg-white\/70,
+.dark .bg-indigo-50\/50 {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+}
+
+.dark .hover\:bg-slate-100:hover {
+  background-color: #334155 !important;
+}
+
+.dark .hover\:bg-indigo-100\/50:hover {
+  background-color: rgba(67, 56, 202, 0.6) !important;
+}
+
+.dark .text-slate-950,
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700,
+.dark .text-slate-600 {
+  color: #f8fafc !important;
+}
+
+.dark .text-slate-500,
+.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.dark .border-slate-100,
+.dark .border-slate-200 {
+  border-color: #334155 !important;
+}
+
+/* Keep primary buttons and elements intact, but ensure cards look good */
+.dark .premium-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3) !important;
+}
+
+/* Fix light shadows that look like glowing white borders in dark mode */
+.dark [class*="shadow-slate-100"],
+.dark [class*="shadow-slate-200"],
+.dark [class*="shadow-indigo-100"],
+.dark [class*="shadow-indigo-200"],
+.dark [class*="shadow-emerald-100"],
+.dark [class*="shadow-emerald-200"],
+.dark [class*="shadow-emerald-500/5"],
+.dark [class*="shadow-rose-100"],
+.dark [class*="shadow-rose-200"],
+.dark [class*="shadow-amber-100"] {
+  --tw-shadow-color: rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark .border-white,
+.dark .border-white\/50,
+.dark .border-white\/40 {
+  border-color: #334155 !important;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+.dark ::-webkit-scrollbar-corner {
+  background: transparent;
 }

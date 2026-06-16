@@ -8,7 +8,7 @@ const TransactionFilters = ({ filters, onFilterChange, onReset }) => {
   };
 
   return (
-    <div className="bg-white/70 backdrop-blur-xl border border-white shadow-xl shadow-slate-200/50 rounded-[2.5rem] p-6 lg:p-8 mb-10 overflow-hidden relative group">
+    <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-[2.5rem] p-6 lg:p-8 mb-10 overflow-hidden relative group">
       <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-indigo-500/10 transition-colors" />
       
       <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8">

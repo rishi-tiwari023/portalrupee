@@ -107,7 +107,7 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="navbar fixed top-0 left-0 right-0 z-[100] backdrop-blur-md bg-white/80 border-b border-slate-100">
+        <nav className="navbar fixed top-0 left-0 right-0 z-[100] backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800 transition-colors duration-300">
             <div className="navbar-container max-w-7xl mx-auto flex justify-between items-center w-full px-4 md:px-8">
                 <div className="navbar-left">
                     <Link to="/" className="navbar-logo-link flex items-center gap-3 transition-transform hover:scale-105 active:scale-95">
