@@ -63,6 +63,12 @@ const userSchema = new mongoose.Schema(
     kycSignatureKey: {
       type: String,
     },
+    lastLogin: {
+      type: Date,
+    },
+    profileImageKey: {
+      type: String,
+    },
   },
   {
     timestamps: true,

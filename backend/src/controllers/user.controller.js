@@ -136,3 +136,35 @@ export const submitKYC = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Update user profile image
+ */
+export const updateProfileImage = async (req, res, next) => {
+  try {
+    const { profileImageKey } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { profileImageKey },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updatedUser) {
+      return next(new AppError('User not found', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Profile image updated successfully',
+      data: {
+        user: updatedUser,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

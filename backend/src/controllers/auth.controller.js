@@ -37,6 +37,7 @@ export const register = async (req, res, next) => {
       mobile,
       password,
       role,
+      lastLogin: new Date(),
     });
 
     // Remove password from output
@@ -102,6 +103,9 @@ export const login = async (req, res, next) => {
       });
     }
 
+    // Update lastLogin
+    await User.updateOne({ _id: user._id }, { lastLogin: new Date() });
+
     res.cookie('jwt', accessToken, cookieOptions);
 
     res.status(200).json({
@@ -150,6 +154,9 @@ export const verify2FA = async (req, res, next) => {
     // Generate tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
+
+    // Update lastLogin
+    await User.updateOne({ _id: user._id }, { lastLogin: new Date() });
 
     res.cookie('jwt', accessToken, cookieOptions);
 
@@ -281,6 +288,7 @@ export const disable2FALogin = async (req, res, next) => {
     // Disable 2FA
     user.twoFactorEnabled = false;
     user.twoFactorSecret = undefined;
+    user.lastLogin = new Date();
     await user.save();
 
     // Clear verification flag from Redis
