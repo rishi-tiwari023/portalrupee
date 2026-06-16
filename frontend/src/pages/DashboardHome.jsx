@@ -291,9 +291,9 @@ const DashboardHome = () => {
       </div>
 
       {/* Transactions Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="w-full">
         {/* Recent Transactions */}
-        <div className="lg:col-span-2 premium-card p-4 sm:p-8 bg-white border border-slate-100 shadow-sm rounded-[2.5rem]">
+        <div className="w-full premium-card p-4 sm:p-8 bg-white border border-slate-100 shadow-sm rounded-[2.5rem]">
           <div className="flex items-center justify-between mb-8 px-2">
             <h3 className="text-slate-800 text-xl font-black tracking-tight">Recent Transactions</h3>
             <button 
@@ -354,20 +354,6 @@ const DashboardHome = () => {
               </div>
             )}
           </div>
-        </div>
-
-        {/* Promo / Info Card */}
-        <div className="premium-card p-6 sm:p-8 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-[2.5rem] shadow-lg shadow-amber-100 flex flex-col justify-center items-center text-center">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-6">
-            <Plus className="w-10 h-10 text-white" />
-          </div>
-          <h3 className="text-2xl font-black mb-3 leading-tight">Apply for a Premium Card</h3>
-          <p className="text-amber-50 text-sm font-medium mb-8 leading-relaxed">
-            Enjoy zero-fee international transfers and 2% cashback on every transaction.
-          </p>
-          <button className="w-full bg-white text-orange-600 font-black py-4 rounded-3xl shadow-lg hover:-translate-y-1 transition-transform active:scale-95">
-            Check Eligibility
-          </button>
         </div>
       </div>
       <CreateAccountModal
