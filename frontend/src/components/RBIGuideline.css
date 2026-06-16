@@ -90,3 +90,24 @@
     outline: 2px solid #1a5cff;
     outline-offset: 4px;
 }
+
+/* Dark Mode Overrides */
+.dark .rbi-guideline {
+    background-color: #0f172a;
+}
+.dark .rbi-guideline__headline--primary {
+    color: #f8fafc;
+}
+.dark .rbi-guideline__headline--secondary {
+    color: #818cf8;
+}
+.dark .rbi-guideline__body {
+    color: #cbd5e1;
+}
+.dark .rbi-guideline__button {
+    background-color: #4f46e5;
+    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
+}
+.dark .rbi-guideline__button:hover {
+    background-color: #4338ca;
+}

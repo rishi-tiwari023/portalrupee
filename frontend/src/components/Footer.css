@@ -104,3 +104,32 @@
     color: #666666;
     margin: 0;
 }
+
+/* Dark Mode Overrides */
+.dark .footer {
+    background-color: #0f172a;
+    border-top-color: #1e293b;
+}
+.dark .footer__brand-name {
+    color: #f8fafc;
+}
+.dark .footer__social-link {
+    background-color: #1e293b;
+    color: #94a3b8;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+.dark .footer__social-link:hover {
+    background-color: #334155;
+}
+.dark .footer__social-link--github:hover {
+    color: #f8fafc;
+}
+.dark .footer__copyright {
+    color: #94a3b8;
+}
+.dark .footer__logo {
+    filter: grayscale(1) brightness(2);
+}
+.dark .footer__branding:hover .footer__logo {
+    filter: grayscale(0) brightness(1.2);
+}

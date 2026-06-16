@@ -194,8 +194,8 @@ const Transactions = () => {
       </div>
 
       {/* Info Banner */}
-      <div className="mb-8 p-4 bg-indigo-50/50 border border-indigo-100/50 rounded-3xl flex items-center gap-4">
-         <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 font-bold">
+      <div className="mb-8 p-4 bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100/50 dark:border-indigo-800/30 rounded-3xl flex items-center gap-4">
+         <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center flex-shrink-0 font-bold">
             <Info className="w-4 h-4" />
          </div>
          <p className="text-xs font-bold text-slate-600 leading-relaxed">

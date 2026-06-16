@@ -384,3 +384,53 @@
         font-size: 2rem;
     }
 }
+
+/* Dark Mode Overrides */
+.dark .emi-calculator-container {
+    background-color: #0f172a;
+}
+.dark .emi-calculator-title {
+    color: #f8fafc;
+}
+.dark .emi-calculator-subtitle {
+    color: #cbd5e1;
+}
+.dark .emi-calculator-left,
+.dark .emi-calculator-right {
+    background: #1e293b;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+.dark .slider-label,
+.dark .breakdown-label,
+.dark .emi-result-label {
+    color: #e2e8f0;
+}
+.dark .breakdown-value,
+.dark .emi-result-amount {
+    color: #818cf8;
+}
+.dark .slider-input {
+    background-color: #0f172a;
+    border-color: #334155;
+    color: #f8fafc;
+}
+.dark .slider-input:focus {
+    border-color: #818cf8;
+}
+.dark .slider-labels {
+    color: #94a3b8;
+}
+.dark .breakdown-item {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+.dark .emi-result {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+.dark .btn-secondary {
+    background-color: transparent;
+    color: #818cf8;
+    border-color: #818cf8;
+}
+.dark .btn-secondary:hover {
+    background-color: rgba(129, 140, 248, 0.1);
+}

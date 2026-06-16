@@ -7,12 +7,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useFormik } from 'formik';
 import * as z from 'zod';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
-import { updateProfile, setTPIN, updateUser, changeTPIN } from '../store/slices/authSlice';
+import { updateProfile, setTPIN, updateUser, changeTPIN, updateProfileImage } from '../store/slices/authSlice';
 import { toast } from 'react-toastify';
 import TPINSetupWizard from '../components/TPINSetupWizard';
 import TwoFactorSetup from '../components/TwoFactorSetup';
 import TPINRecoveryModal from '../components/TPINRecoveryModal';
 import { sanitizeInput } from '../utils/sanitize';
+import api from '../api/axios';
 
 const profileSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -28,6 +29,61 @@ const Profile = () => {
   const [showTPINWizard, setShowTPINWizard] = React.useState(false);
   const [show2FAWizard, setShow2FAWizard] = React.useState(false);
   const [showTPINRecovery, setShowTPINRecovery] = React.useState(false);
+  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
+  const [profileImageUrl, setProfileImageUrl] = React.useState(null);
+  const fileInputRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (user?.profileImageKey) {
+      // Fetch signed URL for profile image
+      const fetchImageUrl = async () => {
+        try {
+          const response = await api.get(`/uploads/url/${user.profileImageKey}`);
+          if (response.data?.url) {
+             setProfileImageUrl(response.data.url);
+          }
+        } catch (error) {
+          console.error("Failed to fetch profile image URL");
+        }
+      };
+      fetchImageUrl();
+    }
+  }, [user?.profileImageKey]);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+       toast.error('Please select an image file');
+       return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+       toast.error('Image must be less than 5MB');
+       return;
+    }
+
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await api.post('/uploads', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      if (response.data?.success && response.data?.data?.key) {
+        await dispatch(updateProfileImage(response.data.data.key)).unwrap();
+        toast.success('Profile image updated successfully');
+      }
+    } catch (error) {
+       toast.error('Failed to upload profile image');
+    } finally {
+       setIsUploadingImage(false);
+       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
 
   const handleTPINSuccess = async (payload) => {
@@ -118,9 +174,9 @@ const Profile = () => {
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 relative overflow-hidden"
+        className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 relative overflow-hidden"
       >
-        <div className="absolute top-0 right-0 p-8 z-20">
+        <div className="flex justify-end w-full mb-6 md:mb-0 md:absolute md:top-0 md:right-0 md:p-8 z-20">
           {!isEditing ? (
             <button
               onClick={() => setIsEditing(true)}
@@ -151,10 +207,25 @@ const Profile = () => {
         </div>
 
         <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-          <div className="w-32 h-32 rounded-3xl bg-gradient-to-tr from-indigo-500 to-cyan-400 p-[3px] shadow-lg shadow-indigo-100">
-            <div className="w-full h-full rounded-[1.4rem] bg-white flex items-center justify-center text-4xl font-bold text-indigo-600">
-              {user?.firstName?.[0]?.toUpperCase()}{user?.lastName?.[0]?.toUpperCase()}
+          <div className="relative group cursor-pointer" onClick={() => !isUploadingImage && fileInputRef.current?.click()}>
+            <div className={`w-32 h-32 rounded-3xl p-[3px] shadow-lg shadow-indigo-100 transition-transform ${isUploadingImage ? 'animate-pulse bg-slate-200' : 'bg-gradient-to-tr from-indigo-500 to-cyan-400 hover:scale-105'}`}>
+              <div className="w-full h-full rounded-[1.4rem] bg-white flex items-center justify-center text-4xl font-bold text-indigo-600 overflow-hidden relative">
+                {profileImageUrl ? (
+                  <img src={profileImageUrl} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <>{user?.firstName?.[0]?.toUpperCase()}{user?.lastName?.[0]?.toUpperCase()}</>
+                )}
+                {isUploadingImage && (
+                  <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center">
+                     <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+                  </div>
+                )}
+              </div>
             </div>
+            <div className="absolute -bottom-2 -right-2 bg-indigo-600 text-white p-2 rounded-xl shadow-lg border-2 border-white transition-transform hover:scale-110 active:scale-95">
+               <Edit3 size={14} />
+            </div>
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
           </div>
 
           <div className="text-center md:text-left">
@@ -442,7 +513,12 @@ const Profile = () => {
         <div className="mt-8 pt-8 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-8">
           <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
             <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Last Login</span>
-            <span className="text-slate-600 font-extrabold text-sm">Today, 10:45 AM</span>
+            <span className="text-slate-600 font-extrabold text-sm">
+              {user?.lastLogin ? new Date(user.lastLogin).toLocaleString(undefined, {
+                  year: 'numeric', month: 'short', day: 'numeric',
+                  hour: '2-digit', minute: '2-digit'
+              }) : 'N/A'}
+            </span>
           </div>
           <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
             <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Device</span>

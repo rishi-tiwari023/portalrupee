@@ -131,7 +131,7 @@ const Accounts = () => {
           </div>
           <div className="relative z-10">
             <p className="text-indigo-200 text-[10px] font-black uppercase tracking-widest">KYC Status</p>
-            <p className="text-xl font-black">{user?.isVerified ? 'VERIFIED' : 'PENDING'}</p>
+            <p className="text-xl font-black">{user?.kycStatus === 'VERIFIED' ? 'VERIFIED' : (user?.kycStatus || 'PENDING')}</p>
           </div>
         </div>
       </div>

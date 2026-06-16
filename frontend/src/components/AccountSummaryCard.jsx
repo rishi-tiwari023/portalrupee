@@ -66,7 +66,7 @@ const AccountSummaryCard = ({ account }) => {
     <div
       onClick={goToDetails}
       className={`relative p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-xl group overflow-hidden cursor-pointer
-      ${isBlocked ? 'bg-slate-50 border-slate-200' : 'bg-gradient-to-br from-white to-slate-50 border-indigo-100'}`}>
+      ${isBlocked ? 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800' : 'bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border-indigo-100 dark:border-indigo-900/50'}`}>
 
       {/* Background Decorators */}
       {!isBlocked && (
@@ -77,11 +77,11 @@ const AccountSummaryCard = ({ account }) => {
       <div className="flex justify-between items-start mb-6 relative z-10">
         <div className="flex items-center gap-3">
           <div className={`p-3 rounded-2xl flex items-center justify-center
-            ${isBlocked ? 'bg-slate-200 text-slate-500' : 'bg-indigo-100 text-indigo-600'}`}>
+            ${isBlocked ? 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400' : 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400'}`}>
             <CreditCard className="w-6 h-6" />
           </div>
           <div>
-            <h4 className={`text-sm font-black tracking-tight ${isBlocked ? 'text-slate-500' : 'text-slate-800'}`}>
+            <h4 className={`text-sm font-black tracking-tight ${isBlocked ? 'text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-white'}`}>
               {accountType} ACCOUNT
             </h4>
             <div className="flex items-center gap-1.5 mt-0.5">
@@ -110,8 +110,8 @@ const AccountSummaryCard = ({ account }) => {
       <div className="mb-6 relative z-10">
         <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest mb-1">Available Balance</p>
         <div className="flex items-baseline gap-1">
-          <span className={`text-lg font-bold ${isBlocked ? 'text-slate-400' : 'text-slate-500'}`}>₹</span>
-          <span className={`text-4xl font-black tracking-tighter ${isBlocked ? 'text-slate-600' : 'text-slate-900'}`}>
+          <span className={`text-lg font-bold ${isBlocked ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}>₹</span>
+          <span className={`text-4xl font-black tracking-tighter ${isBlocked ? 'text-slate-600 dark:text-slate-500' : 'text-slate-900 dark:text-white'}`}>
             {showBalance
               ? ((verifiedBalance !== null ? verifiedBalance : balance)?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00')
               : '••••••'
@@ -124,16 +124,16 @@ const AccountSummaryCard = ({ account }) => {
       <div className="flex justify-between items-end pt-4 border-t border-slate-100 relative z-10">
         <div>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 mt-2">Account Number</p>
-          <div className="flex items-center gap-2 font-mono text-sm tracking-widest font-medium text-slate-600">
-            <span className="text-slate-300">{prefixDots}</span>
-            <span className="text-slate-800 font-black">{lastFourDigits}</span>
+          <div className="flex items-center gap-2 font-mono text-sm tracking-widest font-medium text-slate-600 dark:text-slate-300">
+            <span className="text-slate-300 dark:text-slate-600">{prefixDots}</span>
+            <span className="text-slate-800 dark:text-slate-200 font-black">{lastFourDigits}</span>
           </div>
         </div>
 
         {!isBlocked && (
           <button
             onClick={(e) => { e.stopPropagation(); goToDetails(); }}
-            className="flex items-center gap-1 text-sm font-black text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-4 py-2 rounded-xl transition-colors hover:bg-indigo-100 active:scale-95"
+            className="flex items-center gap-1 text-sm font-black text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-4 py-2 rounded-xl transition-colors hover:bg-indigo-100 dark:hover:bg-indigo-900/50 active:scale-95"
           >
             Details <ArrowRight className="w-4 h-4 ml-1" />
           </button>
