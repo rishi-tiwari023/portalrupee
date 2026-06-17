@@ -207,3 +207,46 @@ export const updateAccountStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+export const freezeAccount = async (req, res, next) => {
+  try {
+    const account = await Account.findById(req.params.id);
+
+    if (!account) {
+      return next(new AppError('Account not found', 404));
+    }
+
+    account.status = 'BLOCKED';
+    await account.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Account frozen successfully',
+      data: account,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const unfreezeAccount = async (req, res, next) => {
+  try {
+    const account = await Account.findById(req.params.id);
+
+    if (!account) {
+      return next(new AppError('Account not found', 404));
+    }
+
+    account.status = 'ACTIVE';
+    await account.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Account unfrozen successfully',
+      data: account,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

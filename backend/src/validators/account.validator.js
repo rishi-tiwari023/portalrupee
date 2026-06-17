@@ -39,3 +39,16 @@ export const getAccountBalanceSchema = z.object({
   }).optional()
 });
 
+export const freezeAccountSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid account ID format'),
+  }),
+});
+
+export const unfreezeAccountSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid account ID format'),
+  }),
+});
+
+
