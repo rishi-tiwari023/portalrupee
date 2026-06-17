@@ -53,42 +53,61 @@ export const deposit = async (req, res, next) => {
         throw new AppError('Account is not active', 400);
       }
 
+      const isSelfDeposit = req.user.role !== 'CASHIER' && req.user.role !== 'MANAGER';
+      const txnStatus = isSelfDeposit ? 'PENDING' : 'SUCCESS';
+
       const [transaction] = await Transaction.create(
         [
           {
+            sender: req.user.id,
+            receiver: account.user,
             receiverAccount: account._id,
             amount,
             type: 'DEPOSIT',
-            status: 'SUCCESS',
+            status: txnStatus,
             description: description || 'Deposit to account',
           },
         ],
         { session }
       );
 
-      account.balance += amount;
-      await account.save({ session });
+      if (!isSelfDeposit) {
+        account.balance += amount;
+        await account.save({ session });
+      }
 
       return {
         transaction,
         newBalance: account.balance,
         userId: account.user,
+        isPending: isSelfDeposit,
       };
     });
 
     // Queue real-time transaction notification
-    await enqueueTransactionAlert({
-      userId: result.userId.toString(),
-      transactionId: result.transaction.transactionId,
-      type: 'DEPOSIT',
-      amount,
-      message: `Your account has been credited with ₹${amount} via Deposit.`,
-      createdAt: result.transaction.createdAt,
-    });
+    if (!result.isPending) {
+      await enqueueTransactionAlert({
+        userId: result.userId.toString(),
+        transactionId: result.transaction.transactionId,
+        type: 'DEPOSIT',
+        amount,
+        message: `Your account has been credited with ₹${amount} via Deposit.`,
+        createdAt: result.transaction.createdAt,
+      });
+    } else {
+      await enqueueTransactionAlert({
+        userId: result.userId.toString(),
+        transactionId: result.transaction.transactionId,
+        type: 'DEPOSIT',
+        amount,
+        message: `Your deposit of ₹${amount} has been initiated and is pending cashier approval.`,
+        createdAt: result.transaction.createdAt,
+      });
+    }
 
     res.status(200).json({
       status: 'success',
-      message: 'Deposit successful',
+      message: result.isPending ? 'Deposit initiated and pending approval' : 'Deposit successful',
       data: result,
     });
   } catch (error) {
@@ -506,3 +525,120 @@ export const generateStatement = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * @desc    Get all pending deposit transactions
+ * @route   GET /api/v1/transactions/pending-deposits
+ * @access  Private (CASHIER, MANAGER)
+ */
+export const getPendingDeposits = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(Math.max(1, parseInt(limit, 10) || 10), 100);
+    const skip = (pageNum - 1) * limitNum;
+
+    const query = { type: 'DEPOSIT', status: 'PENDING' };
+
+    const total = await Transaction.countDocuments(query);
+    const transactions = await Transaction.find(query)
+      .populate('sender', 'firstName lastName email mobile')
+      .populate('receiver', 'firstName lastName email mobile')
+      .populate('receiverAccount', 'accountNumber type')
+      .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    res.status(200).json({
+      status: 'success',
+      results: transactions.length,
+      pagination: {
+        total,
+        pages: Math.ceil(total / limitNum) || 0,
+        page: pageNum,
+        limit: limitNum,
+      },
+      data: {
+        transactions,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Approve or reject a pending deposit
+ * @route   PATCH /api/v1/transactions/:id/approve
+ * @access  Private (CASHIER, MANAGER)
+ */
+export const approveDeposit = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status, description } = req.body;
+
+    const result = await runInTransaction(async (session) => {
+      const transaction = await Transaction.findById(id).session(session);
+      if (!transaction) {
+        throw new AppError('Transaction not found', 404);
+      }
+
+      if (transaction.status !== 'PENDING') {
+        throw new AppError('Transaction is already processed', 400);
+      }
+
+      if (transaction.type !== 'DEPOSIT') {
+        throw new AppError('Invalid transaction type for approval', 400);
+      }
+
+      const account = await Account.findById(transaction.receiverAccount).session(session);
+      if (!account) {
+        throw new AppError('Associated account not found', 404);
+      }
+
+      if (status === 'SUCCESS') {
+        if (account.status !== 'ACTIVE') {
+          throw new AppError('Target account is not active', 400);
+        }
+        account.balance += transaction.amount;
+        await account.save({ session });
+      }
+
+      transaction.status = status;
+      if (description) {
+        transaction.description = description;
+      } else {
+        transaction.description = status === 'SUCCESS' ? 'Deposit approved by Cashier' : 'Deposit rejected by Cashier';
+      }
+      await transaction.save({ session });
+
+      return {
+        transaction,
+        account,
+      };
+    });
+
+    // Queue real-time transaction notification outside session
+    const alertMessage = status === 'SUCCESS'
+      ? `Your account has been credited with ₹${result.transaction.amount} via Deposit (Approved by Cashier).`
+      : `Your deposit request of ₹${result.transaction.amount} was rejected by Cashier.`;
+
+    await enqueueTransactionAlert({
+      userId: result.account.user.toString(),
+      transactionId: result.transaction.transactionId,
+      type: 'DEPOSIT',
+      amount: result.transaction.amount,
+      message: alertMessage,
+      createdAt: result.transaction.createdAt,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: `Deposit transaction ${status.toLowerCase()} successfully`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

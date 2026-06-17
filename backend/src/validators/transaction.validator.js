@@ -73,3 +73,17 @@ export const generateStatementSchema = z.object({
     }),
   }),
 });
+
+export const approveDepositSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid transaction ID format'),
+  }),
+  body: z.object({
+    status: z.enum(['SUCCESS', 'FAILED'], {
+      required_error: 'Status is required to approve/reject deposit',
+      invalid_type_error: 'Status must be SUCCESS or FAILED',
+    }),
+    description: z.string().optional(),
+  }),
+});
+
