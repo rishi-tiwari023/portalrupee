@@ -61,40 +61,60 @@ const router = createBrowserRouter([
         element: lazyRoute(() => import('./pages/Profile')),
       },
       {
-        path: 'accounts',
-        element: lazyRoute(() => import('./pages/Accounts'))
-      },
-      {
-        path: 'transfer',
-        element: lazyRoute(() => import('./pages/Transfer'))
-      },
-      {
-        path: 'transactions',
-        element: lazyRoute(() => import('./pages/Transactions'))
-      },
-      {
-        path: 'analytics',
-        element: lazyRoute(() => import('./pages/Analytics'))
-      },
-      {
-        path: 'kyc',
-        element: lazyRoute(() => import('./pages/KYC'))
-      },
-      {
-        path: 'messages',
-        element: lazyRoute(() => import('./pages/Messages'))
-      },
-      {
         path: 'settings',
         element: lazyRoute(() => import('./pages/Settings'))
       },
-      // Admin/Manager Only Routes
+      // Customer Only Routes
+      {
+        element: <RoleBasedRoute allowedRoles={['CUSTOMER']} />,
+        children: [
+          {
+            path: 'accounts',
+            element: lazyRoute(() => import('./pages/Accounts'))
+          },
+          {
+            path: 'transfer',
+            element: lazyRoute(() => import('./pages/Transfer'))
+          },
+          {
+            path: 'transactions',
+            element: lazyRoute(() => import('./pages/Transactions'))
+          },
+          {
+            path: 'analytics',
+            element: lazyRoute(() => import('./pages/Analytics'))
+          },
+          {
+            path: 'kyc',
+            element: lazyRoute(() => import('./pages/KYC'))
+          },
+          {
+            path: 'messages',
+            element: lazyRoute(() => import('./pages/Messages'))
+          }
+        ]
+      },
+      // Cashier & Manager Routes
+      {
+        element: <RoleBasedRoute allowedRoles={['CASHIER', 'MANAGER']} />,
+        children: [
+          {
+            path: 'approve-deposits',
+            element: lazyRoute(() => import('./pages/ApproveDeposits'))
+          }
+        ]
+      },
+      // Manager Only Routes
       {
         element: <RoleBasedRoute allowedRoles={['MANAGER']} />,
         children: [
           {
             path: 'users',
             element: lazyRoute(() => import('./pages/Users'))
+          },
+          {
+            path: 'freeze-accounts',
+            element: lazyRoute(() => import('./pages/FreezeAccounts'))
           }
         ]
       }

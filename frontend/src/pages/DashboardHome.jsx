@@ -32,9 +32,15 @@ const DashboardHome = () => {
 
   useEffect(() => {
     if (user?._id) {
-      dispatch(fetchDashboardSummary());
+      if (user.role === 'CASHIER') {
+        navigate('/dashboard/approve-deposits', { replace: true });
+      } else if (user.role === 'MANAGER') {
+        navigate('/dashboard/users', { replace: true });
+      } else {
+        dispatch(fetchDashboardSummary());
+      }
     }
-  }, [dispatch, user]);
+  }, [dispatch, user, navigate]);
 
   const quickActions = [
     {
