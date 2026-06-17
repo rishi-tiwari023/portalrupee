@@ -5,8 +5,10 @@ import {
   transferMoney,
   getTransactionHistory,
   generateStatement,
+  getPendingDeposits,
+  approveDeposit,
 } from '../controllers/transaction.controller.js';
-import { isAuth, verifyTPIN } from '../middleware/authMiddleware.js';
+import { isAuth, verifyTPIN, checkRole } from '../middleware/authMiddleware.js';
 import { auditLogger } from '../middleware/audit.middleware.js';
 import validate from '../middleware/validate.js';
 import {
@@ -15,6 +17,7 @@ import {
   transferSchema,
   getTransactionHistorySchema,
   generateStatementSchema,
+  approveDepositSchema,
 } from '../validators/transaction.validator.js';
 
 const router = express.Router();
@@ -44,6 +47,20 @@ router.post('/transfer', verifyTPIN, auditLogger('TRANSFER', 'TRANSACTION'), val
  * @access  Private
  */
 router.get('/statement', validate(generateStatementSchema), generateStatement);
+
+/**
+ * @route   GET /api/v1/transactions/pending-deposits
+ * @desc    Get all pending deposit transactions
+ * @access  Private (CASHIER, MANAGER)
+ */
+router.get('/pending-deposits', checkRole('CASHIER', 'MANAGER'), getPendingDeposits);
+
+/**
+ * @route   PATCH /api/v1/transactions/:id/approve
+ * @desc    Approve or reject a pending deposit transaction
+ * @access  Private (CASHIER, MANAGER)
+ */
+router.patch('/:id/approve', checkRole('CASHIER', 'MANAGER'), auditLogger('APPROVE_DEPOSIT', 'TRANSACTION'), validate(approveDepositSchema), approveDeposit);
 
 /**
  * @route   GET /api/v1/transactions

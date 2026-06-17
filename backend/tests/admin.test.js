@@ -54,7 +54,7 @@ async function runAdminTests() {
     const testUsers = await User.find({ email: { $in: [custEmail, mgrEmail] } });
     const testUserIds = testUsers.map(u => u._id);
 
-    await Account.deleteMany({ user: { $in: testUserIds } });
+    await Account.deleteMany({ $or: [{ user: { $in: testUserIds } }, { accountNumber: '999988887777' }] });
     await Transaction.deleteMany({
       $or: [
         { sender: { $in: testUserIds } },
@@ -230,7 +230,7 @@ async function runAdminTests() {
 
     // 5. Cleanup test data
     console.log('\nCleaning up test data...');
-    await Account.deleteMany({ user: { $in: testUserIds } });
+    await Account.deleteMany({ $or: [{ user: { $in: testUserIds } }, { accountNumber: '999988887777' }] });
     await Transaction.deleteMany({
       $or: [
         { sender: { $in: testUserIds } },

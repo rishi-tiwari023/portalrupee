@@ -6,7 +6,9 @@ import {
   getAccountBalance,
   updateAccountStatus,
   getAllAccounts,
-  getAccountByNumber
+  getAccountByNumber,
+  freezeAccount,
+  unfreezeAccount
 } from '../controllers/account.controller.js';
 import { isAuth, checkRole } from '../middleware/authMiddleware.js';
 import { auditLogger } from '../middleware/audit.middleware.js';
@@ -17,6 +19,8 @@ import {
   getAccountByNumberSchema,
   getAccountDetailsSchema,
   getAccountBalanceSchema,
+  freezeAccountSchema,
+  unfreezeAccountSchema
 } from '../validators/account.validator.js';
 
 const router = express.Router();
@@ -32,5 +36,8 @@ router.post('/:id/balance', validate(getAccountBalanceSchema), getAccountBalance
 
 router.patch('/:id/status', checkRole('MANAGER'), auditLogger('UPDATE_ACCOUNT_STATUS', 'ACCOUNT'), validate(updateStatusSchema), updateAccountStatus);
 
+router.patch('/:id/freeze', checkRole('MANAGER'), auditLogger('FREEZE_ACCOUNT', 'ACCOUNT'), validate(freezeAccountSchema), freezeAccount);
+
+router.patch('/:id/unfreeze', checkRole('MANAGER'), auditLogger('UNFREEZE_ACCOUNT', 'ACCOUNT'), validate(unfreezeAccountSchema), unfreezeAccount);
 
 export default router;
