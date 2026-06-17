@@ -24,19 +24,32 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
 
-  const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', end: true },
-    { name: 'Profile', icon: User, path: '/dashboard/profile' },
-    { name: 'Accounts', icon: CreditCard, path: '/dashboard/accounts' },
-    { name: 'Analytics', icon: TrendingUp, path: '/dashboard/analytics' },
-    { name: 'Transfer', icon: ArrowLeftRight, path: '/dashboard/transfer' },
-    { name: 'Transactions', icon: History, path: '/dashboard/transactions' },
-    { name: 'Messages', icon: MessageSquare, path: '/dashboard/messages' },
-    { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
-  ];
+  let menuItems = [];
 
-  if (user?.role === 'MANAGER') {
-    menuItems.push({ name: 'User Management', icon: Users, path: '/dashboard/users' });
+  if (user?.role === 'CASHIER') {
+    menuItems = [
+      { name: 'Profile', icon: User, path: '/dashboard/profile' },
+      { name: 'Approve Deposits', icon: CreditCard, path: '/dashboard/approve-deposits' },
+      { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
+    ];
+  } else if (user?.role === 'MANAGER') {
+    menuItems = [
+      { name: 'Profile', icon: User, path: '/dashboard/profile' },
+      { name: 'User Management', icon: Users, path: '/dashboard/users' },
+      { name: 'Freeze Accounts', icon: CreditCard, path: '/dashboard/freeze-accounts' },
+      { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
+    ];
+  } else {
+    menuItems = [
+      { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', end: true },
+      { name: 'Profile', icon: User, path: '/dashboard/profile' },
+      { name: 'Accounts', icon: CreditCard, path: '/dashboard/accounts' },
+      { name: 'Analytics', icon: TrendingUp, path: '/dashboard/analytics' },
+      { name: 'Transfer', icon: ArrowLeftRight, path: '/dashboard/transfer' },
+      { name: 'Transactions', icon: History, path: '/dashboard/transactions' },
+      { name: 'Messages', icon: MessageSquare, path: '/dashboard/messages' },
+      { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
+    ];
   }
 
   return (
