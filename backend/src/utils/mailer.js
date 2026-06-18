@@ -478,3 +478,75 @@ export const sendWelcomeMail = async (email, name) => {
 
   return await mailTransporter.sendMail(mailOptions);
 };
+
+/**
+ * Sends a notification email to the admin when a contact form is submitted
+ */
+export const sendContactMail = async (contactData) => {
+  const mailTransporter = await createTransporter();
+  const from = process.env.EMAIL_FROM;
+  // Fallback to sending to the configured FROM email (acting as admin) if no ADMIN_EMAIL is set
+  const to = process.env.ADMIN_EMAIL; 
+  
+  if (!to) {
+    console.log('No admin email configured to receive contact messages.');
+    return;
+  }
+
+  const { name, email, subject, message } = contactData;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; }
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; }
+        .header { background: #4f46e5; color: white; padding: 15px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { padding: 20px; }
+        .field { margin-bottom: 15px; }
+        .field strong { display: block; font-size: 12px; color: #666; text-transform: uppercase; }
+        .field p { margin: 5px 0 0 0; font-size: 16px; }
+        .message-box { background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>New Contact Form Submission</h2>
+        </div>
+        <div class="content">
+          <div class="field">
+            <strong>Name</strong>
+            <p>${name}</p>
+          </div>
+          <div class="field">
+            <strong>Email</strong>
+            <p><a href="mailto:${email}">${email}</a></p>
+          </div>
+          <div class="field">
+            <strong>Subject</strong>
+            <p>${subject}</p>
+          </div>
+          <div class="field">
+            <strong>Message</strong>
+            <div class="message-box">${message}</div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from,
+    to,
+    replyTo: email,
+    subject: `New Contact Submission: ${subject}`,
+    text: `New message from ${name} (${email}):\n\nSubject: ${subject}\n\n${message}`,
+    html: htmlContent,
+  };
+
+  return await mailTransporter.sendMail(mailOptions);
+};

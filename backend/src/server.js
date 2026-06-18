@@ -31,7 +31,7 @@ initializeSocket(server);
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.log('UNHANDLED REJECTION! Shutting down...');
-  console.log(err.name, err.message);
+  console.error(err);
   server.close(() => {
     process.exit(1);
   });
