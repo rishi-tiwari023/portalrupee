@@ -57,8 +57,9 @@ const Transfer = () => {
 
   // Set default account if available
   useEffect(() => {
-    if (accounts.length > 0 && !selectedAccount) {
-      setSelectedAccount(accounts[0]);
+    const activeAccounts = accounts.filter(acc => acc.status === 'ACTIVE');
+    if (activeAccounts.length > 0 && !selectedAccount) {
+      setSelectedAccount(activeAccounts[0]);
     }
   }, [accounts, selectedAccount]);
 
@@ -286,7 +287,7 @@ const Transfer = () => {
             <div className="mb-8">
               <h4 className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">From Account</h4>
               <div className="space-y-3">
-                {accounts.map((acc) => (
+                {accounts.filter(acc => acc.status === 'ACTIVE').map((acc) => (
                   <button
                     key={acc._id}
                     onClick={() => setSelectedAccount(acc)}

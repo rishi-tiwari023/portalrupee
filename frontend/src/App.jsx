@@ -8,8 +8,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import RoleBasedRoute from './components/RoleBasedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import { SocketProvider } from './context/SocketContext';
-
 import './App.css';
+import GuestRoute from './components/GuestRoute';
 
 // Page Loader spinner for lazy chunks
 const PageLoader = () => (
@@ -39,12 +39,37 @@ const router = createBrowserRouter([
         element: lazyRoute(() => import('./pages/Home')),
       },
       {
-        path: 'login',
-        element: lazyRoute(() => import('./pages/Login'))
+        element: <GuestRoute />,
+        children: [
+          {
+            path: 'login',
+            element: lazyRoute(() => import('./pages/Login'))
+          },
+          {
+            path: 'register',
+            element: lazyRoute(() => import('./pages/Register'))
+          }
+        ]
       },
       {
-        path: 'register',
-        element: lazyRoute(() => import('./pages/Register'))
+        path: 'contact',
+        element: lazyRoute(() => import('./pages/ContactUs'))
+      },
+      {
+        path: 'about',
+        element: lazyRoute(() => import('./pages/About'))
+      },
+      {
+        path: 'terms',
+        element: lazyRoute(() => import('./pages/Terms'))
+      },
+      {
+        path: 'guidelines',
+        element: lazyRoute(() => import('./pages/Guidelines'))
+      },
+      {
+        path: 'interest-info',
+        element: lazyRoute(() => import('./pages/InterestInfo'))
       }
     ],
   },

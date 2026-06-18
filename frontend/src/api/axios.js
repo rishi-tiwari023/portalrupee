@@ -31,11 +31,14 @@ api.interceptors.response.use(
       if (status === 401) {
         const isLoginRequest = error.config.url.includes('/auth/login');
         const isRegisterRequest = error.config.url.includes('/auth/register');
+        const isProfileRequest = error.config.url.includes('/users/profile');
         
-        // Only redirect and clear token if it's NOT a login/register request
+        // Always remove token on 401 if it's not a login/register
         if (!isLoginRequest && !isRegisterRequest) {
           localStorage.removeItem('portalrupee_token');
-          if (window.location.pathname !== '/login') {
+          // Only force redirect if it's not the initial profile fetch 
+          // (Let ProtectedLayout handle auth checks for protected routes)
+          if (!isProfileRequest && window.location.pathname !== '/login') {
             window.location.href = '/login';
           }
         }
