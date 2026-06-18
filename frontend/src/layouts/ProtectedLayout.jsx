@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Sidebar from '../components/Sidebar';
 import { Bell, Search, Menu, Check, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, MessageSquare } from 'lucide-react';
@@ -41,6 +41,7 @@ const ProtectedLayout = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [profileImageUrl, setProfileImageUrl] = useState(null);
 
@@ -110,6 +111,16 @@ const ProtectedLayout = () => {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Redirect completely frozen users if they try to access restricted pages
+  if (
+    user?.isCompletelyFrozen &&
+    !location.pathname.startsWith('/dashboard/frozen') &&
+    location.pathname !== '/dashboard/profile' &&
+    location.pathname !== '/dashboard/settings'
+  ) {
+    return <Navigate to="/dashboard/frozen" replace />;
   }
 
   return (

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { User, Mail, Shield, Phone, Calendar, MapPin, Edit3, X, Save, Loader2, ArrowRight } from 'lucide-react';
+import { User, Mail, Shield, Phone, Calendar, MapPin, Edit3, X, Save, Loader2, ArrowRight, ShieldAlert } from 'lucide-react';
 /* eslint-disable no-unused-vars */
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFormik } from 'formik';
@@ -236,13 +236,26 @@ const Profile = () => {
               <span className="px-3 py-1 bg-indigo-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">
                 {user?.role}
               </span>
+              {user?.isCompletelyFrozen ? (
+                <span className="px-3 py-1 bg-rose-600 text-white text-xs font-bold rounded-full uppercase tracking-wider flex items-center gap-1">
+                  <ShieldAlert size={12} /> Completely Frozen
+                </span>
+              ) : user?.isPartiallyFrozen ? (
+                <span className="px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-full uppercase tracking-wider flex items-center gap-1">
+                  <ShieldAlert size={12} /> Partially Frozen
+                </span>
+              ) : (
+                <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full uppercase tracking-wider">
+                  Active
+                </span>
+              )}
               <span className="flex items-center gap-1 text-slate-400 text-sm font-medium">
                 <MapPin size={14} />
                 <span>India</span>
               </span>
               <span className="flex items-center gap-1 text-slate-400 text-sm font-medium">
                 <Calendar size={14} />
-                <span>Joined April 2026</span>
+                <span>Joined {user?.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : 'Unknown'}</span>
               </span>
             </div>
           </div>

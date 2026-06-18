@@ -88,6 +88,17 @@ const Login = () => {
           setUserEmail(values.email);
           return;
         }
+
+        const user = resultAction.payload.data.user;
+        if (user?.isCompletelyFrozen) {
+          toast.error('Account Frozen. All operations restricted.', {
+            icon: <AlertCircle size={20} className="text-rose-600" />,
+            className: 'premium-toast'
+          });
+          navigate('/dashboard/frozen');
+          return;
+        }
+
         toast.success('Sign in successful!', {
           icon: <Rocket size={20} className="text-indigo-600" />,
           className: 'premium-toast'
@@ -110,6 +121,16 @@ const Login = () => {
 
     const resultAction = await dispatch(verify2FA({ email: userEmail, token: otpToken }));
     if (verify2FA.fulfilled.match(resultAction)) {
+      const user = resultAction.payload.data.user;
+      if (user?.isCompletelyFrozen) {
+        toast.error('Account Frozen. All operations restricted.', {
+          icon: <AlertCircle size={20} className="text-rose-600" />,
+          className: 'premium-toast'
+        });
+        navigate('/dashboard/frozen');
+        return;
+      }
+
       toast.success('Identity verified!', {
         icon: <Rocket size={20} className="text-indigo-600" />,
         className: 'premium-toast'
@@ -144,6 +165,16 @@ const Login = () => {
       if (verifyOTP.fulfilled.match(verifyResult)) {
         const disableResult = await dispatch(disable2FAViaOTP({ email: userEmail }));
         if (disable2FAViaOTP.fulfilled.match(disableResult)) {
+          const user = disableResult.payload.data.user;
+          if (user?.isCompletelyFrozen) {
+            toast.error('Account Frozen. All operations restricted.', {
+              icon: <AlertCircle size={20} className="text-rose-600" />,
+              className: 'premium-toast'
+            });
+            navigate('/dashboard/frozen');
+            return;
+          }
+
           toast.success('2FA disabled and identity verified!', {
             icon: <Rocket size={20} className="text-indigo-600" />,
             className: 'premium-toast'

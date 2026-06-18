@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageSquare,
-  TrendingUp
+  TrendingUp,
+  ShieldAlert
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
@@ -37,19 +38,33 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
       { name: 'Profile', icon: User, path: '/dashboard/profile' },
       { name: 'User Management', icon: Users, path: '/dashboard/users' },
       { name: 'Freeze Accounts', icon: CreditCard, path: '/dashboard/freeze-accounts' },
+      { name: 'Freeze Disputes', icon: ShieldAlert, path: '/dashboard/freeze-disputes' },
       { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
     ];
   } else {
-    menuItems = [
-      { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', end: true },
-      { name: 'Profile', icon: User, path: '/dashboard/profile' },
-      { name: 'Accounts', icon: CreditCard, path: '/dashboard/accounts' },
-      { name: 'Analytics', icon: TrendingUp, path: '/dashboard/analytics' },
-      { name: 'Transfer', icon: ArrowLeftRight, path: '/dashboard/transfer' },
-      { name: 'Transactions', icon: History, path: '/dashboard/transactions' },
-      { name: 'Messages', icon: MessageSquare, path: '/dashboard/messages' },
-      { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
-    ];
+    if (user?.isCompletelyFrozen) {
+      menuItems = [
+        { name: 'Account Status', icon: ShieldAlert, path: '/dashboard/frozen', end: true },
+        { name: 'Profile', icon: User, path: '/dashboard/profile' },
+        { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
+      ];
+    } else {
+      menuItems = [
+        { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', end: true },
+        { name: 'Profile', icon: User, path: '/dashboard/profile' },
+        { name: 'Accounts', icon: CreditCard, path: '/dashboard/accounts' },
+        { name: 'Analytics', icon: TrendingUp, path: '/dashboard/analytics' },
+        { name: 'Transfer', icon: ArrowLeftRight, path: '/dashboard/transfer' },
+        { name: 'Transactions', icon: History, path: '/dashboard/transactions' },
+        { name: 'Messages', icon: MessageSquare, path: '/dashboard/messages' },
+      ];
+      
+      if (user?.isPartiallyFrozen) {
+        menuItems.push({ name: 'Account Status', icon: ShieldAlert, path: '/dashboard/frozen' });
+      }
+      
+      menuItems.push({ name: 'Settings', icon: Settings, path: '/dashboard/settings' });
+    }
   }
 
   return (

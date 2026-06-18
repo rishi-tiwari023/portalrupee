@@ -115,8 +115,17 @@ const router = createBrowserRouter([
           {
             path: 'freeze-accounts',
             element: lazyRoute(() => import('./pages/FreezeAccounts'))
+          },
+          {
+            path: 'freeze-disputes',
+            element: lazyRoute(() => import('./pages/FreezeDisputes'))
           }
         ]
+      },
+      // Customer Route for frozen account display
+      {
+        path: 'frozen',
+        element: lazyRoute(() => import('./pages/AccountFrozen'))
       }
     ],
   },
