@@ -8,10 +8,29 @@ import AppError from '../utils/AppError.js';
 export const getProfile = async (req, res, next) => {
   try {
     // req.user is already populated by isAuth middleware
+    const accounts = await Account.find({ user: req.user.id });
+
+    let isCompletelyFrozen = false;
+    let isPartiallyFrozen = false;
+
+    if (accounts.length > 0) {
+      const blockedCount = accounts.filter(acc => acc.status === 'BLOCKED').length;
+      if (blockedCount === accounts.length) {
+        isCompletelyFrozen = true;
+      } else if (blockedCount > 0) {
+        isPartiallyFrozen = true;
+      }
+    }
+
     res.status(200).json({
       status: 'success',
       data: {
-        user: req.user,
+        user: {
+          ...req.user.toObject(),
+          isCompletelyFrozen,
+          isPartiallyFrozen,
+          accounts,
+        },
       },
     });
   } catch (error) {

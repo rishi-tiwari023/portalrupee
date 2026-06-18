@@ -8,7 +8,9 @@ import {
   getAllAccounts,
   getAccountByNumber,
   freezeAccount,
-  unfreezeAccount
+  unfreezeAccount,
+  submitFreezeDispute,
+  getFreezeDisputes
 } from '../controllers/account.controller.js';
 import { isAuth, checkRole } from '../middleware/authMiddleware.js';
 import { auditLogger } from '../middleware/audit.middleware.js';
@@ -27,6 +29,8 @@ const router = express.Router();
 
 router.use(isAuth);
 
+router.get('/disputes', checkRole('MANAGER'), getFreezeDisputes);
+
 router.post('/', auditLogger('CREATE_ACCOUNT', 'ACCOUNT'), validate(createAccountSchema), createAccount);
 router.get('/', getMyAccounts);
 router.get('/admin/all', checkRole('MANAGER'), getAllAccounts);
@@ -39,5 +43,7 @@ router.patch('/:id/status', checkRole('MANAGER'), auditLogger('UPDATE_ACCOUNT_ST
 router.patch('/:id/freeze', checkRole('MANAGER'), auditLogger('FREEZE_ACCOUNT', 'ACCOUNT'), validate(freezeAccountSchema), freezeAccount);
 
 router.patch('/:id/unfreeze', checkRole('MANAGER'), auditLogger('UNFREEZE_ACCOUNT', 'ACCOUNT'), validate(unfreezeAccountSchema), unfreezeAccount);
+
+router.post('/:id/dispute', auditLogger('SUBMIT_FREEZE_DISPUTE', 'ACCOUNT'), submitFreezeDispute);
 
 export default router;

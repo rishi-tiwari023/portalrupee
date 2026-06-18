@@ -30,6 +30,10 @@ const accountSchema = new mongoose.Schema(
       enum: ['ACTIVE', 'BLOCKED', 'CLOSED'],
       default: 'ACTIVE',
     },
+    freezeDispute: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,

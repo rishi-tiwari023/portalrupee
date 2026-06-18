@@ -1,5 +1,23 @@
 import User from '../models/user.model.js';
+import Account from '../models/account.model.js';
 import AppError from '../utils/AppError.js';
+
+const attachFreezeStatus = async (user) => {
+  const accounts = await Account.find({ user: user._id });
+  let isCompletelyFrozen = false;
+  let isPartiallyFrozen = false;
+  
+  if (accounts.length > 0) {
+    const blockedCount = accounts.filter(acc => acc.status === 'BLOCKED').length;
+    if (blockedCount === accounts.length) {
+      isCompletelyFrozen = true;
+    } else if (blockedCount > 0) {
+      isPartiallyFrozen = true;
+    }
+  }
+  
+  return { ...user.toObject(), isCompletelyFrozen, isPartiallyFrozen, accounts };
+};
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt.utils.js';
 import speakeasy from 'speakeasy';
 import { decrypt } from '../utils/encryption.util.js';
@@ -106,13 +124,15 @@ export const login = async (req, res, next) => {
     // Update lastLogin
     await User.updateOne({ _id: user._id }, { lastLogin: new Date() });
 
+    const userWithStatus = await attachFreezeStatus(user);
+
     res.cookie('jwt', accessToken, cookieOptions);
 
     res.status(200).json({
       success: true,
       message: 'Logged in successfully',
       data: {
-        user,
+        user: userWithStatus,
         accessToken,
         refreshToken,
       },
@@ -158,13 +178,15 @@ export const verify2FA = async (req, res, next) => {
     // Update lastLogin
     await User.updateOne({ _id: user._id }, { lastLogin: new Date() });
 
+    const userWithStatus = await attachFreezeStatus(user);
+
     res.cookie('jwt', accessToken, cookieOptions);
 
     res.status(200).json({
       success: true,
       message: 'Logged in successfully',
       data: {
-        user,
+        user: userWithStatus,
         accessToken,
         refreshToken,
       },
@@ -301,13 +323,15 @@ export const disable2FALogin = async (req, res, next) => {
     // Remove password from output
     user.password = undefined;
 
+    const userWithStatus = await attachFreezeStatus(user);
+
     res.cookie('jwt', accessToken, cookieOptions);
 
     res.status(200).json({
       success: true,
       message: '2FA disabled and logged in successfully',
       data: {
-        user,
+        user: userWithStatus,
         accessToken,
         refreshToken,
       },

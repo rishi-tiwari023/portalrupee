@@ -216,6 +216,10 @@ export const freezeAccount = async (req, res, next) => {
       return next(new AppError('Account not found', 404));
     }
 
+    if (account.user.toString() === req.user.id) {
+      return next(new AppError('You cannot freeze your own account', 400));
+    }
+
     account.status = 'BLOCKED';
     await account.save();
 
@@ -237,13 +241,64 @@ export const unfreezeAccount = async (req, res, next) => {
       return next(new AppError('Account not found', 404));
     }
 
+    if (account.user.toString() === req.user.id) {
+      return next(new AppError('You cannot unfreeze your own account', 400));
+    }
+
     account.status = 'ACTIVE';
+    account.freezeDispute = undefined;
     await account.save();
 
     res.status(200).json({
       success: true,
       message: 'Account unfrozen successfully',
       data: account,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const submitFreezeDispute = async (req, res, next) => {
+  try {
+    const { disputeMessage } = req.body;
+    const account = await Account.findOne({ _id: req.params.id, user: req.user.id });
+
+    if (!account) {
+      return next(new AppError('Account not found', 404));
+    }
+
+    if (account.status !== 'BLOCKED') {
+      return next(new AppError('Only blocked accounts can be disputed', 400));
+    }
+
+    if (!disputeMessage || disputeMessage.trim().length === 0) {
+      return next(new AppError('Dispute message is required', 400));
+    }
+
+    account.freezeDispute = disputeMessage;
+    await account.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Dispute submitted successfully',
+      data: account,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getFreezeDisputes = async (req, res, next) => {
+  try {
+    const accounts = await Account.find({ status: 'BLOCKED', freezeDispute: { $exists: true, $ne: null } })
+      .populate('user', 'firstName lastName email mobile')
+      .sort({ updatedAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: accounts.length,
+      data: accounts,
     });
   } catch (error) {
     next(error);
