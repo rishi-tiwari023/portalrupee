@@ -34,12 +34,12 @@ const DepositModal = ({ isOpen, onClose, accounts }) => {
     onSubmit: async (values) => {
       const resultAction = await dispatch(deposit(values));
       if (deposit.fulfilled.match(resultAction)) {
-        toast.success('Funds added successfully!');
+        toast.success('Request has been forwarded to cashier.');
         dispatch(fetchDashboardSummary());
         setTimeout(() => {
           onClose();
           dispatch(clearTransactionStatus());
-        }, 2000);
+        }, 3000);
       }
     },
   });
@@ -92,9 +92,9 @@ const DepositModal = ({ isOpen, onClose, accounts }) => {
                   >
                     <CheckCircle2 className="w-10 h-10" />
                   </motion.div>
-                  <h4 className="text-2xl font-black text-slate-900 mb-2">Transaction Successful!</h4>
+                  <h4 className="text-2xl font-black text-slate-900 mb-2">Request Forwarded!</h4>
                   <p className="text-slate-500 font-medium max-w-xs mx-auto">
-                    ₹{formik.values.amount.toLocaleString()} has been added to your account.
+                    Your deposit of ₹{formik.values.amount.toLocaleString()} is waiting for approval from the cashier.
                   </p>
                 </div>
               ) : (
