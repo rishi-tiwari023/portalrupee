@@ -18,6 +18,7 @@ import twoFactorRoutes from './routes/2fa.routes.js';
 import transactionRoutes from './routes/transaction.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import chatRoutes from './routes/chat.routes.js';
+import contactRoutes from './routes/contact.routes.js';
 
 import expressMongoSanitize from 'express-mongo-sanitize';
 import cookieParser from 'cookie-parser';
@@ -52,6 +53,7 @@ app.use('/api/v1/transactions', transactionRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/uploads', uploadRoutes);
 app.use('/api/v1/chats', chatRoutes);
+app.use('/api/v1/contact', contactRoutes);
 
 
 // Health Check
