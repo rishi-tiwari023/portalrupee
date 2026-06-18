@@ -120,6 +120,14 @@ const Navbar = () => {
                     </Link>
                 </div>
 
+                <div className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
+                    <Link to="/about" className="hover:text-indigo-600 transition-colors">What is PortalRupee</Link>
+                    <Link to="/guidelines" className="hover:text-indigo-600 transition-colors">Guidelines</Link>
+                    <Link to="/interest-info" className="hover:text-indigo-600 transition-colors">Interest Information</Link>
+                    <Link to="/terms" className="hover:text-indigo-600 transition-colors">Terms & Conditions</Link>
+                    <Link to="/contact" className="hover:text-indigo-600 transition-colors">Contact Us</Link>
+                </div>
+
                 <div className="navbar-right flex items-center gap-3 md:gap-4" ref={dropdownRef}>
                     {isAuthenticated && (
                         <div className="notification-container relative">
