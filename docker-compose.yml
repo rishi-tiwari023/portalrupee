@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  backend:
+    image: ${DOCKERHUB_USERNAME:-rishitiwari023}/portalrupee-backend:latest
+    container_name: portalrupee-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    environment:
+      # Override local URLs to point to Docker services
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  redis:
+    image: redis:alpine
+    container_name: portalrupee-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: portalrupee-rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"   # Standard AMQP port
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  redis_data:
+  rabbitmq_data:
