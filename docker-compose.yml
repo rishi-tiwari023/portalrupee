@@ -2,7 +2,8 @@ version: '3.8'
 
 services:
   backend:
-    image: ${DOCKERHUB_USERNAME:-rishitiwari023}/portalrupee-backend:latest
+  # "Use the DOCKERHUB_USERNAME environment variable. If that variable doesn't exist, fall back to rishitiwari023.
+    image: ${DOCKERHUB_USERNAME:-rishitiwari023}/portalrupee-backend:latest 
     container_name: portalrupee-backend
     restart: always
     ports:
