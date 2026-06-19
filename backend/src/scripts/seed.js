@@ -32,7 +32,7 @@ const seedDatabase = async () => {
         lastName: 'Manager',
         email: 'manager@portalrupee.com',
         mobile: '9000000001',
-        password: 'password123',
+        password: 'Password@123',
         role: 'MANAGER'
       },
       {
@@ -40,7 +40,7 @@ const seedDatabase = async () => {
         lastName: 'Cashier',
         email: 'cashier@portalrupee.com',
         mobile: '9000000002',
-        password: 'password123',
+        password: 'Password@123',
         role: 'CASHIER'
       },
       {
@@ -48,7 +48,7 @@ const seedDatabase = async () => {
         lastName: 'Customer',
         email: 'customer@portalrupee.com',
         mobile: '9000000003',
-        password: 'password123',
+        password: 'Password@123',
         tpin: '111111',
         role: 'CUSTOMER'
       },
@@ -57,7 +57,7 @@ const seedDatabase = async () => {
         lastName: 'Customer',
         email: 'customer2@portalrupee.com',
         mobile: '9000000004',
-        password: 'password123',
+        password: 'Password@123',
         tpin: '111111',
         role: 'CUSTOMER'
       }
