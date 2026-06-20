@@ -5,6 +5,8 @@ import {
   getKycQueue,
   updateKycStatus,
   listUsers,
+  getPendingApprovals,
+  approveRegistration,
 } from '../controllers/admin.controller.js';
 import { isAuth, checkRole } from '../middleware/authMiddleware.js';
 import { auditLogger } from '../middleware/audit.middleware.js';
@@ -17,9 +19,13 @@ import {
 
 const router = express.Router();
 
-// Protect all routes and restrict to MANAGER
+// Protect all routes and restrict to MANAGER and ADMIN
 router.use(isAuth);
-router.use(checkRole('MANAGER'));
+router.use(checkRole('MANAGER', 'ADMIN'));
+
+// Registration approvals
+router.get('/pending-approvals', getPendingApprovals);
+router.patch('/users/:id/approve-registration', approveRegistration);
 
 // System stats
 router.get('/stats', getSystemStats);

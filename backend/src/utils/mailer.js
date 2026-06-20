@@ -423,7 +423,7 @@ export const sendWelcomeMail = async (email, name) => {
             <div class="feature-item">
               <span class="feature-icon">🛡️</span>
               <div class="feature-text">
-                <h4>Ironclad TPIN Security</h4>
+                <h4>Secure TPIN Authentication</h4>
                 <p>Verify every transaction securely using your personalized 6-digit transaction PIN.</p>
               </div>
             </div>
@@ -550,3 +550,96 @@ export const sendContactMail = async (contactData) => {
 
   return await mailTransporter.sendMail(mailOptions);
 };
+
+/**
+ * Sends a notification email when a user's registration is approved
+ */
+export const sendApprovalMail = async (email, name) => {
+  const mailTransporter = await createTransporter();
+  const from = process.env.EMAIL_FROM;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; }
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; }
+        .header { background: #10b981; color: white; padding: 15px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { padding: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>Registration Approved!</h2>
+        </div>
+        <div class="content">
+          <p>Hello ${name},</p>
+          <p>Great news! Your registration on PortalRupee has been approved.</p>
+          <p>You can now log in and access all features of your account.</p>
+          <p>Welcome aboard!</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from,
+    to: email,
+    subject: 'PortalRupee Registration Approved',
+    text: `Hello ${name}, your registration on PortalRupee has been approved. You can now log in.`,
+    html: htmlContent,
+  };
+
+  return await mailTransporter.sendMail(mailOptions);
+};
+
+/**
+ * Sends a notification email when a user's registration is rejected
+ */
+export const sendRejectionMail = async (email, name) => {
+  const mailTransporter = await createTransporter();
+  const from = process.env.EMAIL_FROM;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; }
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; }
+        .header { background: #ef4444; color: white; padding: 15px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { padding: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>Registration Update</h2>
+        </div>
+        <div class="content">
+          <p>Hello ${name},</p>
+          <p>Unfortunately, your recent registration on PortalRupee could not be approved at this time.</p>
+          <p>Your application details have been removed from our system. If you believe this was a mistake, or if you wish to try again with corrected details, you may re-apply on our registration page.</p>
+          <p>Thank you for your interest in PortalRupee.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from,
+    to: email,
+    subject: 'PortalRupee Registration Update',
+    text: `Hello ${name}, unfortunately your registration could not be approved. Your application details have been removed from our system. You may re-apply if you wish.`,
+    html: htmlContent,
+  };
+
+  return await mailTransporter.sendMail(mailOptions);
+};
+

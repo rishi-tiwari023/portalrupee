@@ -4,6 +4,7 @@ import Transaction from '../models/transaction.model.js';
 import AuditLog from '../models/auditLog.model.js';
 import AppError from '../utils/AppError.js';
 import { getPresignedUrlForViewing } from '../utils/s3.helper.js';
+import { sendApprovalMail, sendRejectionMail } from '../utils/mailer.js';
 
 /**
  * Update user role (Managers only)
@@ -239,6 +240,101 @@ export const listUsers = async (req, res, next) => {
         users
       }
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get pending registrations based on role (ADMIN/MANAGER)
+ */
+export const getPendingApprovals = async (req, res, next) => {
+  try {
+    const requesterRole = req.user.role;
+    let targetRoles = [];
+
+    if (requesterRole === 'ADMIN') {
+      targetRoles = ['CASHIER', 'MANAGER'];
+    } else if (requesterRole === 'MANAGER') {
+      targetRoles = ['CUSTOMER'];
+    } else {
+      return next(new AppError('You do not have permission to view pending approvals', 403));
+    }
+
+    const pendingUsers = await User.find({
+      approvalStatus: 'PENDING',
+      role: { $in: targetRoles }
+    }).sort({ createdAt: 1 });
+
+    res.status(200).json({
+      status: 'success',
+      results: pendingUsers.length,
+      data: {
+        pendingUsers
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Approve or Reject a user registration
+ */
+export const approveRegistration = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { action } = req.body; // 'APPROVE' or 'REJECT'
+    const requesterRole = req.user.role;
+
+    if (!['APPROVE', 'REJECT'].includes(action)) {
+      return next(new AppError('Invalid action. Must be APPROVE or REJECT.', 400));
+    }
+
+    const userToApprove = await User.findById(id);
+    if (!userToApprove) {
+      return next(new AppError('User not found', 404));
+    }
+
+    if (userToApprove.approvalStatus !== 'PENDING') {
+      return next(new AppError('User is not in PENDING status', 400));
+    }
+
+    // Role checks
+    if (requesterRole === 'MANAGER' && userToApprove.role !== 'CUSTOMER') {
+      return next(new AppError('Managers can only approve Customers', 403));
+    }
+    if (requesterRole === 'ADMIN' && !['CASHIER', 'MANAGER'].includes(userToApprove.role)) {
+      return next(new AppError('Admins can only approve Cashiers and Managers', 403));
+    }
+
+    if (action === 'APPROVE') {
+      userToApprove.approvalStatus = 'APPROVED';
+      await userToApprove.save();
+      
+      // Send email asynchronously without blocking response
+      sendApprovalMail(userToApprove.email, userToApprove.firstName).catch(err => console.error('Failed to send approval mail:', err));
+
+      return res.status(200).json({
+        status: 'success',
+        message: `User registration approved successfully`,
+        data: {
+          user: userToApprove
+        }
+      });
+    } else if (action === 'REJECT') {
+      const { email, firstName } = userToApprove;
+      await User.findByIdAndDelete(id);
+
+      // Send rejection mail asynchronously
+      sendRejectionMail(email, firstName).catch(err => console.error('Failed to send rejection mail:', err));
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'User registration rejected and deleted successfully'
+      });
+    }
+
   } catch (error) {
     next(error);
   }
