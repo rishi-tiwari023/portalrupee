@@ -2,8 +2,8 @@
 
 **Project Start**: April 8, 2026  
 **Project Resumption**: May 23, 2026  
-**Project Completion Goal**: June 15, 2026  
-**Team**: 1 Backend Engineer, 1 Frontend Engineer
+**Project Completion**: June 20, 2026  
+**Team**: [Rishi Tiwari](https://github.com/rishi-tiwari023/) and [Gagan Gupta](https://github.com/gagangupta5)
 
 ---
 
@@ -365,4 +365,4 @@
 - [x] Transaction Engine (Transfer/PIN) Working (Day 14 - Apr 21)
 - [x] S3 Files & OTP Verification Ready (Day 21 - Jun 06)
 - [x] Real-time Chat & Analytics Deployed (Day 28 - Jun 13)
-- [ ] Production Deployment Complete (Day 34 - Jun 19)
+- [x] Production Deployment Complete (Day 35 - Jun 20)
