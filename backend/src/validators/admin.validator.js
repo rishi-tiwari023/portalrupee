@@ -5,7 +5,7 @@ export const updateRoleSchema = z.object({
     userId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid user ID'),
   }),
   body: z.object({
-    role: z.enum(['CUSTOMER', 'CASHIER', 'MANAGER']),
+    role: z.enum(['CUSTOMER', 'CASHIER', 'MANAGER', 'ADMIN']),
   }),
 });
 
@@ -22,7 +22,7 @@ export const listUsersSchema = z.object({
   query: z.object({
     page: z.string().optional().default('1').transform(val => parseInt(val, 10)),
     limit: z.string().optional().default('10').transform(val => parseInt(val, 10)),
-    role: z.enum(['CUSTOMER', 'CASHIER', 'MANAGER']).optional(),
+    role: z.enum(['CUSTOMER', 'CASHIER', 'MANAGER', 'ADMIN']).optional(),
     kycStatus: z.enum(['NOT_STARTED', 'PENDING', 'VERIFIED', 'REJECTED']).optional(),
     search: z.string().optional(),
   }).default({}),

@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['CUSTOMER', 'CASHIER', 'MANAGER'],
+      enum: ['CUSTOMER', 'CASHIER', 'MANAGER', 'ADMIN'],
       default: 'CUSTOMER',
     },
     twoFactorEnabled: {
@@ -51,6 +51,11 @@ const userSchema = new mongoose.Schema(
     twoFactorSecret: {
       type: String,
       select: false,
+    },
+    approvalStatus: {
+      type: String,
+      enum: ['PENDING', 'APPROVED', 'REJECTED'],
+      default: 'PENDING',
     },
     kycStatus: {
       type: String,
@@ -76,6 +81,7 @@ const userSchema = new mongoose.Schema(
 );
 
 // Indexes for performance optimization
+userSchema.index({ approvalStatus: 1, createdAt: -1 });
 userSchema.index({ kycStatus: 1, updatedAt: 1 });
 userSchema.index({ role: 1, createdAt: -1 });
 userSchema.index({ createdAt: -1 });

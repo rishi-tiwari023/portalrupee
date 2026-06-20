@@ -28,12 +28,22 @@ const seedDatabase = async () => {
 
     const userData = [
       {
+        firstName: 'Super',
+        lastName: 'Admin',
+        email: 'admin@portalrupee.com',
+        mobile: '9000000000',
+        password: 'Password@123',
+        role: 'ADMIN',
+        approvalStatus: 'APPROVED'
+      },
+      {
         firstName: 'System',
         lastName: 'Manager',
         email: 'manager@portalrupee.com',
         mobile: '9000000001',
         password: 'Password@123',
-        role: 'MANAGER'
+        role: 'MANAGER',
+        approvalStatus: 'APPROVED'
       },
       {
         firstName: 'Bank',
@@ -41,7 +51,8 @@ const seedDatabase = async () => {
         email: 'cashier@portalrupee.com',
         mobile: '9000000002',
         password: 'Password@123',
-        role: 'CASHIER'
+        role: 'CASHIER',
+        approvalStatus: 'APPROVED'
       },
       {
         firstName: 'Mr.',
@@ -50,7 +61,8 @@ const seedDatabase = async () => {
         mobile: '9000000003',
         password: 'Password@123',
         tpin: '111111',
-        role: 'CUSTOMER'
+        role: 'CUSTOMER',
+        approvalStatus: 'APPROVED'
       },
       {
         firstName: 'Mrs.',
@@ -59,7 +71,8 @@ const seedDatabase = async () => {
         mobile: '9000000004',
         password: 'Password@123',
         tpin: '111111',
-        role: 'CUSTOMER'
+        role: 'CUSTOMER',
+        approvalStatus: 'APPROVED'
       }
     ];
 

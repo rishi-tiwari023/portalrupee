@@ -15,7 +15,7 @@ export const registerSchema = z.object({
     email: z.string().email('Invalid email address'),
     mobile: z.string().regex(/^\d{10}$/, 'Mobile number must be exactly 10 digits'),
     password: passwordComplexity,
-    role: z.enum(['CUSTOMER', 'CASHIER', 'MANAGER']).optional(),
+    role: z.enum(['CUSTOMER', 'CASHIER', 'MANAGER', 'ADMIN']).optional(),
   }),
 });
 
