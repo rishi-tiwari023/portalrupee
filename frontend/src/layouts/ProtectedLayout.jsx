@@ -113,6 +113,11 @@ const ProtectedLayout = () => {
     return <Navigate to="/login" replace />;
   }
 
+  // Redirect pending users to the Approval Required page
+  if (user?.approvalStatus === 'PENDING') {
+    return <Navigate to="/approval-required" replace />;
+  }
+
   // Redirect completely frozen users if they try to access restricted pages
   if (
     user?.isCompletelyFrozen &&

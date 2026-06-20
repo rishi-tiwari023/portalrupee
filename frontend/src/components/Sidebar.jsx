@@ -27,7 +27,13 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
 
   let menuItems = [];
 
-  if (user?.role === 'CASHIER') {
+  if (user?.role === 'ADMIN') {
+    menuItems = [
+      { name: 'Profile', icon: User, path: '/dashboard/profile' },
+      { name: 'Pending Approvals', icon: Users, path: '/dashboard/pending-approvals' },
+      { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
+    ];
+  } else if (user?.role === 'CASHIER') {
     menuItems = [
       { name: 'Profile', icon: User, path: '/dashboard/profile' },
       { name: 'Approve Deposits', icon: CreditCard, path: '/dashboard/approve-deposits' },
@@ -36,6 +42,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
   } else if (user?.role === 'MANAGER') {
     menuItems = [
       { name: 'Profile', icon: User, path: '/dashboard/profile' },
+      { name: 'Pending Approvals', icon: Users, path: '/dashboard/pending-approvals' },
       { name: 'User Management', icon: Users, path: '/dashboard/users' },
       { name: 'Freeze Accounts', icon: CreditCard, path: '/dashboard/freeze-accounts' },
       { name: 'Freeze Disputes', icon: ShieldAlert, path: '/dashboard/freeze-disputes' },

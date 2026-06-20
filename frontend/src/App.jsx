@@ -70,8 +70,16 @@ const router = createBrowserRouter([
       {
         path: 'interest-info',
         element: lazyRoute(() => import('./pages/InterestInfo'))
+      },
+      {
+        path: 'demo-credentials',
+        element: lazyRoute(() => import('./pages/DemoCredentials'))
       }
     ],
+  },
+  {
+    path: '/approval-required',
+    element: lazyRoute(() => import('./pages/ApprovalRequired'))
   },
   {
     path: '/dashboard',
@@ -126,6 +134,16 @@ const router = createBrowserRouter([
           {
             path: 'approve-deposits',
             element: lazyRoute(() => import('./pages/ApproveDeposits'))
+          }
+        ]
+      },
+      // Admin & Manager Routes
+      {
+        element: <RoleBasedRoute allowedRoles={['ADMIN', 'MANAGER']} />,
+        children: [
+          {
+            path: 'pending-approvals',
+            element: lazyRoute(() => import('./pages/PendingApprovals'))
           }
         ]
       },

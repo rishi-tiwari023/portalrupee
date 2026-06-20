@@ -126,6 +126,7 @@ const Navbar = () => {
                     <Link to="/interest-info" className="hover:text-indigo-600 transition-colors">Interest Information</Link>
                     <Link to="/terms" className="hover:text-indigo-600 transition-colors">Terms & Conditions</Link>
                     <Link to="/contact" className="hover:text-indigo-600 transition-colors">Contact Us</Link>
+                    <Link to="/demo-credentials" className="hover:text-indigo-600 transition-colors">Demo Credentials</Link>
                 </div>
 
                 <div className="navbar-right flex items-center gap-3 md:gap-4" ref={dropdownRef}>
