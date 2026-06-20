@@ -55,10 +55,10 @@ The system is built on a modern event-driven architecture. The **backend** is an
 
 ## Live Demo
 
-| Service  | URL                              |
-| -------- | -------------------------------- |
-| Frontend | https://portalrupee.vercel.app   |
-| Backend  | http://35.154.77.142:5000/health |
+| Service  | URL                                |
+| -------- | ---------------------------------- |
+| Frontend | https://portalrupee.app            |
+| Backend  | https://api.portalrupee.app/api/v1 |
 
 **Test Accounts** (run `npm run seed` in the backend to create these):
 
@@ -154,6 +154,8 @@ The system is built on a modern event-driven architecture. The **backend** is an
 | Tool           | Purpose                                             |
 | -------------- | --------------------------------------------------- |
 | Docker Compose | Orchestrate backend, Redis, and RabbitMQ containers |
+| Nginx          | Reverse proxy for backend HTTPS                     |
+| Certbot        | Automated Let's Encrypt SSL certificates            |
 | GitHub Actions | CI pipeline (lint) + CD pipeline (Docker + EC2)     |
 | AWS EC2        | Backend hosting (t3.medium, Ubuntu 26.04)           |
 | Vercel         | Frontend hosting (SPA with rewrites)                |

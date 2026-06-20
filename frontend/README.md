@@ -567,10 +567,10 @@ The frontend is deployed on **Vercel** with SPA rewrite rules configured in `ver
 1. Import the `portalrupee` repository on Vercel
 2. Set the root directory to `frontend`
 3. Add the environment variable:
-   - `VITE_API_BASE_URL` = your backend API URL (e.g., `http://35.154.77.142:5000/api/v1`)
+   - `VITE_API_BASE_URL` = your backend API URL (e.g., `https://api.portalrupee.app/api/v1`)
 4. Deploy
 
-**Live URL:** `https://portalrupee.vercel.app`
+**Live URL:** `https://portalrupee.app`
 
 ---
 
