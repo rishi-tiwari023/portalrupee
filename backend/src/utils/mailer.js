@@ -643,3 +643,113 @@ export const sendRejectionMail = async (email, name) => {
   return await mailTransporter.sendMail(mailOptions);
 };
 
+/**
+ * Sends an EMI calculation breakdown email
+ */
+export const sendEmiMail = async (email, emiDetails) => {
+  const mailTransporter = await createTransporter();
+  const from = process.env.EMAIL_FROM;
+
+  const { loanAmount, tenure, interestRate, monthlyEMI, totalPayable, interestAmount } = emiDetails;
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+        maximumFractionDigits: 0,
+        style: 'currency',
+        currency: 'INR'
+    }).format(amount);
+  };
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Your EMI Calculation Breakdown</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 24px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #f1f5f9; }
+        .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 40px 20px; text-align: center; }
+        .header h1 { color: #ffffff; font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 800; margin: 0; }
+        .content { padding: 40px 30px; }
+        .greeting { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 16px; }
+        .intro-text { font-size: 15px; line-height: 1.6; color: #475569; margin-bottom: 30px; }
+        .breakdown-card { background: #f8fafc; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; margin-bottom: 24px; }
+        .emi-highlight { text-align: center; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px dashed #cbd5e1; }
+        .emi-highlight span { display: block; font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+        .emi-highlight strong { display: block; font-family: 'Outfit', sans-serif; font-size: 36px; color: #4f46e5; font-weight: 800; }
+        .grid-row { display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 15px; }
+        .grid-row:last-child { margin-bottom: 0; }
+        .grid-label { color: #64748b; font-weight: 500; }
+        .grid-val { color: #0f172a; font-weight: 700; font-family: 'Outfit', sans-serif; }
+        .footer { background: #f8fafc; padding: 30px 20px; text-align: center; border-top: 1px solid #e2e8f0; }
+        .footer-logo { font-family: 'Outfit', sans-serif; font-weight: 800; color: #4f46e5; font-size: 16px; margin-bottom: 8px; }
+        .footer-text { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>PortalRupee</h1>
+        </div>
+        <div class="content">
+          <h2 class="greeting">Your EMI Calculation</h2>
+          <p class="intro-text">
+            Here is the breakdown of the customized EMI calculation you requested on PortalRupee.
+          </p>
+          
+          <div class="breakdown-card">
+            <div class="emi-highlight">
+              <span>Estimated Monthly EMI</span>
+              <strong>${formatCurrency(monthlyEMI)}</strong>
+            </div>
+            
+            <div class="grid-row">
+              <span class="grid-label">Principal Amount</span>
+              <span class="grid-val">${formatCurrency(loanAmount)}</span>
+            </div>
+            <div class="grid-row">
+              <span class="grid-label">Interest Rate</span>
+              <span class="grid-val">${interestRate}% PA</span>
+            </div>
+            <div class="grid-row">
+              <span class="grid-label">Loan Tenure</span>
+              <span class="grid-val">${tenure} Years</span>
+            </div>
+            <div class="grid-row">
+              <span class="grid-label">Total Interest</span>
+              <span class="grid-val">${formatCurrency(interestAmount)}</span>
+            </div>
+            <div class="grid-row" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+              <span class="grid-label" style="color: #0f172a; font-weight: 700;">Total Payable</span>
+              <span class="grid-val" style="color: #4f46e5;">${formatCurrency(totalPayable)}</span>
+            </div>
+          </div>
+          
+          <p class="intro-text" style="font-size: 13px; color: #94a3b8;">
+            * Please note that this is an estimate for planning purposes. Actual interest rates and EMIs may vary based on your credit profile and final loan terms.
+          </p>
+        </div>
+        <div class="footer">
+          <div class="footer-logo">PortalRupee</div>
+          <p class="footer-text">
+            &copy; ${new Date().getFullYear()} PortalRupee. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from,
+    to: email,
+    subject: 'Your PortalRupee EMI Calculation',
+    text: `Your estimated EMI for ₹\${loanAmount} at \${interestRate}% for \${tenure} years is ₹\${monthlyEMI}.`,
+    html: htmlContent,
+  };
+
+  return await mailTransporter.sendMail(mailOptions);
+};
