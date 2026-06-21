@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../store/slices/authSlice';
 import {
@@ -92,17 +92,17 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
         `}
       >
       {/* PortalRupee Info */}
-      <div className="h-32 pt-4 flex items-center px-6 mb-8 relative">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-10 h-10 flex-shrink-0 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-            <img src={logo} alt="L" className="w-6 h-6 object-contain invert" />
+      <div className="h-20 pt-4 flex items-center px-6 mb-8 relative">
+        <Link to="/" className="flex items-center gap-3 overflow-hidden transition-transform hover:scale-105 active:scale-95">
+          <div className="w-10 h-10 flex-shrink-0 shadow-sm rounded-xl overflow-hidden bg-white">
+            <img src={logo} alt="PortalRupee Logo" className="w-full h-full object-contain p-1" />
           </div>
           {isExpanded && (
-            <span className="text-xl font-black text-slate-900 tracking-tighter transition-all duration-500">
-              Portal<span className="text-indigo-600">Rupee</span>
-            </span>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-700 to-indigo-500 bg-clip-text text-transparent whitespace-nowrap transition-all duration-500">
+              Portal Rupee
+            </h1>
           )}
-        </div>
+        </Link>
 
         {/* Toggle Button */}
         <button

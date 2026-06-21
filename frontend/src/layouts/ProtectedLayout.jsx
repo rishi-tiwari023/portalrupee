@@ -139,7 +139,7 @@ const ProtectedLayout = () => {
         </div>
 
         {/* Top Header */}
-        <header className="w-full h-24 lg:h-32 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl sticky top-0 z-50 flex items-center justify-between px-6 lg:px-10 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+        <header className="flex-shrink-0 w-full h-16 lg:h-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl sticky top-0 z-50 flex items-center justify-between px-6 lg:px-10 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
            <div className="flex items-center gap-4">
              <button 
                onClick={() => setIsSidebarOpen(true)}
