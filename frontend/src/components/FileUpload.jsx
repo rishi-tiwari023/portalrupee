@@ -45,6 +45,26 @@ const FileUpload = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   };
 
+  // Dynamically generate supported formats text based on accept array
+  const getAcceptedExtensionsText = () => {
+    const list = [];
+    accept.forEach(t => {
+      let ext = t;
+      if (t.includes('/')) {
+        ext = t.split('/')[1];
+      }
+      ext = ext.replace('.', '').toUpperCase();
+      if (ext === 'JPEG' || ext === 'JPG') {
+        if (!list.includes('JPEG') && !list.includes('JPG')) {
+          list.push('JPEG', 'JPG');
+        }
+      } else if (!list.includes(ext)) {
+        list.push(ext);
+      }
+    });
+    return list.join(', ');
+  };
+
   // Pre-flight file validation
   const validateFile = (selectedFile) => {
     if (!selectedFile) return false;
@@ -53,10 +73,34 @@ const FileUpload = ({
     const fileType = selectedFile.type;
     const isAllowedType = accept.includes(fileType) ||
       // Handle extension-based checking fallback
-      accept.some(ext => selectedFile.name.toLowerCase().endsWith(ext.toLowerCase()));
+      accept.some(item => {
+        if (item.includes('/')) {
+          const extension = item.split('/')[1];
+          if (extension === 'jpeg' || extension === 'jpg') {
+            return selectedFile.name.toLowerCase().endsWith('.jpg') || selectedFile.name.toLowerCase().endsWith('.jpeg');
+          }
+          return selectedFile.name.toLowerCase().endsWith(`.${extension}`);
+        }
+        return selectedFile.name.toLowerCase().endsWith(item.toLowerCase());
+      });
 
     if (!isAllowedType) {
-      const formattedTypes = accept.map(t => t.split('/')[1] || t).join(', ').toUpperCase();
+      const list = [];
+      accept.forEach(t => {
+        let ext = t;
+        if (t.includes('/')) {
+          ext = t.split('/')[1];
+        }
+        ext = ext.replace('.', '').toUpperCase();
+        if (ext === 'JPEG' || ext === 'JPG') {
+          if (!list.includes('JPEG') && !list.includes('JPG')) {
+            list.push('JPEG', 'JPG');
+          }
+        } else if (!list.includes(ext)) {
+          list.push(ext);
+        }
+      });
+      const formattedTypes = list.join(', ');
       const err = `Invalid file type. Only ${formattedTypes} files are allowed.`;
       setErrorMsg(err);
       toast.error(err);
@@ -348,7 +392,7 @@ const FileUpload = ({
               Drag & drop your document here, or <span className="text-indigo-600 font-black">browse</span>
             </p>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-              Supports JPEG, JPG, PNG, PDF (Max {formatBytes(maxSize)})
+              Supports {getAcceptedExtensionsText()} (Max {formatBytes(maxSize)})
             </p>
           </div>
         )}

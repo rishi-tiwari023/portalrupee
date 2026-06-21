@@ -171,7 +171,7 @@ const KYC = () => {
                     label=""
                     onUploadSuccess={(data) => setSigDoc(data)}
                     onUploadError={() => setSigDoc(null)}
-                    accept={['image/jpeg', 'image/png', 'image/jpg']} // Signatures typically images only
+                    accept={['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']}
                   />
 
                   {sigDoc && (
