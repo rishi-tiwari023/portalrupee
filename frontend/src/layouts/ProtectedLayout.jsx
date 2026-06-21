@@ -1,6 +1,7 @@
-import { Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Sidebar from '../components/Sidebar';
+import logo from '../assets/logo.png';
 import { Bell, Search, Menu, Check, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, MessageSquare } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
@@ -139,17 +140,25 @@ const ProtectedLayout = () => {
         </div>
 
         {/* Top Header */}
-        <header className="flex-shrink-0 w-full h-16 lg:h-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl sticky top-0 z-50 flex items-center justify-between px-6 lg:px-10 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
-           <div className="flex items-center gap-4">
+        <header className="flex-shrink-0 w-full h-16 lg:h-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 lg:px-10 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+           <div className="flex items-center gap-2 sm:gap-4">
              <button 
                onClick={() => setIsSidebarOpen(true)}
-               className="lg:hidden p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-indigo-600 transition-all"
+               className="lg:hidden p-2 sm:p-2.5 bg-white border border-slate-200 rounded-lg sm:rounded-xl text-slate-600 hover:text-indigo-600 transition-all"
              >
-               <Menu className="w-6 h-6" />
+               <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
              </button>
+             <Link to="/" className="lg:hidden flex items-center gap-2 sm:gap-3 transition-transform hover:scale-105 active:scale-95">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 shadow-sm rounded-lg sm:rounded-xl overflow-hidden bg-white">
+                  <img src={logo} alt="PortalRupee Logo" className="w-full h-full object-contain p-0.5 sm:p-1" />
+                </div>
+                <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-700 to-indigo-500 bg-clip-text text-transparent whitespace-nowrap">
+                  Portal Rupee
+                </h1>
+             </Link>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
             {/* Connection Status */}
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/50 border border-white/50">
               <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'}`} />
@@ -180,8 +189,7 @@ const ProtectedLayout = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-2xl rounded-3xl overflow-hidden p-2 z-[200] flex flex-col max-h-[400px]"
-                    >
+                        className="absolute -right-14 sm:right-0 mt-3 w-[90vw] sm:w-80 max-w-[320px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-2xl rounded-3xl overflow-hidden p-2 z-[200] flex flex-col max-h-[400px]">
                         <div className="px-4 py-3 border-b border-slate-50 dark:border-slate-800/50 flex items-center justify-between">
                             <span className="text-sm font-extrabold text-slate-800 dark:text-slate-200">Notifications</span>
                             {unreadCount > 0 && (
@@ -240,17 +248,17 @@ const ProtectedLayout = () => {
               </AnimatePresence>
             </div>
 
-            <div className="h-8 w-[1px] bg-slate-200/60" />
+            <div className="h-8 w-[1px] bg-slate-200/60 hidden sm:block" />
 
-            <div className="flex items-center gap-4 group cursor-pointer">
-              <div className="flex flex-col text-right">
+            <div className="flex items-center gap-2 sm:gap-4 group cursor-pointer">
+              <div className="hidden sm:flex flex-col text-right">
                 <span className="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   {user?.firstName} {user?.lastName}
                 </span>
                 <span className="text-[10px] text-indigo-500 font-black uppercase tracking-widest">{user?.role || 'CUSTOMER'}</span>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-indigo-700 p-[3px] shadow-lg shadow-indigo-200 transform group-hover:scale-110 transition-transform">
-                <div className="w-full h-full rounded-[13px] bg-white flex items-center justify-center text-indigo-700 font-black text-sm overflow-hidden">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-indigo-500 to-indigo-700 p-[3px] shadow-lg shadow-indigo-200 transform group-hover:scale-110 transition-transform flex-shrink-0">
+                <div className="w-full h-full rounded-[10px] sm:rounded-[13px] bg-white flex items-center justify-center text-indigo-700 font-black text-sm overflow-hidden">
                   {profileImageUrl ? (
                     <img src={profileImageUrl} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (

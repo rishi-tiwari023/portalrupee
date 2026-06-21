@@ -18,7 +18,15 @@ import {
     ArrowUpRight, 
     ArrowLeftRight, 
     MessageSquare, 
-    Check 
+    Check,
+    LayoutDashboard,
+    History,
+    Settings,
+    User,
+    Users,
+    TrendingUp,
+    ShieldAlert,
+    Menu
 } from 'lucide-react';
 import { useSocket } from '../context/SocketContext';
 import './Navbar.css';
@@ -66,6 +74,54 @@ const Navbar = () => {
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
 
+    const [showDashboardMenu, setShowDashboardMenu] = useState(false);
+
+    let menuItems = [];
+    if (user?.role === 'ADMIN') {
+        menuItems = [
+            { name: 'Profile', icon: User, path: '/dashboard/profile' },
+            { name: 'Pending Approvals', icon: Users, path: '/dashboard/pending-approvals' },
+            { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
+        ];
+    } else if (user?.role === 'CASHIER') {
+        menuItems = [
+            { name: 'Profile', icon: User, path: '/dashboard/profile' },
+            { name: 'Approve Deposits', icon: CreditCard, path: '/dashboard/approve-deposits' },
+            { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
+        ];
+    } else if (user?.role === 'MANAGER') {
+        menuItems = [
+            { name: 'Profile', icon: User, path: '/dashboard/profile' },
+            { name: 'Pending Approvals', icon: Users, path: '/dashboard/pending-approvals' },
+            { name: 'User Management', icon: Users, path: '/dashboard/users' },
+            { name: 'Freeze Accounts', icon: CreditCard, path: '/dashboard/freeze-accounts' },
+            { name: 'Freeze Disputes', icon: ShieldAlert, path: '/dashboard/freeze-disputes' },
+            { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
+        ];
+    } else if (user) {
+        if (user?.isCompletelyFrozen) {
+            menuItems = [
+                { name: 'Account Status', icon: ShieldAlert, path: '/dashboard/frozen' },
+                { name: 'Profile', icon: User, path: '/dashboard/profile' },
+                { name: 'Settings', icon: Settings, path: '/dashboard/settings' },
+            ];
+        } else {
+            menuItems = [
+                { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+                { name: 'Profile', icon: User, path: '/dashboard/profile' },
+                { name: 'Accounts', icon: CreditCard, path: '/dashboard/accounts' },
+                { name: 'Analytics', icon: TrendingUp, path: '/dashboard/analytics' },
+                { name: 'Transfer', icon: ArrowLeftRight, path: '/dashboard/transfer' },
+                { name: 'Transactions', icon: History, path: '/dashboard/transactions' },
+                { name: 'Messages', icon: MessageSquare, path: '/dashboard/messages' },
+            ];
+            if (user?.isPartiallyFrozen) {
+                menuItems.push({ name: 'Account Status', icon: ShieldAlert, path: '/dashboard/frozen' });
+            }
+            menuItems.push({ name: 'Settings', icon: Settings, path: '/dashboard/settings' });
+        }
+    }
+
     const handleNotificationClick = (notif) => {
         markAsRead(notif.id);
         setShowNotifications(false);
@@ -89,6 +145,7 @@ const Navbar = () => {
                 setShowDropdown(false);
                 setShowCreateDropdown(false);
                 setShowNotifications(false);
+                setShowDashboardMenu(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -98,11 +155,20 @@ const Navbar = () => {
     const toggleDropdown = () => {
         setShowDropdown(!showDropdown);
         setShowNotifications(false);
+        setShowDashboardMenu(false);
     };
 
     const toggleNotifications = () => {
         setShowNotifications(!showNotifications);
         setShowDropdown(false);
+        setShowCreateDropdown(false);
+        setShowDashboardMenu(false);
+    };
+
+    const toggleDashboardMenu = () => {
+        setShowDashboardMenu(!showDashboardMenu);
+        setShowDropdown(false);
+        setShowNotifications(false);
         setShowCreateDropdown(false);
     };
 
@@ -156,7 +222,7 @@ const Navbar = () => {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                         transition={{ duration: 0.2, ease: "easeOut" }}
-                                        className="dropdown-menu absolute right-0 mt-3 w-80 bg-white border border-slate-100 shadow-2xl rounded-3xl overflow-hidden p-2 z-[200] flex flex-col max-h-[400px]"
+                                        className="dropdown-menu absolute -right-10 sm:right-0 mt-3 w-[90vw] sm:w-80 max-w-[320px] bg-white border border-slate-100 shadow-2xl rounded-3xl overflow-hidden p-2 z-[200] flex flex-col max-h-[400px]"
                                     >
                                         <div className="px-4 py-3 border-b border-slate-50 flex items-center justify-between">
                                             <span className="text-sm font-extrabold text-slate-800">Notifications</span>
@@ -218,6 +284,66 @@ const Navbar = () => {
                         </div>
                     )}
 
+                    <div className="md:hidden relative">
+                        <button 
+                            onClick={toggleDashboardMenu}
+                            className={`relative p-2.5 rounded-2xl border transition-all active:scale-95 cursor-pointer
+                                ${showDashboardMenu 
+                                    ? 'bg-indigo-50 border-indigo-200 text-indigo-600' 
+                                    : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600 hover:shadow-md'
+                                }
+                            `}
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
+
+                        <AnimatePresence>
+                            {showDashboardMenu && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    transition={{ duration: 0.2, ease: "easeOut" }}
+                                    className="dropdown-menu fixed left-4 right-4 mx-auto sm:left-auto sm:mx-0 top-[72px] w-auto max-w-[320px] bg-white border border-slate-100 shadow-2xl rounded-3xl overflow-hidden p-2 z-[200] flex flex-col max-h-[80vh]"
+                                >
+                                    <div className="px-4 py-3 border-b border-slate-50 flex items-center justify-between">
+                                        <span className="text-sm font-extrabold text-slate-800">Menu</span>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto no-scrollbar py-2 space-y-1">
+                                        {isAuthenticated && menuItems.length > 0 && (
+                                            <>
+                                                <div className="px-3 py-1 text-[10px] font-black text-slate-400 uppercase tracking-wider">Dashboard</div>
+                                                {menuItems.map((item, idx) => {
+                                                    const Icon = item.icon;
+                                                    return (
+                                                        <Link 
+                                                            key={idx} 
+                                                            to={item.path} 
+                                                            onClick={() => setShowDashboardMenu(false)}
+                                                            className="flex items-center gap-3 p-3 mx-1 rounded-2xl hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-semibold transition-colors"
+                                                        >
+                                                            <Icon size={18} className="text-indigo-500" />
+                                                            <span>{item.name}</span>
+                                                        </Link>
+                                                    );
+                                                })}
+                                                <div className="h-px bg-slate-50 my-2 mx-2" />
+                                            </>
+                                        )}
+                                        
+                                        <div className="px-3 py-1 mt-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Information</div>
+                                        <Link to="/about" onClick={() => setShowDashboardMenu(false)} className="block p-3 mx-1 text-sm font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl transition-colors">What is PortalRupee</Link>
+                                        <Link to="/guidelines" onClick={() => setShowDashboardMenu(false)} className="block p-3 mx-1 text-sm font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl transition-colors">Guidelines</Link>
+                                        <Link to="/interest-info" onClick={() => setShowDashboardMenu(false)} className="block p-3 mx-1 text-sm font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl transition-colors">Interest Information</Link>
+                                        <Link to="/terms" onClick={() => setShowDashboardMenu(false)} className="block p-3 mx-1 text-sm font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl transition-colors">Terms & Conditions</Link>
+                                        <Link to="/contact" onClick={() => setShowDashboardMenu(false)} className="block p-3 mx-1 text-sm font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl transition-colors">Contact Us</Link>
+                                        <Link to="/demo-credentials" onClick={() => setShowDashboardMenu(false)} className="block p-3 mx-1 text-sm font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl transition-colors">Demo Credentials</Link>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
                     <div className="dropdown-container relative">
                         <button 
                             onClick={toggleDropdown}
@@ -243,15 +369,15 @@ const Navbar = () => {
                                 >
                                     {isAuthenticated ? (
                                         <div className="p-1 space-y-1">
-                                            <Link to="/dashboard" onClick={() => setShowDropdown(false)} className="dropdown-item flex items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-semibold transition-colors">
+                                            <Link to="/dashboard" onClick={() => setShowDropdown(false)} className="hidden md:flex dropdown-item items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-semibold transition-colors">
                                                 <Layout size={18} className="text-indigo-500" />
                                                 <span>Dashboard</span>
                                             </Link>
-                                            <Link to="/dashboard/accounts" onClick={() => setShowDropdown(false)} className="dropdown-item flex items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-semibold transition-colors">
+                                            <Link to="/dashboard/accounts" onClick={() => setShowDropdown(false)} className="hidden md:flex dropdown-item items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-semibold transition-colors">
                                                 <CreditCard size={18} className="text-indigo-500" />
                                                 <span>My Accounts</span>
                                             </Link>
-                                            <div className="h-px bg-slate-50 my-1 mx-2" />
+                                            <div className="h-px bg-slate-50 my-1 mx-2 hidden md:block" />
                                             <button onClick={handleLogout} className="dropdown-item w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-red-50 text-red-500 font-semibold transition-colors">
                                                 <LogOut size={18} />
                                                 <span>Logout</span>
@@ -259,41 +385,6 @@ const Navbar = () => {
                                         </div>
                                     ) : (
                                         <div className="p-1 space-y-1">
-                                            <div className="relative">
-                                                <button 
-                                                    onClick={() => setShowCreateDropdown(!showCreateDropdown)}
-                                                    className={`dropdown-item w-full flex items-center justify-between p-3 rounded-2xl font-semibold transition-colors
-                                                        ${showCreateDropdown ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-slate-50 text-slate-700'}
-                                                    `}
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <UserPlus size={18} className="text-indigo-500" />
-                                                        <span>Create</span>
-                                                    </div>
-                                                    <ChevronLeft className={`w-4 h-4 transition-transform duration-300 ${showCreateDropdown ? '-rotate-90' : ''}`} />
-                                                </button>
-                                                
-                                                <AnimatePresence>
-                                                    {showCreateDropdown && (
-                                                        <motion.div 
-                                                            initial={{ height: 0, opacity: 0 }}
-                                                            animate={{ height: 'auto', opacity: 1 }}
-                                                            exit={{ height: 0, opacity: 0 }}
-                                                            className="ml-8 overflow-hidden"
-                                                        >
-                                                            <div className="py-1 space-y-1">
-                                                                <Link to="/register" onClick={() => setShowDropdown(false)} className="block p-2 text-sm text-slate-500 hover:text-indigo-600 font-medium transition-colors">
-                                                                    Savings Account
-                                                                </Link>
-                                                                <Link to="/register" onClick={() => setShowDropdown(false)} className="block p-2 text-sm text-slate-500 hover:text-indigo-600 font-medium transition-colors">
-                                                                    Current Account
-                                                                </Link>
-                                                            </div>
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </div>
-                                            
                                             <Link to="/login" onClick={() => setShowDropdown(false)} className="dropdown-item flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 text-slate-700 font-semibold transition-colors">
                                                 <LogIn size={18} className="text-slate-400" />
                                                 <span>Login</span>
