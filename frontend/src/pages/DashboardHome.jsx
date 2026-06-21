@@ -18,6 +18,7 @@ import CreateAccountModal from '../components/CreateAccountModal';
 import DepositModal from '../components/DepositModal';
 import WithdrawModal from '../components/WithdrawModal';
 import TransactionDetailsModal from '../components/TransactionDetailsModal';
+import DownloadStatementModal from '../components/DownloadStatementModal';
 
 const DashboardHome = () => {
   const dispatch = useDispatch();
@@ -29,6 +30,7 @@ const DashboardHome = () => {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isStatementModalOpen, setIsStatementModalOpen] = useState(false);
 
   useEffect(() => {
     if (user?._id) {
@@ -69,7 +71,7 @@ const DashboardHome = () => {
       icon: FileText,
       color: 'bg-amber-500',
       textColor: 'text-amber-600',
-      onClick: () => { }
+      onClick: () => setIsStatementModalOpen(true)
     },
   ];
 
@@ -91,12 +93,9 @@ const DashboardHome = () => {
         </div>
 
         {/* Main Stats Grid Skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-            <div className="h-64 bg-slate-200 rounded-[2.5rem]"></div>
-            <div className="h-64 bg-slate-200 rounded-[2.5rem]"></div>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           <div className="h-64 bg-slate-200 rounded-[2.5rem]"></div>
+          <div className="h-64 bg-slate-200 rounded-[2.5rem] lg:col-span-2"></div>
         </div>
 
         {/* Accounts Skeleton */}
@@ -134,8 +133,7 @@ const DashboardHome = () => {
       </div>
 
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-10">
           {/* Balance Card - High Fidelity Bank Card Look */}
           <div className="premium-card relative overflow-hidden p-6 sm:p-8 bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4338ca] text-white rounded-[2.5rem] shadow-2xl shadow-indigo-200 group transition-all duration-500 hover:scale-[1.02]">
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-indigo-400/20 transition-colors" />
@@ -191,9 +189,9 @@ const DashboardHome = () => {
           </div>
 
           {/* Quick Actions Card */}
-          <div className="premium-card p-6 sm:p-8 bg-white border border-slate-100 shadow-sm rounded-[2.5rem] flex flex-col justify-between">
+          <div className="premium-card p-6 sm:p-8 bg-white border border-slate-100 shadow-sm rounded-[2.5rem] flex flex-col justify-center lg:col-span-2">
             <h3 className="text-slate-800 text-lg font-black tracking-tight mb-6 sm:mb-8">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
               {quickActions.map((action) => (
                 <button
                   key={action.name}
@@ -208,57 +206,6 @@ const DashboardHome = () => {
               ))}
             </div>
           </div>
-        </div>
-
-        {/* Savings Goals Card - More Detailed & Glowing */}
-        <div className="premium-card p-6 sm:p-8 bg-slate-900 text-white rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col border border-slate-800">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 rounded-full -mr-20 -mt-20 blur-3xl" />
-
-          <div className="flex justify-between items-center mb-8 sm:mb-10">
-            <div>
-              <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Savings Goal</h3>
-              <p className="text-3xl font-black tracking-tighter">Emergency Fund</p>
-            </div>
-            <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 shadow-inner">
-              <LayoutGrid className="w-7 h-7 text-indigo-400" />
-            </div>
-          </div>
-
-          <div className="space-y-8 flex-1 flex flex-col justify-center">
-            <div>
-              <div className="flex justify-between items-end mb-3">
-                <span className="text-4xl font-black text-indigo-400 tracking-tighter">₹12,450<span className="text-xl text-slate-600">.00</span></span>
-                <span className="text-slate-500 text-xs font-bold">of ₹20,000</span>
-              </div>
-
-              <div className="h-4 w-full bg-slate-800/50 rounded-full overflow-hidden p-1 relative border border-slate-700">
-                <div
-                  className="h-full bg-gradient-to-r from-indigo-600 via-indigo-400 to-cyan-400 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all duration-1000 ease-out"
-                  style={{ width: '62%' }}
-                />
-              </div>
-              <div className="flex justify-between mt-3">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Progress</span>
-                <span className="text-sm font-black text-indigo-400">62%</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 py-4 border-y border-white/5">
-              <div>
-                <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Daily Avg</p>
-                <p className="text-sm font-black text-white">₹450.00</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">ETA</p>
-                <p className="text-sm font-black text-white">18 Days</p>
-              </div>
-            </div>
-          </div>
-
-          <button className="mt-8 w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-black text-sm transition-all active:scale-95 shadow-lg shadow-indigo-600/20">
-            Customize Goal
-          </button>
-        </div>
       </div>
 
       {/* Individual Accounts Section */}
@@ -381,6 +328,11 @@ const DashboardHome = () => {
         onClose={() => setIsModalOpen(false)} 
         transaction={selectedTransaction} 
         currentUserId={user?._id} 
+      />
+      <DownloadStatementModal
+        isOpen={isStatementModalOpen}
+        onClose={() => setIsStatementModalOpen(false)}
+        accounts={summary?.accounts}
       />
     </div>
   );

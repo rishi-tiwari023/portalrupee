@@ -58,8 +58,7 @@ const ContactUs = () => {
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Customer Care</h4>
-                                    <p className="text-lg font-bold text-slate-800">1800-123-4567</p>
-                                    <p className="text-sm text-slate-500">Available 24/7 for emergency blocking</p>
+                                    <p className="text-lg font-bold text-slate-800">Will be added later</p>
                                 </div>
                             </div>
 
@@ -69,7 +68,7 @@ const ContactUs = () => {
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Email Support</h4>
-                                    <p className="text-lg font-bold text-slate-800">support@portalrupee.in</p>
+                                    <p className="text-lg font-bold text-slate-800">rishitiwari023.dev@gmail.com</p>
                                     <p className="text-sm text-slate-500">We aim to reply within 24 hours</p>
                                 </div>
                             </div>
