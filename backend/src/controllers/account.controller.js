@@ -1,5 +1,6 @@
 import Account from '../models/account.model.js';
 import User from '../models/user.model.js';
+import Transaction from '../models/transaction.model.js';
 import AppError from '../utils/AppError.js';
 import speakeasy from 'speakeasy';
 import { decrypt } from '../utils/encryption.util.js';
@@ -170,10 +171,26 @@ export const getAccountBalance = async (req, res, next) => {
       return next(new AppError('Account not found or unauthorized', 404));
     }
 
+    const lastTransaction = await Transaction.findOne({
+      $or: [
+        { senderAccount: account._id },
+        { receiverAccount: account._id }
+      ],
+      status: 'SUCCESS'
+    }).sort({ createdAt: -1 });
+
     res.status(200).json({
       success: true,
       data: {
         balance: account.balance,
+        lastTransaction: lastTransaction ? {
+          amount: lastTransaction.amount,
+          type: lastTransaction.type,
+          senderAccount: lastTransaction.senderAccount,
+          receiverAccount: lastTransaction.receiverAccount,
+          createdAt: lastTransaction.createdAt,
+          description: lastTransaction.description,
+        } : null
       },
     });
   } catch (error) {

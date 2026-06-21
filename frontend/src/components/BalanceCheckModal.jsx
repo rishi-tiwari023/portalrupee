@@ -1,15 +1,42 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { fetchAccountBalance } from '../store/slices/accountSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Wallet, ArrowUpRight, ArrowDownLeft, Calendar, ShieldCheck, ShieldAlert, History } from 'lucide-react';
 
 const BalanceCheckModal = ({ isOpen, onClose, account }) => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (isOpen && account && account.lastTransaction === undefined) {
+      dispatch(fetchAccountBalance({ accountId: account._id }));
+    }
+  }, [isOpen, account, dispatch]);
+
   if (!account) return null;
 
-  const { accountNumber, accountType, balance, status, createdAt } = account;
+  const { _id, accountNumber, accountType, balance, status, createdAt, lastTransaction } = account;
   const isBlocked = status === 'BLOCKED' || status === 'CLOSED';
 
+  let lastTxValue = 'Loading...';
+  let lastTxIcon = ArrowUpRight;
+  let lastTxColor = 'text-slate-400';
+
+  if (lastTransaction) {
+    const receiverAccountId = lastTransaction.receiverAccount?._id || lastTransaction.receiverAccount;
+    const isCredit = 
+      lastTransaction.type === 'DEPOSIT' || 
+      (lastTransaction.type === 'TRANSFER' && receiverAccountId === _id);
+      
+    lastTxValue = `${isCredit ? '+' : '-'}₹${lastTransaction.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    lastTxIcon = isCredit ? ArrowDownLeft : ArrowUpRight;
+    lastTxColor = isCredit ? 'text-emerald-500' : 'text-rose-500';
+  } else if (lastTransaction === null) {
+    lastTxValue = 'No transactions';
+  }
+
   const stats = [
-    { label: 'Last Transaction', value: '₹2,450.00', icon: ArrowUpRight, color: 'text-emerald-500' },
+    { label: 'Last Transaction', value: lastTxValue, icon: lastTxIcon, color: lastTxColor },
     { label: 'Pending Clearances', value: '₹0.00', icon: ArrowDownLeft, color: 'text-rose-500' },
   ];
 

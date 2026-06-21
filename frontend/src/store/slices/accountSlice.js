@@ -75,6 +75,20 @@ const accountSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Fetch Account Balance
+      .addCase(fetchAccountBalance.fulfilled, (state, action) => {
+        const { balance, lastTransaction } = action.payload;
+        const accountId = action.meta.arg.accountId;
+        const account = state.accounts.find(acc => acc._id === accountId);
+        if (account) {
+          account.balance = balance;
+          account.lastTransaction = lastTransaction;
+        }
+        if (state.currentAccount && state.currentAccount._id === accountId) {
+          state.currentAccount.balance = balance;
+          state.currentAccount.lastTransaction = lastTransaction;
+        }
+      })
       // Fetch My Accounts
       .addCase(fetchMyAccounts.pending, (state) => {
         state.loading = true;
