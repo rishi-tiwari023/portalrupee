@@ -35,6 +35,7 @@ const Transfer = () => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [selectedAccount, setSelectedAccount] = useState(null);
+  const [selectedReceiverAccount, setSelectedReceiverAccount] = useState(null);
   const [tpin, setTpin] = useState('');
   const [tpinError, setTpinError] = useState('');
   const [totpToken, setTotpToken] = useState('');
@@ -63,6 +64,15 @@ const Transfer = () => {
     }
   }, [accounts, selectedAccount]);
 
+  // Set default receiver account if available
+  useEffect(() => {
+    if (selectedReceiver && selectedReceiver.accounts && selectedReceiver.accounts.length > 0) {
+      setSelectedReceiverAccount(selectedReceiver.accounts[0]);
+    } else {
+      setSelectedReceiverAccount(null);
+    }
+  }, [selectedReceiver]);
+
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -90,6 +100,10 @@ const Transfer = () => {
         toast.error('Insufficient balance in selected account');
         return;
       }
+      if (!selectedReceiverAccount) {
+        toast.warn('Recipient does not have any active account');
+        return;
+      }
     }
     setStep(step + 1);
   };
@@ -107,6 +121,7 @@ const Transfer = () => {
     const transferData = {
       senderAccountId: selectedAccount._id,
       receiverId: selectedReceiver._id,
+      receiverAccountId: selectedReceiverAccount?._id,
       amount: parseFloat(amount),
       description: sanitizeInput(description) || `Transfer to ${selectedReceiver.firstName}`,
       tpin,
@@ -202,7 +217,9 @@ const Transfer = () => {
                       </div>
                       <div className="text-left">
                         <p className="text-slate-900 font-bold">{resUser.firstName} {resUser.lastName}</p>
-                        <p className="text-slate-400 text-xs font-semibold">{resUser.mobile}</p>
+                        <p className="text-slate-400 text-xs font-semibold">
+                          {resUser.mobile} | Accounts: {resUser.accounts?.map(a => `${a.accountType} (*${a.accountNumber.slice(-4)})`).join(', ') || 'No active accounts'}
+                        </p>
                       </div>
                     </div>
                     {selectedReceiver?._id === resUser._id && (
@@ -284,31 +301,65 @@ const Transfer = () => {
             </div>
 
             {/* Account Selection */}
-            <div className="mb-8">
-              <h4 className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">From Account</h4>
-              <div className="space-y-3">
-                {accounts.filter(acc => acc.status === 'ACTIVE').map((acc) => (
-                  <button
-                    key={acc._id}
-                    onClick={() => setSelectedAccount(acc)}
-                    className={`w-full flex items-center justify-between p-4 rounded-3xl transition-all border-2
-                      ${selectedAccount?._id === acc._id 
-                        ? 'border-indigo-600 bg-indigo-50/30' 
-                        : 'border-slate-100 hover:bg-slate-50'}
-                    `}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center">
-                        <CreditCard className="w-5 h-5" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div>
+                <h4 className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">From Account</h4>
+                <div className="space-y-3">
+                  {accounts.filter(acc => acc.status === 'ACTIVE').map((acc) => (
+                    <button
+                      key={acc._id}
+                      type="button"
+                      onClick={() => setSelectedAccount(acc)}
+                      className={`w-full flex items-center justify-between p-4 rounded-3xl transition-all border-2 text-left
+                        ${selectedAccount?._id === acc._id 
+                          ? 'border-indigo-600 bg-indigo-50/30' 
+                          : 'border-slate-100 hover:bg-slate-50'}
+                      `}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center flex-shrink-0">
+                          <CreditCard className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-slate-800">{acc.accountType} Account</p>
+                          <p className="text-xs font-bold text-slate-500 tracking-wider">**** {acc.accountNumber.slice(-4)}</p>
+                          <p className="text-xs font-bold text-slate-400">Bal: ₹{acc.balance.toLocaleString('en-IN')}</p>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <p className="text-sm font-black text-slate-800">{acc.accountType} (**** {acc.accountNumber.slice(-4)})</p>
-                        <p className="text-xs font-bold text-slate-400 tracking-tight">Balance: ₹{acc.balance.toLocaleString('en-IN')}</p>
+                      {selectedAccount?._id === acc._id && <CheckCircle2 className="w-5 h-5 text-indigo-600 flex-shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">To Account</h4>
+                <div className="space-y-3">
+                  {selectedReceiver?.accounts && selectedReceiver.accounts.map((acc) => (
+                    <button
+                      key={acc._id || acc.accountNumber}
+                      type="button"
+                      onClick={() => setSelectedReceiverAccount(acc)}
+                      className={`w-full flex items-center justify-between p-4 rounded-3xl transition-all border-2 text-left
+                        ${selectedReceiverAccount?.accountNumber === acc.accountNumber
+                          ? 'border-indigo-600 bg-indigo-50/30' 
+                          : 'border-slate-100 hover:bg-slate-50'}
+                      `}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <CreditCard className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-slate-800">{acc.accountType} Account</p>
+                          <p className="text-xs font-bold text-slate-500 tracking-wider">**** {acc.accountNumber.slice(-4)}</p>
+                          <p className="text-xs font-bold text-slate-400">{acc.accountNumber}</p>
+                        </div>
                       </div>
-                    </div>
-                    {selectedAccount?._id === acc._id && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
-                  </button>
-                ))}
+                      {selectedReceiverAccount?.accountNumber === acc.accountNumber && <CheckCircle2 className="w-5 h-5 text-indigo-600 flex-shrink-0" />}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -354,7 +405,11 @@ const Transfer = () => {
 
             <h2 className="text-3xl font-black text-slate-800 mb-2">Security Check</h2>
             <p className="text-slate-500 font-medium mb-10 max-w-xs mx-auto">
-              You are sending <span className="text-indigo-600 font-bold">₹{amount}</span> to <span className="text-indigo-600 font-bold">{selectedReceiver.firstName}</span>. Please enter your 6-digit Transaction PIN.
+              You are sending <span className="text-indigo-600 font-bold">₹{amount}</span> to <span className="text-indigo-600 font-bold">{selectedReceiver.firstName}</span>
+              {selectedReceiverAccount && (
+                <> (Account: <span className="font-mono text-xs font-bold text-slate-700">{selectedReceiverAccount.accountNumber}</span>)</>
+              )}
+              . Please enter your 6-digit Transaction PIN.
             </p>
 
             <div className="mb-8">
@@ -436,7 +491,12 @@ const Transfer = () => {
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-400 font-black uppercase tracking-widest">Sent To</span>
-                <span className="text-slate-900 font-black">{selectedReceiver.firstName} {selectedReceiver.lastName}</span>
+                <span className="text-slate-900 font-black">
+                  {selectedReceiver.firstName} {selectedReceiver.lastName}
+                  {selectedReceiverAccount && (
+                    <span className="text-xs text-slate-500 font-mono block sm:inline sm:ml-2">({selectedReceiverAccount.accountNumber})</span>
+                  )}
+                </span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-400 font-black uppercase tracking-widest">Total Amount</span>

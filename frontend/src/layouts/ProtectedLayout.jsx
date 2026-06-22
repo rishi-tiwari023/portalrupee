@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchMyAccounts } from '../store/slices/accountSlice';
 import Sidebar from '../components/Sidebar';
 import logo from '../assets/logo.png';
 import { Bell, Search, Menu, Check, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, MessageSquare } from 'lucide-react';
@@ -38,6 +39,8 @@ const getNotificationIcon = (type) => {
 
 const ProtectedLayout = () => {
   const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { accounts } = useSelector((state) => state.account);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
@@ -75,17 +78,10 @@ const ProtectedLayout = () => {
   } = useSocket() || {};
 
   useEffect(() => {
-    if (user && user.twoFactorEnabled === false) {
-      const hasSeenPrompt = sessionStorage.getItem('2fa_prompt_seen');
-      if (!hasSeenPrompt) {
-        toast.warn('Security Alert: Please enable Two-Factor Authentication to secure your account!', {
-          autoClose: 10000,
-          className: 'premium-toast',
-        });
-        sessionStorage.setItem('2fa_prompt_seen', 'true');
-      }
+    if (isAuthenticated && user?.role === 'CUSTOMER' && accounts.length === 0) {
+      dispatch(fetchMyAccounts());
     }
-  }, [user]);
+  }, [isAuthenticated, user, accounts.length, dispatch]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
