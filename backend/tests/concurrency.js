@@ -60,7 +60,7 @@ async function runConcurrencyTest() {
     const token = await login('customer@portalrupee.com', 'password123');
     const receiverId = await getReceiverId(token, 'customer2@portalrupee.com');
     
-    const ACC_NUM = '1000000001';
+    const ACC_NUM = '100000000001';
     const initialBalance = await getBalance(token, ACC_NUM);
     console.log(`Initial Balance of ${ACC_NUM}: ₹${initialBalance}`);
 

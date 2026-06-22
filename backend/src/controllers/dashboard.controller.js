@@ -13,8 +13,34 @@ export const getSummary = async (req, res, next) => {
       return next(new AppError('User not found', 404));
     }
 
-    const accounts = await Account.find({ user: userId });
+    const accounts = await Account.find({ user: userId }).lean();
     const accountIds = accounts.map(acc => acc._id);
+
+    const accountsWithTx = await Promise.all(
+      accounts.map(async (account) => {
+        const lastTransaction = await Transaction.findOne({
+          $or: [
+            { senderAccount: account._id },
+            { receiverAccount: account._id }
+          ],
+          status: 'SUCCESS'
+        })
+          .sort({ createdAt: -1 })
+          .lean();
+
+        return {
+          ...account,
+          lastTransaction: lastTransaction ? {
+            amount: lastTransaction.amount,
+            type: lastTransaction.type,
+            senderAccount: lastTransaction.senderAccount,
+            receiverAccount: lastTransaction.receiverAccount,
+            createdAt: lastTransaction.createdAt,
+            description: lastTransaction.description,
+          } : null
+        };
+      })
+    );
 
     const recentActivity = await Transaction.find({
       $or: [
@@ -39,7 +65,7 @@ export const getSummary = async (req, res, next) => {
       data: {
         totalBalance,
         accountCount: accounts.length,
-        accounts,
+        accounts: accountsWithTx,
         recentActivity
       }
     });

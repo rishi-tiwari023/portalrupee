@@ -211,7 +211,7 @@ export const withdraw = async (req, res, next) => {
  */
 export const transferMoney = async (req, res, next) => {
   try {
-    const { receiverId, amount, description, totpToken, senderAccountId } = req.body;
+    const { receiverId, amount, description, totpToken, senderAccountId, receiverAccountId } = req.body;
     const senderId = req.user.id;
 
     // 1. Initial Checks (outside transaction for speed/validation)
@@ -251,7 +251,10 @@ export const transferMoney = async (req, res, next) => {
       }
 
       // Find receiver account (default to their first active account)
-      const receiverAccount = await Account.findOne({ user: receiverId, status: 'ACTIVE' }).session(session);
+      const receiverQuery = receiverAccountId
+        ? { _id: receiverAccountId, user: receiverId, status: 'ACTIVE' }
+        : { user: receiverId, status: 'ACTIVE' };
+      const receiverAccount = await Account.findOne(receiverQuery).session(session);
       if (!receiverAccount) {
         throw new AppError('Receiver active account not found or account is not active', 404);
       }

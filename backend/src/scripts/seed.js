@@ -102,21 +102,21 @@ const seedDatabase = async () => {
     const accountData = [
       {
         user: customer._id,
-        accountNumber: '1000000001',
+        accountNumber: '100000000001',
         accountType: 'SAVINGS',
         balance: 45000,
         status: 'ACTIVE'
       },
       {
         user: customer._id,
-        accountNumber: '1000000002',
+        accountNumber: '100000000002',
         accountType: 'CURRENT',
         balance: 15300,
         status: 'ACTIVE'
       },
       {
         user: receiver._id,
-        accountNumber: '1000000003',
+        accountNumber: '100000000003',
         accountType: 'SAVINGS',
         balance: 5000,
         status: 'ACTIVE'

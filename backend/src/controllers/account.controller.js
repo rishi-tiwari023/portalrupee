@@ -51,12 +51,39 @@ export const getMyAccounts = async (req, res, next) => {
   try {
     const accounts = await Account.find({ user: req.user.id })
       .populate('user', 'firstName lastName email mobile')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const accountsWithTx = await Promise.all(
+      accounts.map(async (account) => {
+        const lastTransaction = await Transaction.findOne({
+          $or: [
+            { senderAccount: account._id },
+            { receiverAccount: account._id }
+          ],
+          status: 'SUCCESS'
+        })
+          .sort({ createdAt: -1 })
+          .lean();
+
+        return {
+          ...account,
+          lastTransaction: lastTransaction ? {
+            amount: lastTransaction.amount,
+            type: lastTransaction.type,
+            senderAccount: lastTransaction.senderAccount,
+            receiverAccount: lastTransaction.receiverAccount,
+            createdAt: lastTransaction.createdAt,
+            description: lastTransaction.description,
+          } : null
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
-      count: accounts.length,
-      data: accounts,
+      count: accountsWithTx.length,
+      data: accountsWithTx,
     });
   } catch (error) {
     next(error);
@@ -68,15 +95,37 @@ export const getAccountDetails = async (req, res, next) => {
     const account = await Account.findOne({
       _id: req.params.id,
       user: req.user.id,
-    }).populate('user', 'firstName lastName email mobile');
+    })
+      .populate('user', 'firstName lastName email mobile')
+      .lean();
 
     if (!account) {
       return next(new AppError('Account not found or unauthorized', 404));
     }
 
+    const lastTransaction = await Transaction.findOne({
+      $or: [
+        { senderAccount: account._id },
+        { receiverAccount: account._id }
+      ],
+      status: 'SUCCESS'
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
     res.status(200).json({
       success: true,
-      data: account,
+      data: {
+        ...account,
+        lastTransaction: lastTransaction ? {
+          amount: lastTransaction.amount,
+          type: lastTransaction.type,
+          senderAccount: lastTransaction.senderAccount,
+          receiverAccount: lastTransaction.receiverAccount,
+          createdAt: lastTransaction.createdAt,
+          description: lastTransaction.description,
+        } : null
+      },
     });
   } catch (error) {
     next(error);

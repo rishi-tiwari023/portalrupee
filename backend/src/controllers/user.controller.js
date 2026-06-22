@@ -106,13 +106,23 @@ export const searchUsers = async (req, res, next) => {
         },
         { _id: { $ne: req.user.id } }, // Exclude self
       ],
-    }).select('firstName lastName email mobile role');
+    }).select('firstName lastName email mobile role').lean();
+
+    const usersWithAccounts = await Promise.all(
+      users.map(async (u) => {
+        const accounts = await Account.find({ user: u._id, status: 'ACTIVE' }).select('accountNumber accountType');
+        return {
+          ...u,
+          accounts
+        };
+      })
+    );
 
     res.status(200).json({
       status: 'success',
-      results: users.length,
+      results: usersWithAccounts.length,
       data: {
-        users,
+        users: usersWithAccounts,
       },
     });
   } catch (error) {

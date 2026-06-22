@@ -7,7 +7,7 @@ export const depositSchema = z.object({
         required_error: 'Account number is required',
       })
       .regex(/^\d{12}$/, 'Account number must be exactly 12 digits'),
-    amount: z
+    amount: z.coerce
       .number({
         required_error: 'Amount is required',
       })
@@ -24,7 +24,7 @@ export const withdrawSchema = z.object({
         required_error: 'Account number is required',
       })
       .regex(/^\d{12}$/, 'Account number must be exactly 12 digits'),
-    amount: z
+    amount: z.coerce
       .number({
         required_error: 'Amount is required',
       })
@@ -37,7 +37,9 @@ export const withdrawSchema = z.object({
 export const transferSchema = z.object({
   body: z.object({
     receiverId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid receiver user ID format'),
-    amount: z.number().min(1, 'Amount must be at least 1'),
+    senderAccountId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid sender account ID format').optional(),
+    receiverAccountId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid receiver account ID format').optional(),
+    amount: z.coerce.number().min(1, 'Amount must be at least 1'),
     description: z.string().max(100, 'Description must be less than 100 characters').optional(),
     tpin: z
       .string()
