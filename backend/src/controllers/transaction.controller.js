@@ -277,10 +277,14 @@ export const transferMoney = async (req, res, next) => {
       );
 
       // Update balances
-      senderAccount.balance -= amount;
+      const parsedAmount = Number(amount);
+      
+      senderAccount.balance = Number(senderAccount.balance || 0) - parsedAmount;
+      senderAccount.markModified('balance');
       await senderAccount.save({ session });
 
-      receiverAccount.balance += amount;
+      receiverAccount.balance = Number(receiverAccount.balance || 0) + parsedAmount;
+      receiverAccount.markModified('balance');
       await receiverAccount.save({ session });
 
       return {

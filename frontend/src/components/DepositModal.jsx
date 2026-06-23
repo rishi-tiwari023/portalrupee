@@ -124,11 +124,12 @@ const DepositModal = ({ isOpen, onClose, accounts }) => {
                         type="number"
                         name="amount"
                         placeholder="0.00"
-                        className={`w-full pl-14 pr-5 py-4 bg-slate-50 border-2 rounded-2xl outline-none font-bold text-slate-900 transition-all
+                        className={`w-full pl-14 pr-5 py-4 bg-slate-50 border-2 rounded-2xl outline-none font-bold text-slate-900 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
                           ${formik.touched.amount && formik.errors.amount ? 'border-rose-300 bg-rose-50' : 'border-transparent focus:border-emerald-500'}
                         `}
                         onChange={(e) => formik.setFieldValue('amount', parseFloat(e.target.value) || '')}
                         onBlur={formik.handleBlur}
+                        onWheel={(e) => e.target.blur()}
                         value={formik.values.amount}
                       />
                     </div>

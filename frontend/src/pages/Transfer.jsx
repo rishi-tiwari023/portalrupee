@@ -294,8 +294,9 @@ const Transfer = () => {
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
+                  onWheel={(e) => e.target.blur()}
                   placeholder="0.00"
-                  className="bg-transparent text-5xl font-black tracking-tighter text-slate-900 w-full text-center outline-none max-w-[200px]"
+                  className="bg-transparent text-5xl font-black tracking-tighter text-slate-900 w-full text-center outline-none max-w-[200px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
