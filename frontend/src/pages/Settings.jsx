@@ -9,8 +9,14 @@ const Settings = () => {
 
   // Appearance Settings State (from Context)
   const { theme, setTheme } = useTheme();
+  const [localTheme, setLocalTheme] = useState(theme);
+
+  useEffect(() => {
+    setLocalTheme(theme);
+  }, [theme]);
 
   const handleSave = () => {
+    setTheme(localTheme);
     toast.success('Settings saved successfully!', { icon: <CheckCircle className="text-emerald-500" /> });
   };
 
@@ -35,8 +41,8 @@ const Settings = () => {
               <p className="text-sm text-slate-500 dark:text-slate-400">Choose how the application looks.</p>
             </div>
             <select 
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
+              value={localTheme}
+              onChange={(e) => setLocalTheme(e.target.value)}
               className="px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900 min-w-[150px] cursor-pointer"
             >
               <option value="light">Light</option>

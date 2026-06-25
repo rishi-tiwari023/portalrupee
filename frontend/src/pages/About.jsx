@@ -6,10 +6,16 @@ const About = () => {
         <div className="min-h-screen pt-28 pb-12 px-4 max-w-7xl mx-auto">
             <div className="text-center mb-16">
                 <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6">What is PortalRupee?</h1>
-                <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+                <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-6">
                     PortalRupee is a next-generation digital banking platform built for the modern Indian economy. 
                     We provide secure, lightning-fast, and transparent financial services compliant with RBI regulations.
                 </p>
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 max-w-3xl mx-auto text-left flex gap-3 items-start">
+                    <span className="text-xl">⚠️</span>
+                    <p className="text-amber-900 text-sm md:text-base font-medium">
+                        To be clear: PortalRupee is NOT an actual bank, UPI service, or VPA provider. It's a demo project, a full-stack simulation built to explore how real banking systems work under the hood.
+                    </p>
+                </div>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
