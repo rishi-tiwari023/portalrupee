@@ -27,6 +27,8 @@ import compression from 'compression';
 
 const app = express();
 
+app.set('trust proxy', 1); // Trust first proxy for express-rate-limit
+
 app.use(helmet());
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',

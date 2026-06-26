@@ -13,6 +13,8 @@ export const connectRabbitMQ = async () => {
     console.log('RabbitMQ Client Connected');
   } catch (err) {
     console.error('RabbitMQ Connection Error:', err);
+    console.error('Failed to connect to RabbitMQ. Forcing process exit to allow Docker to auto-restart.');
+    process.exit(1);
   }
 };
 
